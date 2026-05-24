@@ -491,9 +491,16 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
 
   <!-- Incharge -->
   <div class="card">
-    <div class="card-header"><span class="ch-icon">👩‍⚕️</span><h3>หัวหน้าหอ / ผู้รับผิดชอบเวร</h3></div>
+    <div class="card-header"><span class="ch-icon">👩‍⚕️</span><h3>หัวหน้าหอ / หัวหน้าเวร</h3></div>
     <div class="card-body">
-      <div class="section-title">เลือกหัวหน้าเวร</div>
+      <div class="form-group" style="margin-bottom:12px">
+        <label>หัวหน้าหอ</label>
+        <div style="padding:8px 12px;border-radius:var(--r-sm);background:var(--blue-lt);border:1.5px solid var(--blue-md);
+          font-size:13px;font-weight:600;color:var(--blue);display:flex;align-items:center;gap:6px">
+          👩‍⚕️ นางอัญญารัตน์ เจียมธนานุรักษ์
+        </div>
+      </div>
+      <div class="section-title">เลือกหัวหน้าเวร / ผู้รับผิดชอบเวร</div>
       <div class="chips" id="incharge-chips"></div>
       <hr class="divider">
       <div class="form-group">
@@ -780,7 +787,7 @@ const checkDefs = [
 ];
 
 const inchargeList = [
-  'อัญญารัตน์','คำพุด','เบญจมาศ','สาคร','นวลตา','สุนันทา',
+  'คำพุด','เบญจมาศ','สาคร','นวลตา','สุนันทา',
   'สุรีรัตน์','พิศา','จารุวรรณ','ฐิตินันท์','จันจิรา','อัญชลี',
   'สรวงสุดา','ศิริรัตน์','พุทธชาติ','อรอุมา','อุ้มบุญ','อริสรา',
   'สุพรรณี','ชนาภา','กนกพร','วริศรา'
@@ -954,13 +961,19 @@ function showEquipDetail(idx, listOverride) {
   renderModal(idx);
   document.getElementById('modal').classList.add('open');
 
-  // swipe support
-  const box = document.querySelector('.modal-box');
-  let tx = 0;
-  box.ontouchstart = ev => { tx = ev.touches[0].clientX; };
-  box.ontouchend   = ev => {
-    const dx = ev.changedTouches[0].clientX - tx;
-    if(Math.abs(dx) > 60) dx < 0 ? navModal(1) : navModal(-1);
+  // touch/pointer swipe — ใช้ pointermove แทนเพื่อไม่ขัด scroll
+  const content = document.getElementById('modal-content');
+  let ptStart = null, ptStartY = null;
+  content.onpointerdown = ev => { ptStart = ev.clientX; ptStartY = ev.clientY; };
+  content.onpointerup   = ev => {
+    if(ptStart === null) return;
+    const dx = ev.clientX - ptStart;
+    const dy = Math.abs(ev.clientY - ptStartY);
+    // swipe เฉพาะแนวนอน (dx > dy) และระยะ > 50px
+    if(Math.abs(dx) > 50 && Math.abs(dx) > dy) {
+      dx < 0 ? navModal(1) : navModal(-1);
+    }
+    ptStart = null;
   };
 }
 
@@ -1241,6 +1254,7 @@ function getFormData() {
     date:       document.getElementById('f-date').value,
     shift:      document.getElementById('f-shift').value,
     nurse:      document.getElementById('f-nurse').value.trim() || '—',
+    ward_head:  'นางอัญญารัตน์ เจียมธนานุรักษ์',
     incharge:   selectedIncharge || '—',
     note:       document.getElementById('f-note').value.trim(),
     lary1:      getRadio('ci-l1'),
