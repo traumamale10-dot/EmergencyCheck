@@ -1,0 +1,1413 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>รถ Emergency — ตรวจสอบอุปกรณ์</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --red:      #C0392B;
+  --red-dk:   #96281B;
+  --red-lt:   #FDEDEC;
+  --blue:     #1A5276;
+  --blue-md:  #2471A3;
+  --blue-lt:  #EBF5FB;
+  --green:    #1E8449;
+  --green-lt: #EAFAF1;
+  --amber:    #B7770D;
+  --amber-lt: #FEF9E7;
+  --gray-50:  #F8F9FA;
+  --gray-100: #F1F3F4;
+  --gray-200: #E8EAED;
+  --gray-300: #DADCE0;
+  --gray-400: #BDC1C6;
+  --gray-600: #80868B;
+  --gray-800: #3C4043;
+  --gray-900: #202124;
+  --white:    #FFFFFF;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.08);
+  --shadow-md: 0 4px 12px rgba(0,0,0,.10), 0 2px 4px rgba(0,0,0,.06);
+  --r: 10px;
+  --r-sm: 6px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { font-size: 15px; }
+body {
+  font-family: 'Sarabun', sans-serif;
+  background: var(--gray-100);
+  color: var(--gray-900);
+  min-height: 100vh;
+  padding-bottom: 80px;
+}
+
+/* ── HEADER ── */
+.app-header {
+  background: linear-gradient(135deg, var(--blue) 0%, #154360 100%);
+  color: #fff;
+  padding: 14px 16px 12px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: var(--shadow-md);
+}
+.hdr-top { display: flex; align-items: center; justify-content: space-between; }
+.hdr-title { display: flex; align-items: center; gap: 10px; }
+.hdr-icon { width: 36px; height: 36px; background: rgba(255,255,255,.2); border-radius: 8px;
+  display: flex; align-items: center; justify-content: center; font-size: 20px; }
+.hdr-title h1 { font-size: 16px; font-weight: 600; color: #fff; line-height: 1.2; }
+.hdr-title p { font-size: 11px; color: rgba(255,255,255,.7); margin-top: 1px; }
+.hdr-badge { background: rgba(255,255,255,.2); border-radius: 20px; padding: 4px 10px;
+  font-size: 11px; font-weight: 500; color: #fff; }
+.hdr-info { display: flex; align-items: center; justify-content: space-between; margin-top: 10px;
+  background: rgba(0,0,0,.15); border-radius: var(--r-sm); padding: 6px 10px; }
+.hdr-info span { font-size: 11px; color: rgba(255,255,255,.85); }
+.hdr-info strong { color: #fff; }
+
+/* ── TABS ── */
+.tabs-wrap { background: var(--white); border-bottom: 1px solid var(--gray-200);
+  position: sticky; top: 93px; z-index: 99; }
+.tabs { display: flex; overflow-x: auto; scrollbar-width: none; }
+.tabs::-webkit-scrollbar { display: none; }
+.tab {
+  flex: 1; min-width: 70px; padding: 12px 8px 10px;
+  font-family: 'Sarabun', sans-serif; font-size: 12px; font-weight: 500;
+  color: var(--gray-600); cursor: pointer; border: none; background: none;
+  border-bottom: 2px solid transparent; white-space: nowrap;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  transition: color .2s, border-color .2s;
+}
+.tab .tab-icon { font-size: 18px; }
+.tab.active { color: var(--blue-md); border-bottom-color: var(--blue-md); }
+
+/* ── PAGE ── */
+.page { display: none; padding: 14px 12px; animation: fadeIn .25s ease; }
+.page.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ── CARDS ── */
+.card {
+  background: var(--white); border-radius: var(--r);
+  box-shadow: var(--shadow-sm); border: 1px solid var(--gray-200);
+  margin-bottom: 12px; overflow: hidden;
+}
+.card-header {
+  padding: 12px 14px 10px; border-bottom: 1px solid var(--gray-100);
+  display: flex; align-items: center; gap: 8px;
+}
+.card-header h3 { font-size: 13px; font-weight: 600; color: var(--gray-800); }
+.card-header .ch-icon { font-size: 18px; }
+.card-body { padding: 12px 14px; }
+
+/* ── FORM ELEMENTS ── */
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+.form-row.full { grid-template-columns: 1fr; }
+.form-group { display: flex; flex-direction: column; gap: 4px; }
+.form-group label { font-size: 11px; font-weight: 600; color: var(--gray-600); text-transform: uppercase; letter-spacing: .4px; }
+.form-group input, .form-group select, .form-group textarea {
+  padding: 8px 10px; border: 1.5px solid var(--gray-300); border-radius: var(--r-sm);
+  font-family: 'Sarabun', sans-serif; font-size: 13px; color: var(--gray-900);
+  background: var(--gray-50); transition: border-color .2s, background .2s;
+  -webkit-appearance: none; appearance: none;
+}
+.form-group input:focus, .form-group select:focus {
+  outline: none; border-color: var(--blue-md); background: var(--white);
+}
+
+/* ── PROGRESS ── */
+.prog-wrap { margin-bottom: 14px; }
+.prog-label { display: flex; justify-content: space-between; margin-bottom: 5px; }
+.prog-label span { font-size: 11px; color: var(--gray-600); }
+.prog-label strong { font-size: 11px; color: var(--blue-md); font-family: 'IBM Plex Mono', monospace; }
+.prog-bar { height: 5px; background: var(--gray-200); border-radius: 3px; overflow: hidden; }
+.prog-fill { height: 100%; background: linear-gradient(90deg, var(--blue-md), #27AE60);
+  border-radius: 3px; transition: width .4s cubic-bezier(.4,0,.2,1); }
+
+/* ── CHECK ITEMS ── */
+.check-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.check-item {
+  border: 1.5px solid var(--gray-200); border-radius: var(--r-sm); padding: 10px;
+  transition: border-color .2s, background .2s;
+}
+.check-item.has-issue { border-color: #E74C3C; background: #FFF5F5; }
+.check-item.all-ok { border-color: var(--green); background: var(--green-lt); }
+.ci-title { font-size: 11px; font-weight: 600; color: var(--gray-800); margin-bottom: 8px; display: flex; align-items: center; gap: 5px; }
+.radio-group { display: flex; flex-direction: column; gap: 4px; }
+.radio-opt {
+  display: flex; align-items: center; gap: 6px;
+  padding: 5px 7px; border-radius: 5px; cursor: pointer; transition: background .15s;
+  font-size: 12px; color: var(--gray-600);
+}
+.radio-opt:hover { background: var(--gray-100); }
+.radio-opt input[type=radio] { width: 14px; height: 14px; accent-color: var(--blue-md); flex-shrink: 0; }
+.radio-opt.selected { color: var(--gray-900); font-weight: 500; }
+.dot-status { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.dot-ok { background: var(--green); }
+.dot-warn { background: var(--amber); }
+.dot-bad { background: var(--red); }
+.sub-divider { border-top: 1px dashed var(--gray-200); margin: 7px 0 6px; }
+.sub-label { font-size: 10px; color: var(--gray-600); margin-bottom: 5px; font-weight: 500; }
+.num-input { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+.num-input input[type=number] {
+  width: 70px; padding: 6px 8px; font-size: 16px; font-weight: 600; font-family: 'IBM Plex Mono', monospace;
+  border: 1.5px solid var(--gray-300); border-radius: var(--r-sm); text-align: center;
+  background: var(--gray-50); color: var(--gray-900);
+}
+.num-btn {
+  width: 30px; height: 30px; border-radius: 50%; border: 1.5px solid var(--gray-300);
+  background: var(--white); font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: all .15s;
+}
+.num-btn:hover { background: var(--blue-lt); border-color: var(--blue-md); color: var(--blue-md); }
+
+/* ── INCHARGE CHIPS ── */
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  padding: 5px 12px; border-radius: 20px; font-size: 12px; cursor: pointer;
+  border: 1.5px solid var(--gray-300); background: var(--white); color: var(--gray-600);
+  transition: all .15s; font-family: 'Sarabun', sans-serif;
+}
+.chip:hover { border-color: var(--blue-md); color: var(--blue-md); background: var(--blue-lt); }
+.chip.active { border-color: var(--blue-md); background: var(--blue-md); color: #fff; }
+
+/* ── BUTTONS ── */
+.btn-row { display: flex; gap: 8px; margin-top: 14px; }
+.btn {
+  flex: 1; padding: 12px 16px; border-radius: var(--r-sm); border: none; cursor: pointer;
+  font-family: 'Sarabun', sans-serif; font-size: 14px; font-weight: 600;
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  transition: all .2s; -webkit-tap-highlight-color: transparent;
+}
+.btn-primary { background: var(--blue-md); color: #fff; box-shadow: 0 3px 10px rgba(36,113,163,.35); }
+.btn-primary:hover { background: var(--blue); transform: translateY(-1px); }
+.btn-primary:active { transform: translateY(0); }
+.btn-green { background: var(--green); color: #fff; box-shadow: 0 3px 10px rgba(30,132,73,.3); }
+.btn-green:hover { background: #166935; }
+.btn-outline { background: var(--white); color: var(--gray-800); border: 1.5px solid var(--gray-300); }
+.btn-outline:hover { border-color: var(--blue-md); color: var(--blue-md); background: var(--blue-lt); }
+.btn-icon { font-size: 16px; }
+
+/* ── EQUIPMENT GRID ── */
+.search-bar { position: relative; margin-bottom: 10px; }
+.search-bar input { width: 100%; padding: 9px 12px 9px 36px; border-radius: var(--r); border: 1.5px solid var(--gray-300); font-size: 13px; background: var(--white); }
+.search-bar::before { content: '🔍'; position: absolute; left: 11px; top: 50%; transform: translateY(-50%); font-size: 14px; }
+.filter-row { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin-bottom: 12px; padding-bottom: 2px; }
+.filter-row::-webkit-scrollbar { display: none; }
+.filter-pill {
+  padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 500; white-space: nowrap;
+  cursor: pointer; border: 1.5px solid var(--gray-300); background: var(--white); color: var(--gray-600);
+  transition: all .15s;
+}
+.filter-pill.active { background: var(--blue); border-color: var(--blue); color: #fff; }
+
+/* กลุ่มแยกชนิด */
+.group-section { margin-bottom: 18px; }
+.group-title {
+  font-size: 11px; font-weight: 700; color: var(--gray-600);
+  text-transform: uppercase; letter-spacing: .5px;
+  padding: 6px 4px 6px; margin-bottom: 8px;
+  border-bottom: 2px solid var(--gray-200);
+  display: flex; align-items: center; gap: 6px;
+}
+.group-title .g-count {
+  background: var(--gray-200); color: var(--gray-600);
+  border-radius: 10px; padding: 1px 7px; font-size: 10px;
+}
+.group-title .g-checked {
+  background: var(--green-lt); color: var(--green);
+  border-radius: 10px; padding: 1px 7px; font-size: 10px;
+}
+
+.eq-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+@media (max-width: 360px) { .eq-grid { grid-template-columns: repeat(2, 1fr); } }
+.eq-card {
+  background: var(--white); border-radius: var(--r); border: 1.5px solid var(--gray-200);
+  overflow: hidden; cursor: pointer; transition: all .2s; box-shadow: var(--shadow-sm);
+  position: relative;
+}
+.eq-card:hover { border-color: var(--blue-md); box-shadow: 0 6px 16px rgba(36,113,163,.15); transform: translateY(-2px); }
+.eq-card.fifo { border-color: #E74C3C; }
+.eq-card.checked { border-color: var(--green); background: var(--green-lt); }
+.eq-card.checked .eq-img::after {
+  content: '✅'; position: absolute; top: 4px; right: 4px;
+  background: rgba(255,255,255,.9); border-radius: 50%;
+  width: 22px; height: 22px; display: flex; align-items: center; justify-content: center;
+  font-size: 13px; box-shadow: 0 1px 4px rgba(0,0,0,.15);
+}
+.eq-img {
+  width: 100%; height: 110px;
+  background: var(--gray-100); display: flex; align-items: center; justify-content: center;
+  font-size: 32px; position: relative; overflow: hidden;
+}
+.eq-img img { width: 100%; height: 110px; object-fit: contain; display: block; background: var(--gray-50); }
+.eq-body { padding: 8px 9px; }
+.eq-name { font-size: 11px; font-weight: 600; color: var(--gray-800); line-height: 1.3; margin-bottom: 4px; }
+.eq-floor { font-size: 10px; color: var(--gray-600); margin-bottom: 4px; }
+
+/* ── BADGES ── */
+.badge { display: inline-block; padding: 2px 7px; border-radius: 20px; font-size: 10px; font-weight: 600; }
+.badge-ok { background: var(--green-lt); color: var(--green); }
+.badge-warn { background: var(--amber-lt); color: var(--amber); }
+.badge-danger { background: var(--red-lt); color: var(--red); }
+.badge-blue { background: var(--blue-lt); color: var(--blue-md); }
+.badge-fifo { background: #FDEDEC; color: #C0392B; font-size: 9px; }
+
+/* ── HISTORY ── */
+.stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px; }
+.stat-box { background: var(--white); border-radius: var(--r); padding: 10px 8px; text-align: center; box-shadow: var(--shadow-sm); border: 1px solid var(--gray-200); }
+.stat-num { font-size: 22px; font-weight: 700; color: var(--gray-900); font-family: 'IBM Plex Mono', monospace; }
+.stat-lbl { font-size: 10px; color: var(--gray-600); margin-top: 2px; }
+.hist-card { background: var(--white); border-radius: var(--r); border: 1px solid var(--gray-200); padding: 11px 13px; margin-bottom: 8px; box-shadow: var(--shadow-sm); }
+.hist-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 7px; }
+.hist-date { font-size: 13px; font-weight: 600; color: var(--gray-900); }
+.hist-shift { font-size: 11px; color: var(--gray-600); margin-left: 6px; }
+.hist-checks { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px; }
+.hist-foot { display: flex; justify-content: space-between; align-items: center; }
+.hist-who { font-size: 11px; color: var(--gray-600); }
+.hist-time { font-size: 10px; color: var(--gray-400); font-family: 'IBM Plex Mono', monospace; }
+
+/* ── SHEETS TAB ── */
+.sheets-status {
+  background: linear-gradient(135deg, #0F6E56, #0A4F3C);
+  border-radius: var(--r); padding: 16px; margin-bottom: 12px; color: #fff;
+}
+.sheets-status h3 { font-size: 14px; font-weight: 600; margin-bottom: 10px; color: #fff; }
+.sheets-info-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,.15); }
+.sheets-info-row:last-child { border-bottom: none; }
+.sheets-info-row .lbl { font-size: 12px; color: rgba(255,255,255,.7); }
+.sheets-info-row .val { font-size: 12px; font-weight: 500; color: #fff; }
+.sheets-connected-badge { display: inline-flex; align-items: center; gap: 5px; background: rgba(255,255,255,.2);
+  border-radius: 20px; padding: 4px 10px; font-size: 12px; font-weight: 500; color: #fff; }
+
+/* ── MODAL ── */
+.modal-overlay {
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,.55);
+  z-index: 200; align-items: flex-end; justify-content: center;
+  -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px);
+}
+.modal-overlay.open { display: flex; animation: overlayIn .2s ease; }
+@keyframes overlayIn { from { opacity: 0; } to { opacity: 1; } }
+.modal-box {
+  background: var(--white); border-radius: var(--r) var(--r) 0 0;
+  width: 100%; max-width: 480px; max-height: 85vh; overflow-y: auto;
+  animation: slideUp .25s cubic-bezier(.4,0,.2,1);
+}
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.modal-drag { width: 40px; height: 4px; background: var(--gray-300); border-radius: 2px;
+  margin: 10px auto 0; }
+.modal-content { padding: 14px 16px 24px; }
+.modal-img {
+  width: 100%; height: 220px; object-fit: contain;
+  border-radius: var(--r); margin-bottom: 12px;
+  background: var(--gray-50); border: 1px solid var(--gray-200);
+}
+.modal-img-ph { width: 100%; height: 220px; background: var(--gray-100); border-radius: var(--r); display: flex; align-items: center; justify-content: center; font-size: 60px; margin-bottom: 12px; }
+.modal-title { font-size: 17px; font-weight: 700; color: var(--gray-900); margin-bottom: 12px; }
+.detail-row { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--gray-100); }
+.detail-row:last-child { border-bottom: none; }
+.detail-row .dl { font-size: 12px; color: var(--gray-600); }
+.detail-row .dr { font-size: 13px; font-weight: 500; color: var(--gray-900); text-align: right; }
+
+/* modal nav arrows */
+.modal-nav {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 10px;
+}
+.modal-nav-btn {
+  width: 36px; height: 36px; border-radius: 50%; border: 1.5px solid var(--gray-300);
+  background: var(--white); cursor: pointer; font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .15s; color: var(--gray-700);
+}
+.modal-nav-btn:hover { background: var(--blue-lt); border-color: var(--blue-md); color: var(--blue-md); }
+.modal-nav-btn:disabled { opacity: .35; cursor: default; }
+.modal-nav-counter { font-size: 12px; color: var(--gray-600); font-family: 'IBM Plex Mono', monospace; }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed; bottom: 76px; left: 50%; transform: translateX(-50%);
+  background: var(--gray-900); color: #fff; padding: 10px 20px;
+  border-radius: 24px; font-size: 13px; font-weight: 500; display: none; z-index: 999;
+  box-shadow: 0 4px 16px rgba(0,0,0,.25); white-space: nowrap;
+  animation: toastIn .2s ease;
+}
+@keyframes toastIn { from { transform: translateX(-50%) translateY(10px); opacity: 0; } to { transform: translateX(-50%) translateY(0); opacity: 1; } }
+
+/* ── BOTTOM NAV (mobile) ── */
+@media (max-width: 640px) {
+  .tabs-wrap { display: none; }
+  .bottom-nav {
+    display: flex; position: fixed; bottom: 0; left: 0; right: 0;
+    background: var(--white); border-top: 1px solid var(--gray-200);
+    box-shadow: 0 -2px 10px rgba(0,0,0,.08); z-index: 100;
+  }
+  .bnav-btn {
+    flex: 1; padding: 8px 4px 10px; display: flex; flex-direction: column; align-items: center; gap: 3px;
+    cursor: pointer; border: none; background: none; font-family: 'Sarabun', sans-serif;
+    font-size: 10px; color: var(--gray-600); transition: color .2s;
+  }
+  .bnav-btn .icon { font-size: 22px; }
+  .bnav-btn.active { color: var(--blue-md); }
+  body { padding-bottom: 65px; }
+}
+@media (min-width: 641px) {
+  .bottom-nav { display: none; }
+  .tabs-wrap { display: block; }
+}
+
+/* ── SHEETS CONFIG ── */
+.config-note {
+  background: #FFF3CD; border: 1px solid #FFEAA7; border-radius: var(--r-sm);
+  padding: 10px 12px; margin-bottom: 12px;
+}
+.config-note p { font-size: 12px; color: #856404; line-height: 1.6; }
+.config-note code { background: rgba(0,0,0,.08); padding: 1px 5px; border-radius: 3px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; }
+
+/* ── UTILITY ── */
+.empty-state { text-align: center; padding: 40px 20px; color: var(--gray-600); }
+.empty-state .es-icon { font-size: 40px; margin-bottom: 10px; }
+.empty-state p { font-size: 13px; }
+.section-title { font-size: 11px; font-weight: 700; color: var(--gray-600); text-transform: uppercase; letter-spacing: .6px; margin-bottom: 8px; }
+hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="app-header">
+  <div class="hdr-top">
+    <div class="hdr-title">
+      <div class="hdr-icon">🚑</div>
+      <div>
+        <h1>รถ Emergency</h1>
+        <p id="hdr-unit">ระบบตรวจสอบอุปกรณ์</p>
+      </div>
+    </div>
+    <div class="hdr-badge" id="hdr-shift">—</div>
+  </div>
+  <div class="hdr-info">
+    <span id="hdr-date">กำลังโหลด...</span>
+    <span>🟢 <strong id="sheets-status-dot">ยังไม่เชื่อมต่อ Sheets</strong></span>
+  </div>
+</header>
+
+<!-- TABS (desktop) -->
+<div class="tabs-wrap">
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('equip',this)"><span class="tab-icon">📦</span>คลังอุปกรณ์</button>
+    <button class="tab" onclick="switchTab('check',this)"><span class="tab-icon">✅</span>ตรวจเช็ค</button>
+    <button class="tab" onclick="switchTab('hist',this)"><span class="tab-icon">📋</span>ประวัติ</button>
+    <button class="tab" onclick="switchTab('sheets',this)"><span class="tab-icon">📊</span>Google Sheets</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     PAGE 1: EQUIPMENT
+════════════════════════════════════════════ -->
+<div id="page-equip" class="page active">
+
+  <!-- Progress bar ตรวจอุปกรณ์ -->
+  <div style="background:var(--white);border-radius:var(--r);padding:12px 14px;margin-bottom:10px;box-shadow:var(--shadow-sm);border:1px solid var(--gray-200)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <span style="font-size:12px;font-weight:600;color:var(--gray-800)">ความคืบหน้าการตรวจอุปกรณ์</span>
+      <span style="font-size:12px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:var(--blue-md)" id="equip-prog-pct">0/54</span>
+    </div>
+    <div style="height:8px;background:var(--gray-200);border-radius:4px;overflow:hidden;margin-bottom:10px">
+      <div id="equip-prog-fill" style="height:100%;background:linear-gradient(90deg,var(--blue-md),#27AE60);border-radius:4px;transition:width .4s cubic-bezier(.4,0,.2,1);width:0%"></div>
+    </div>
+    <button id="btn-save-equip" onclick="saveEquipToSheets()"
+      style="width:100%;padding:10px;border-radius:var(--r-sm);border:none;cursor:not-allowed;font-family:'Sarabun',sans-serif;font-size:14px;font-weight:600;
+        background:var(--gray-300);color:var(--gray-600);display:flex;align-items:center;justify-content:center;gap:8px;transition:all .3s"
+      disabled>
+      <span>📋</span> <span id="btn-save-equip-txt">ต้องตรวจสอบให้ครบก่อน (0/54)</span>
+    </button>
+  </div>
+
+  <div class="search-bar">
+    <input type="text" id="eq-search" placeholder="ค้นหาอุปกรณ์..." oninput="renderEquip()">
+  </div>
+  <div class="filter-row">
+    <div class="filter-pill active" onclick="setFilter(this,'all')">ทั้งหมด</div>
+    <div class="filter-pill" onclick="setFilter(this,'ชั้นที่ 1')">ชั้นที่ 1</div>
+    <div class="filter-pill" onclick="setFilter(this,'ชั้นที่ 2')">ชั้นที่ 2</div>
+    <div class="filter-pill" onclick="setFilter(this,'ชั้นที่ 3')">ชั้นที่ 3</div>
+    <div class="filter-pill" onclick="setFilter(this,'ด้านบน')">ด้านบน</div>
+    <div class="filter-pill" onclick="setFilter(this,'ด้านนอก')">ด้านนอก</div>
+    <div class="filter-pill" onclick="setFilter(this,'__fifo')">⚠ ใช้ก่อน</div>
+    <div class="filter-pill" onclick="setFilter(this,'__checked')" id="pill-checked">✅ ตรวจแล้ว</div>
+  </div>
+  <div id="eq-container"></div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     PAGE 2: CHECK FORM
+════════════════════════════════════════════ -->
+<div id="page-check" class="page">
+  <div class="prog-wrap">
+    <div class="prog-label">
+      <span>ความคืบหน้าการตรวจสอบ</span>
+      <strong id="prog-pct">0%</strong>
+    </div>
+    <div class="prog-bar"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+  </div>
+
+  <!-- General Info -->
+  <div class="card">
+    <div class="card-header"><span class="ch-icon">📅</span><h3>ข้อมูลทั่วไป</h3></div>
+    <div class="card-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>วันที่</label>
+          <input type="date" id="f-date">
+        </div>
+        <div class="form-group">
+          <label>เวร</label>
+          <select id="f-shift">
+            <option value="เวรดึก">เวรดึก (00:00–08:00)</option>
+            <option value="เวรเช้า">เวรเช้า (08:00–16:00)</option>
+            <option value="เวรบ่าย">เวรบ่าย (16:00–00:00)</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row full">
+        <div class="form-group">
+          <label>ชื่อผู้ตรวจสอบ</label>
+          <input type="text" id="f-nurse" placeholder="ชื่อ-นามสกุล หรือชื่อเล่น">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Check Items -->
+  <div class="card">
+    <div class="card-header"><span class="ch-icon">🏥</span><h3>ผลการตรวจสอบอุปกรณ์</h3></div>
+    <div class="card-body">
+      <div class="check-grid" id="check-grid"></div>
+    </div>
+  </div>
+
+  <!-- Incharge -->
+  <div class="card">
+    <div class="card-header"><span class="ch-icon">👩‍⚕️</span><h3>หัวหน้าหอ / ผู้รับผิดชอบเวร</h3></div>
+    <div class="card-body">
+      <div class="section-title">เลือกหัวหน้าเวร</div>
+      <div class="chips" id="incharge-chips"></div>
+      <hr class="divider">
+      <div class="form-group">
+        <label>หมายเหตุ</label>
+        <input type="text" id="f-note" placeholder="หมายเหตุเพิ่มเติม (ถ้ามี)">
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="submitCheck()">
+      <span class="btn-icon">✅</span> ยืนยันการตรวจสอบ
+    </button>
+    <button class="btn btn-green" onclick="saveToSheets()" style="flex:0;padding:12px 14px;" title="บันทึกไป Sheets">
+      <span class="btn-icon">📊</span>
+    </button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     PAGE 3: HISTORY
+════════════════════════════════════════════ -->
+<div id="page-hist" class="page">
+  <div class="stat-row" id="stat-row"></div>
+  <div id="hist-list"></div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     PAGE 4: GOOGLE SHEETS CONFIG
+════════════════════════════════════════════ -->
+<div id="page-sheets" class="page">
+  <div class="config-note">
+    <p>⚙️ ใส่ <code>Spreadsheet ID</code> และ <code>Apps Script URL</code> แล้วกดบันทึก
+    — หลังจากนั้นทุกการตรวจเช็คจะบันทึกไป Google Sheets อัตโนมัติ</p>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><span class="ch-icon">🔗</span><h3>ตั้งค่า Google Sheets</h3></div>
+    <div class="card-body">
+      <div class="form-group" style="margin-bottom:10px">
+        <label>Spreadsheet ID</label>
+        <input type="text" id="cfg-sid" value="1X4NBGK_8xokrgl3qf1F1XtCdUUhFeyKvXjQTaJMMkbI" placeholder="1X4NBGK_8xok...">
+      </div>
+      <div class="form-group" style="margin-bottom:10px">
+        <label>Apps Script Web App URL</label>
+        <input type="text" id="cfg-url" value="https://script.google.com/macros/s/AKfycbyGmBvAaguHwmchbz_SujJUj--QfLSmyIVDlrlPJjo8hk82HvD3dsa3AWTl7AhxdVFP/exec">
+      </div>
+      <div class="form-group" style="margin-bottom:12px">
+        <label>ชื่อ Sheet</label>
+        <input type="text" id="cfg-sheet" value="EmergencyCheck" placeholder="EmergencyCheck">
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="saveConfig()"><span class="btn-icon">💾</span> บันทึกการตั้งค่า</button>
+        <button class="btn btn-outline" onclick="testSheets()"><span class="btn-icon">🧪</span> ทดสอบ</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="sheets-connected-card" style="display:none">
+    <div class="sheets-status">
+      <h3>📊 Google Sheets เชื่อมต่อแล้ว</h3>
+      <div class="sheets-info-row"><span class="lbl">Sheet ID</span><span class="val" id="sc-id" style="font-size:11px;font-family:'IBM Plex Mono',monospace"></span></div>
+      <div class="sheets-info-row"><span class="lbl">Sheet Name</span><span class="val" id="sc-name"></span></div>
+      <div class="sheets-info-row"><span class="lbl">บันทึกแล้ว</span><span class="val" id="sc-count">0 รายการ</span></div>
+      <div class="sheets-info-row"><span class="lbl">ล่าสุด</span><span class="val" id="sc-last">—</span></div>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="btn btn-outline" style="flex:1;background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.3)" onclick="openSheets()">🔗 เปิด Sheets</button>
+        <button class="btn btn-outline" style="flex:1;background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.3)" onclick="exportAll()">📤 Export ทั้งหมด</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><span class="ch-icon">📖</span><h3>วิธีสร้าง Apps Script</h3></div>
+    <div class="card-body" style="font-size:12px;color:var(--gray-800);line-height:1.8">
+      <p><strong>1.</strong> เปิด Google Sheets ที่ต้องการ → <strong>Extensions → Apps Script</strong></p>
+      <p><strong>2.</strong> วางโค้ดด้านล่างทั้งหมด แทนที่โค้ดเดิม:</p>
+      <div style="background:var(--gray-900);color:#A8FF78;border-radius:var(--r-sm);padding:12px;margin:8px 0;overflow-x:auto;font-family:'IBM Plex Mono',monospace;font-size:10px;line-height:1.7">
+<pre id="apps-script-code">function doPost(e) {
+  try {
+    var ss = SpreadsheetApp.openById('1X4NBGK_8xokrgl3qf1F1XtCdUUhFeyKvXjQTaJMMkbI');
+    var sheet = ss.getSheetByName('EmergencyCheck')
+                || ss.insertSheet('EmergencyCheck');
+    var data = JSON.parse(e.postData.contents);
+
+    // Add header if sheet is empty
+    if (sheet.getLastRow() === 0) {
+      sheet.appendRow([
+        'วันที่','เวร','ผู้ตรวจสอบ','หัวหน้าหอ',
+        'Laryngoscope(1)','ไฟ Lary1',
+        'Laryngoscope(2)','ไฟ Lary2',
+        'Emergency box 1','ยา box1',
+        'Emergency box 2','ยา box2',
+        'Defibrillator','Battery','Red dot',
+        'หมายเหตุ','เวลาบันทึก'
+      ]);
+      sheet.getRange(1,1,1,17)
+        .setBackground('#1A5276')
+        .setFontColor('#FFFFFF')
+        .setFontWeight('bold');
+      sheet.setFrozenRows(1);
+    }
+
+    sheet.appendRow([
+      data.date, data.shift, data.nurse, data.incharge,
+      data.lary1, data.lary1_light,
+      data.lary2, data.lary2_light,
+      data.box1, data.box1_med,
+      data.box2, data.box2_med,
+      data.defib, data.battery, data.reddot,
+      data.note, data.timestamp
+    ]);
+
+    return ContentService
+      .createTextOutput(JSON.stringify({status:'ok'}))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch(err) {
+    return ContentService
+      .createTextOutput(JSON.stringify({status:'error',msg:err.toString()}))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function doGet(e) {
+  return ContentService
+    .createTextOutput(JSON.stringify({status:'alive'}))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+// ── ดึง File ID รูปทั้งหมดจาก Drive Folder ──
+function getFileIds() {
+  var folderId = '1tfNKiu55ocZbXF3ovQaH7dz97tSOKsUM';
+  var folder = DriveApp.getFolderById(folderId);
+  var files = folder.getFiles();
+  var ss = SpreadsheetApp.openById('1X4NBGK_8xokrgl3qf1F1XtCdUUhFeyKvXjQTaJMMkbI');
+  var sheet = ss.getSheetByName('FileIDs') || ss.insertSheet('FileIDs');
+  sheet.clearContents();
+  sheet.appendRow(['FileName','FileID','ImgURL']);
+  sheet.getRange(1,1,1,3)
+    .setBackground('#1A5276').setFontColor('#fff').setFontWeight('bold');
+  while (files.hasNext()) {
+    var f = files.next();
+    var id = f.getId();
+    sheet.appendRow([
+      f.getName(), id,
+      'https://lh3.googleusercontent.com/d/' + id
+    ]);
+  }
+  SpreadsheetApp.getUi()
+    .alert('เสร็จแล้ว! ดู Sheet "FileIDs" ใน Spreadsheet');
+}</pre>
+      </div>
+      <p><strong>3.</strong> กด <strong>Deploy → New deployment → Web app</strong></p>
+      <p><strong>4.</strong> Execute as: <strong>Me</strong> · Who has access: <strong>Anyone</strong></p>
+      <p><strong>5.</strong> คัดลอก Web App URL มาใส่ในช่องด้านบน แล้วกด "บันทึกการตั้งค่า"</p>
+      <div style="background:#EBF5FB;border-radius:var(--r-sm);padding:10px;margin-top:8px;border-left:3px solid var(--blue-md)">
+        <p style="font-weight:600;color:var(--blue);margin-bottom:4px">🖼 วิธีดึงรูปภาพจริง (ทำครั้งเดียว)</p>
+        <p><strong>6.</strong> ใน Apps Script เลือก function <strong>getFileIds</strong> → กด <strong>Run</strong></p>
+        <p><strong>7.</strong> เปิด Google Sheets จะเห็น Sheet ใหม่ชื่อ <strong>"FileIDs"</strong></p>
+        <p><strong>8.</strong> ส่ง Sheet นั้น (หรือ copy ข้อมูล) ให้ Claude → จะอัปเดต HTML ให้แสดงรูปจริงทันที</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL (Equipment Detail) -->
+<div class="modal-overlay" id="modal" onclick="closeModal(event)">
+  <div class="modal-box">
+    <div class="modal-drag"></div>
+    <div class="modal-content" id="modal-content"></div>
+  </div>
+</div>
+
+<!-- BOTTOM NAV (mobile) -->
+<nav class="bottom-nav">
+  <button class="bnav-btn active" onclick="switchTab('equip',this)"><span class="icon">📦</span>คลัง</button>
+  <button class="bnav-btn" onclick="switchTab('check',this)"><span class="icon">✅</span>ตรวจเช็ค</button>
+  <button class="bnav-btn" onclick="switchTab('hist',this)"><span class="icon">📋</span>ประวัติ</button>
+  <button class="bnav-btn" onclick="switchTab('sheets',this)"><span class="icon">📊</span>Sheets</button>
+</nav>
+
+<div class="toast" id="toast"></div>
+
+<!-- ════════════════════════════════════════════
+     JAVASCRIPT
+════════════════════════════════════════════ -->
+<script>
+// ─── CONFIG ───────────────────────────────────────────────
+const DRIVE_FOLDER   = '1tfNKiu55ocZbXF3ovQaH7dz97tSOKsUM';
+const SPREADSHEET_ID = '1X4NBGK_8xokrgl3qf1F1XtCdUUhFeyKvXjQTaJMMkbI';
+const SCRIPT_URL     = 'https://script.google.com/macros/s/AKfycbyGmBvAaguHwmchbz_SujJUj--QfLSmyIVDlrlPJjo8hk82HvD3dsa3AWTl7AhxdVFP/exec';
+
+let config = {
+  sheetsId:  SPREADSHEET_ID,
+  scriptUrl: localStorage.getItem('scriptUrl') || SCRIPT_URL,
+  sheetName: localStorage.getItem('sheetName') || 'EmergencyCheck',
+  connected: true   // pre-connected
+};
+let savedCount = parseInt(localStorage.getItem('savedCount') || '0');
+let records = JSON.parse(localStorage.getItem('records') || '[]');
+let selectedIncharge = null;
+let curFilter = 'all';
+
+// ─── EQUIPMENT DATA ────────────────────────────────────────
+// imgId = Google Drive File ID → URL: https://lh3.googleusercontent.com/d/{imgId}
+const equipment = [
+  {name:"Ambubag(1)",        floor:"ชั้นที่ 1", exp:"2026-07-18", fifo:"",               note:"",             imgId:"1-VULhSGnjl2rAHF7ThEqr5VnHhHgUWTb"},
+  {name:"Ambubag(2)",        floor:"ชั้นที่ 1", exp:"2026-07-13", fifo:"Use this first",  note:"",             imgId:"1GT4Oc8-AFsc7U0yHQjaDdpOloUHUf7DF"},
+  {name:"Hold mask(1)",      floor:"ชั้นที่ 1", exp:"2026-07-30", fifo:"",               note:"",             imgId:"1rRqA7wCj2KBTiu8JdwnUYnuSqfAHOHGy"},
+  {name:"Hold mask(2)",      floor:"ชั้นที่ 1", exp:"2026-06-26", fifo:"",               note:"",             imgId:"1_VVyma9VCQW6fh5MM2T0h4qkodAMBPCb"},
+  {name:"Hold mask(3)",      floor:"ชั้นที่ 1", exp:"2026-07-30", fifo:"",               note:"",             imgId:"1JtZUN2FItBs5LTJYlb-QR1xqndHLPnRW"},
+  {name:"Hold mask(4)",      floor:"ชั้นที่ 1", exp:"2026-06-10", fifo:"Use this first",  note:"",             imgId:"1MG2hJG5rmOIjPYb7U-2J_mWTiQ1T-o2J"},
+  {name:"Air way(1)",        floor:"ชั้นที่ 1", exp:"2030-11-04", fifo:"Use this first",  note:"",             imgId:"1rd8zdETTqjWvvCY13_6PXMb0Dbnvr27B"},
+  {name:"Air way(2)",        floor:"ชั้นที่ 1", exp:"2030-07-04", fifo:"",               note:"",             imgId:"1NWQrhn67DKCmwXOHjZvCgYt--OYK-yb1"},
+  {name:"หมวกคลุมผม(5)",    floor:"ชั้นที่ 1", exp:"",           fifo:"",               note:"",             imgId:"1QeRVl5mB6CrSrwkia9CETaylzgw2Vkxk"},
+  {name:"Face mesk (1)",     floor:"ชั้นที่ 1", exp:"",           fifo:"",               note:"",             imgId:"15zEkKkRBUO24uewBB1cMrI-V8bhKEcPn"},
+  {name:"สายออกซิเจน(1)",   floor:"ชั้นที่ 1", exp:"2030-12-16", fifo:"",               note:"",             imgId:"1TezHAn_fvjCPjTjZuwqk9mCAKXNfVlgx"},
+  {name:"สายออกซิเจน(2)",   floor:"ชั้นที่ 1", exp:"2030-08-30", fifo:"Use this first",  note:"",             imgId:"1egoBirM7TlrnhlL4q6CEvbk8q2IWZNJh"},
+  {name:"N95(2)",            floor:"ชั้นที่ 1", exp:"",           fifo:"",               note:"",             imgId:"10VL915068T_WzVVpSC829MLG483orAL6"},
+  {name:"ET Tube No.6(1)",   floor:"ชั้นที่ 2", exp:"2028-02-12", fifo:"",               note:"",             imgId:"1Tc5tR4IIK0U0WyWmFVofMT953WUD_h7n"},
+  {name:"ET Tube No.6(2)",   floor:"ชั้นที่ 2", exp:"2028-01-10", fifo:"Use this first",  note:"",             imgId:"1IKsUbmGoqOm2HkqLRgbrk5m8YX0kpbRd"},
+  {name:"ET Tube No.6.5(1)", floor:"ชั้นที่ 2", exp:"2028-02-17", fifo:"Use this first",  note:"",             imgId:"1FP0s4dWBMHwbCDxfTE5NazsJ2QxpN0ix"},
+  {name:"ET Tube No.6.5(2)", floor:"ชั้นที่ 2", exp:"2028-02-17", fifo:"",               note:"",             imgId:"1T7gcqz1H_NDld_Bdx6dEFngrLdPoP-06"},
+  {name:"ET Tube No.7(1)",   floor:"ชั้นที่ 2", exp:"2028-01-02", fifo:"Use this first",  note:"",             imgId:"1kMYAXCrEH-8cdAlyuA6ZJTYYfhFdRS12"},
+  {name:"ET Tube No.7(2)",   floor:"ชั้นที่ 2", exp:"2028-03-25", fifo:"",               note:"",             imgId:"1OnoXCBZTl989P_VlM-PPz1XqEjeBlP1u"},
+  {name:"ET Tube No.7(3)",   floor:"ชั้นที่ 2", exp:"2028-03-25", fifo:"",               note:"",             imgId:"1gLsMCZ5mUnWC9ztjQFYq7K8Y4Y2MhPCs"},
+  {name:"ET Tube No.7(4)",   floor:"ชั้นที่ 2", exp:"2028-03-25", fifo:"",               note:"",             imgId:"1wnP7J-aV2CwHwO9516na9aY3Kys2y1OM"},
+  {name:"ET Tube No.7.5(1)", floor:"ชั้นที่ 2", exp:"2030-04-28", fifo:"",               note:"",             imgId:"1HheWQpsKjaOBOuMdmMkbVpfuJXZQGD0u"},
+  {name:"ET Tube No.7.5(2)", floor:"ชั้นที่ 2", exp:"2030-04-28", fifo:"",               note:"",             imgId:"1WV7Ac3gYCYbGyhqlDPF7AyYQ86jKzvZz"},
+  {name:"ET Tube No.7.5(3)", floor:"ชั้นที่ 2", exp:"2030-04-28", fifo:"",               note:"",             imgId:"1SXnYcQwJ_D8tpyb-Y2qm4nC4sWZHSS56"},
+  {name:"ET Tube No.7.5(4)", floor:"ชั้นที่ 2", exp:"2030-04-28", fifo:"",               note:"",             imgId:"10-Sw01pECZZIqcft250sbtARneJMa256"},
+  {name:"ET Tube No.7.5(5)", floor:"ชั้นที่ 2", exp:"2030-04-28", fifo:"",               note:"",             imgId:"1ASUZsS3YWte0FgCo87HoVxkOlWjRWSER"},
+  {name:"ET Tube No.7.5(6)", floor:"ชั้นที่ 2", exp:"2030-04-28", fifo:"Use this first",  note:"",             imgId:"19b2HOLCkw631AjZCj0OB0bk6N_wc8gyY"},
+  {name:"ET Tube No.8(1)",   floor:"ชั้นที่ 2", exp:"2028-03-14", fifo:"Use this first",  note:"",             imgId:"11pyMNqgziNUDT5zKiEs-uV2iDDfXsWtv"},
+  {name:"ET Tube No.8(2)",   floor:"ชั้นที่ 2", exp:"2030-09-04", fifo:"",               note:"",             imgId:"1SIhiCYgxWhP1fL1x0fR-3t2Q2hIlH8VN"},
+  {name:"ET Tube No.8(3)",   floor:"ชั้นที่ 2", exp:"2028-05-31", fifo:"",               note:"",             imgId:"11kXr3HY2N7GlT_4Oa-EbTqYAJt4A4qwm"},
+  {name:"ET Tube No.8(4)",   floor:"ชั้นที่ 2", exp:"2028-05-31", fifo:"",               note:"",             imgId:"1avxT5-SLG2cequ5kBLt9dfIcWEZ2thvT"},
+  {name:"Intubation Set (1)",floor:"ชั้นที่ 3", exp:"2026-06-05", fifo:"Use this first",  note:"",             imgId:"1Tgx10xYAWAPBGqWypfVHoB9K1SF7Yn4u"},
+  {name:"Intubation Set (2)",floor:"ชั้นที่ 3", exp:"2029-01-19", fifo:"",               note:"",             imgId:"1eDM62-rti8DM_6zTFz-9OqVeBTxfSqdT"},
+  {name:"Intubation Set (3)",floor:"ชั้นที่ 3", exp:"2028-03-17", fifo:"",               note:"",             imgId:"1QeFgflYIEfeizOWqFs5njWS1CkRHEI4_"},
+  {name:"Intubation Set (4)",floor:"ชั้นที่ 3", exp:"2028-03-17", fifo:"",               note:"",             imgId:"1Tu5I4v4heiH8HWg7Kz5hX68bzCEAcls_"},
+  {name:"Intubation Set (5)",floor:"ชั้นที่ 3", exp:"2029-01-19", fifo:"",               note:"",             imgId:"17MztOi7gP1sAmHQ2GS7L8bEkSz0DvBR1"},
+  {name:"Syring 20 ml (1)",  floor:"ชั้นที่ 3", exp:"2028-09-30", fifo:"Use this first",  note:"",             imgId:"1oSa7IczO7XqYtbvlV3a7Jk1_FwR2gDo6"},
+  {name:"Syring 50 ml (1)",  floor:"ชั้นที่ 3", exp:"2029-03-24", fifo:"Use this first",  note:"",             imgId:"1SprhUFKfqyN6XPmOAX65GXiVh90IA9zP"},
+  {name:"Red dot (10)",      floor:"ชั้นที่ 3", exp:"2027-02-28", fifo:"",               note:"",             imgId:"14wP_A1ZaDutj76ciqAI0_ZinO1HdRZuH"},
+  {name:"Xylocaine jelly",   floor:"ชั้นที่ 3", exp:"2027-03-31", fifo:"",               note:"",             imgId:"1THIMunZoiLQhAozOJmenQ2GfT9m4o89h"},
+  {name:"Maggill forcep",    floor:"ชั้นที่ 3", exp:"2026-07-15", fifo:"Use this first",  note:"ส่งนึ่ง",      imgId:"1EBB5afwROPeYpY2YeUCBgeOy5WcGdaOg"},
+  {name:"แว่นตา (2)",        floor:"ชั้นที่ 3", exp:"",           fifo:"",               note:"",             imgId:"1BJVq15ipjIDFez-RZAy7jtScQo6JGzka"},
+  {name:"ถ่านไฟฉาย (2)",    floor:"ชั้นที่ 3", exp:"",           fifo:"",               note:"",             imgId:"1Ovh0_Y076-Rplx37m5vQj8lqjpEpzTwI"},
+  {name:"Block Y (2)",       floor:"ชั้นที่ 3", exp:"",           fifo:"",               note:"",             imgId:"1Vrt331L0eMt1uwPCYUriqeGaWkQUHy6a"},
+  {name:"Laryngoscope(1)",   floor:"ด้านบน",    exp:"",           fifo:"",               note:"ไฟส่องสว่าง",  imgId:"1MktpZR5z6Y8hzlQZRNkK3X-Ptg7IRNNC"},
+  {name:"Laryngoscope(2)",   floor:"ด้านบน",    exp:"",           fifo:"",               note:"ไฟส่องสว่าง",  imgId:"1OowGohgpkIgq6t45Djn0tqiNWUCxjo42"},
+  {name:"End Tidal Co2",     floor:"ด้านบน",    exp:"",           fifo:"",               note:"",             imgId:"1aAWPnnGclSSZJCELP25anglwWm_LYZ4H"},
+  {name:"Guide Wire (1)",    floor:"ด้านนอก",   exp:"2026-07-30", fifo:"Use this first",  note:"",             imgId:"11KZHntMHzvkhyboCAeuFVyLo3cVX4S9M"},
+  {name:"Guide Wire (2)",    floor:"ด้านนอก",   exp:"2030-06-30", fifo:"",               note:"",             imgId:"1erTbrOO7_BUCUYNizjTaWsn2zC9Gz9vF"},
+  {name:"Guide Wire (3)",    floor:"ด้านนอก",   exp:"2029-01-14", fifo:"",               note:"",             imgId:"1einGFS981W2fj55QstgGJdoZSYZHKYJt"},
+  {name:"Guide Wire (4)",    floor:"ด้านนอก",   exp:"2029-01-14", fifo:"",               note:"",             imgId:"15ht2IZ3758T7mWkDUsuOidYK6zKeUX5c"},
+  {name:"Guide Wire (5)",    floor:"ด้านนอก",   exp:"2029-01-14", fifo:"",               note:"",             imgId:"16NZiSZDuou2otpKacWZe4R30t_oeCGlK"},
+  {name:"Stethoscope",       floor:"ด้านนอก",   exp:"",           fifo:"",               note:"",             imgId:"1uZu3FU2GyPrPG58IuhGrA3ddAVV39qTu"},
+  {name:"Elastic gum bougie",floor:"ด้านนอก",   exp:"",           fifo:"Use this first",  note:"ส่งนึ่ง",      imgId:"1txoay5OUMHGGgM9V5IPW1KEtxOj_UiCe"},
+];
+
+const EMOJIS = {
+  'Ambubag':'🫁','Hold mask':'😷','Air way':'💨','หมวกคลุมผม':'🧢',
+  'Face mesk':'😷','สายออกซิเจน':'🔗','N95':'😷','ET Tube':'🩺',
+  'Intubation':'🔧','Syring':'💉','Red dot':'🔴','Xylocaine':'💊',
+  'Maggill':'🔩','แว่นตา':'👓','ถ่านไฟฉาย':'🔋','Block Y':'🔲',
+  'Laryngoscope':'🔦','End Tidal':'📊','Guide Wire':'🔗','Stethoscope':'🩺','Elastic':'🔩'
+};
+function emoji(name){ for(const k in EMOJIS) if(name.includes(k)) return EMOJIS[k]; return '📦'; }
+
+const checkDefs = [
+  {id:'l1',  label:'Laryngoscope(1)', icon:'🔦',
+    opts:['พร้อมใช้','ไม่พร้อมใช้'], sub:{label:'ไฟส่องสว่าง', opts:['เพียงพอ','ไม่เพียงพอ']}},
+  {id:'l2',  label:'Laryngoscope(2)', icon:'🔦',
+    opts:['พร้อมใช้','ไม่พร้อมใช้'], sub:{label:'ไฟส่องสว่าง', opts:['เพียงพอ','ไม่เพียงพอ']}},
+  {id:'b1',  label:'Emergency box 1', icon:'📦',
+    opts:['พร้อมใช้','ไม่พร้อมใช้'], sub:{label:'สถานะยา', opts:['ยาครบ','กำลังเติมยา','มีการใช้ยา']}},
+  {id:'b2',  label:'Emergency box 2', icon:'📦',
+    opts:['พร้อมใช้','ไม่พร้อมใช้'], sub:{label:'สถานะยา', opts:['ยาครบ','กำลังเติมยา','มีการใช้ยา']}},
+  {id:'df',  label:'Defibrillator',   icon:'⚡',
+    opts:['พร้อมใช้','ไม่พร้อมใช้'], sub:{label:'Battery', opts:['3 ชม.','น้อยกว่า 3 ชม.','กำลังชาร์จไฟ']}},
+  {id:'rd',  label:'Red dot (จำนวน)', icon:'🔴', isNum:true},
+];
+
+const inchargeList = [
+  'อัญญารัตน์','คำพุด','เบญจมาศ','สาคร','นวลตา','สุนันทา',
+  'สุรีรัตน์','พิศา','จารุวรรณ','ฐิตินันท์','จันจิรา','อัญชลี',
+  'สรวงสุดา','ศิริรัตน์','พุทธชาติ','อรอุมา','อุ้มบุญ','อริสรา',
+  'สุพรรณี','ชนาภา','กนกพร','วริศรา'
+];
+
+// ─── INIT ──────────────────────────────────────────────────
+function init() {
+  const now = new Date();
+  document.getElementById('hdr-date').textContent =
+    now.toLocaleDateString('th-TH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  const h = now.getHours();
+  const shift = h<8?'เวรดึก':h<16?'เวรเช้า':'เวรบ่าย';
+  document.getElementById('hdr-shift').textContent = shift;
+  document.getElementById('f-date').value = now.toISOString().split('T')[0];
+  document.getElementById('f-shift').value = shift;
+  if(config.scriptUrl) document.getElementById('cfg-url').value = config.scriptUrl;
+  document.getElementById('cfg-sheet').value = config.sheetName;
+  updateSheetsStatus();
+  renderEquip();
+  updateEquipProgress();
+  renderCheckGrid();
+  renderIncharge();
+  renderHistory();
+}
+
+// ─── TABS ──────────────────────────────────────────────────
+function switchTab(id, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab, .bnav-btn').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  // Activate both desktop tab and mobile nav
+  const tabs = document.querySelectorAll('.tab');
+  const bnavs = document.querySelectorAll('.bnav-btn');
+  const order = ['equip','check','hist','sheets'];
+  const idx = order.indexOf(id);
+  if(tabs[idx]) tabs[idx].classList.add('active');
+  if(bnavs[idx]) bnavs[idx].classList.add('active');
+  if(id==='hist') renderHistory();
+}
+
+// ─── EQUIPMENT ─────────────────────────────────────────────
+let checkedItems = new Set(JSON.parse(localStorage.getItem('checkedItems')||'[]'));
+let equipStatus  = JSON.parse(localStorage.getItem('equipStatus')||'{}');
+
+function getExpBadge(exp) {
+  if(!exp) return '';
+  const days = Math.floor((new Date(exp) - new Date()) / 86400000);
+  if(days < 0)   return `<span class="badge badge-danger">หมดอายุ</span>`;
+  if(days < 60)  return `<span class="badge badge-danger">${days} วัน</span>`;
+  if(days < 180) return `<span class="badge badge-warn">${days} วัน</span>`;
+  return `<span class="badge badge-ok">${new Date(exp).toLocaleDateString('th-TH',{month:'short',year:'numeric'})}</span>`;
+}
+
+function toggleChecked(idx, ev) {
+  ev.stopPropagation();
+  if(checkedItems.has(idx)) checkedItems.delete(idx);
+  else checkedItems.add(idx);
+  localStorage.setItem('checkedItems', JSON.stringify([...checkedItems]));
+  renderEquip();
+}
+
+function renderEquip() {
+  const q = document.getElementById('eq-search').value.toLowerCase();
+  let items = equipment.map((e,idx) => ({...e,idx})).filter(e => {
+    if(curFilter==='__fifo') return e.fifo==='Use this first';
+    if(curFilter==='__checked') return checkedItems.has(e.idx);
+    if(curFilter!=='all' && e.floor!==curFilter) return false;
+    return !q || e.name.toLowerCase().includes(q);
+  });
+
+  const useGroups = curFilter==='all' && !q;
+  const container = document.getElementById('eq-container');
+
+  if(!useGroups) {
+    container.innerHTML = `<div class="eq-grid">${items.map(e => makeCard(e)).join('')}</div>`;
+    return;
+  }
+
+  // Group by floor
+  const floorOrder = ['ชั้นที่ 1','ชั้นที่ 2','ชั้นที่ 3','ด้านบน','ด้านนอก'];
+  const floorIcon  = {'ชั้นที่ 1':'🔵','ชั้นที่ 2':'🟢','ชั้นที่ 3':'🟡','ด้านบน':'🔴','ด้านนอก':'⚪'};
+  const groups = {};
+  floorOrder.forEach(f => groups[f] = []);
+  items.forEach(e => { if(groups[e.floor]) groups[e.floor].push(e); });
+
+  container.innerHTML = floorOrder
+    .filter(f => groups[f].length > 0)
+    .map(f => {
+      const grpItems = groups[f];
+      const chkCount = grpItems.filter(e => checkedItems.has(e.idx)).length;
+      return `<div class="group-section">
+        <div class="group-title">
+          ${floorIcon[f]} ${f}
+          <span class="g-count">${grpItems.length}</span>
+          ${chkCount>0?`<span class="g-checked">✅ ${chkCount}/${grpItems.length}</span>`:''}
+        </div>
+        <div class="eq-grid">${grpItems.map(e => makeCard(e)).join('')}</div>
+      </div>`;
+    }).join('');
+}
+
+function makeCard(e) {
+  const idx = e.idx;
+  const em = emoji(e.name);
+  const isFifo = e.fifo==='Use this first';
+  const isChecked = checkedItems.has(idx);
+  const status = equipStatus[idx] || '';
+  const imgSrc = e.imgId ? `https://lh3.googleusercontent.com/d/${e.imgId}` : null;
+
+  // border color by status
+  let borderStyle = '';
+  if(status==='ขาด')     borderStyle = 'border-color:#C0392B;';
+  else if(status==='ส่งนึ่ง') borderStyle = 'border-color:#B7770D;';
+  else if(status==='รอเบิก') borderStyle = 'border-color:#2471A3;';
+  else if(isChecked)     borderStyle = 'border-color:var(--green);';
+  else if(isFifo)        borderStyle = 'border-color:#E74C3C;';
+
+  const statusBadge = status
+    ? `<span class="badge" style="background:${status==='ขาด'?'#FDEDEC':status==='ส่งนึ่ง'?'#FEF9E7':'#EBF5FB'};color:${status==='ขาด'?'#C0392B':status==='ส่งนึ่ง'?'#B7770D':'#2471A3'};font-size:10px">
+        ${status==='ขาด'?'❌':status==='ส่งนึ่ง'?'🔄':'⏳'} ${status}</span>` : '';
+
+  return `<div class="eq-card${isChecked?' checked':''}" style="${borderStyle}" onclick="showEquipDetail(${idx})">
+    <div class="eq-img" id="ei-${idx}">
+      ${imgSrc
+        ? `<img src="${imgSrc}" alt="${e.name}" loading="lazy"
+             onerror="document.getElementById('ei-${idx}').innerHTML='<span style=\\'font-size:36px\\'>${em}</span>'"
+             style="width:100%;height:110px;object-fit:contain;display:block;background:#f8f9fa">`
+        : `<span style="font-size:36px">${em}</span>`
+      }
+      ${isChecked?`<div style="position:absolute;top:4px;right:4px;background:rgba(255,255,255,.92);border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:13px;box-shadow:0 1px 4px rgba(0,0,0,.2)">✅</div>`:''}
+    </div>
+    <div class="eq-body">
+      <div class="eq-name">${e.name}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:3px">
+        ${getExpBadge(e.exp)}
+        ${isFifo?'<span class="badge badge-fifo">ใช้ก่อน</span>':''}
+        ${statusBadge}
+        ${e.note?`<span class="badge badge-blue" style="font-size:9px">${e.note}</span>`:''}
+      </div>
+    </div>
+  </div>`;
+}
+
+function setFilter(el, f) {
+  curFilter = f;
+  document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  renderEquip();
+}
+
+// track current modal idx for navigation
+let modalIdx = 0;
+let modalList = []; // filtered/visible indices
+
+function showEquipDetail(idx, listOverride) {
+  // build navigation list from currently visible items
+  if(listOverride) {
+    modalList = listOverride;
+  } else {
+    const q = document.getElementById('eq-search').value.toLowerCase();
+    modalList = equipment.map((_,i)=>i).filter(i => {
+      const e = equipment[i];
+      if(curFilter==='__fifo') return e.fifo==='Use this first';
+      if(curFilter==='__checked') return checkedItems.has(i);
+      if(curFilter!=='all' && e.floor!==curFilter) return false;
+      return !q || e.name.toLowerCase().includes(q);
+    });
+  }
+  modalIdx = modalList.indexOf(idx);
+  if(modalIdx < 0) { modalIdx = 0; modalList = equipment.map((_,i)=>i); modalIdx = modalList.indexOf(idx); }
+  renderModal(idx);
+  document.getElementById('modal').classList.add('open');
+
+  // swipe support
+  const box = document.querySelector('.modal-box');
+  let tx = 0;
+  box.ontouchstart = ev => { tx = ev.touches[0].clientX; };
+  box.ontouchend   = ev => {
+    const dx = ev.changedTouches[0].clientX - tx;
+    if(Math.abs(dx) > 60) dx < 0 ? navModal(1) : navModal(-1);
+  };
+}
+
+function navModal(dir) {
+  const newPos = modalIdx + dir;
+  if(newPos < 0 || newPos >= modalList.length) return;
+  modalIdx = newPos;
+  renderModal(modalList[modalIdx]);
+}
+
+function renderModal(idx) {
+  const e = equipment[idx];
+  const em = emoji(e.name);
+  const isChecked = checkedItems.has(idx);
+  const curStatus = equipStatus[idx] || '';
+  const days = e.exp ? Math.floor((new Date(e.exp)-new Date())/86400000) : null;
+  const dayColor = days===null?'inherit':days<60?'#C0392B':days<180?'#B7770D':'#1E8449';
+  const imgHtml = e.imgId
+    ? `<img src="https://lh3.googleusercontent.com/d/${e.imgId}" class="modal-img" alt="${e.name}" loading="lazy"
+         onerror="this.outerHTML='<div class=\\'modal-img-ph\\'>${em}</div>'">`
+    : `<div class="modal-img-ph">${em}</div>`;
+
+  const pos = modalIdx + 1;
+  const total = modalList.length;
+
+  const statusOpts = [
+    {val:'',        label:'ปกติ',    icon:'✅', bg:'#1E8449', lt:'#EAFAF1'},
+    {val:'ขาด',     label:'ของขาด', icon:'❌', bg:'#C0392B', lt:'#FDEDEC'},
+    {val:'ส่งนึ่ง', label:'ส่งนึ่ง', icon:'🔄', bg:'#B7770D', lt:'#FEF9E7'},
+    {val:'รอเบิก',  label:'รอเบิก', icon:'⏳', bg:'#2471A3', lt:'#EBF5FB'},
+  ];
+  const statusBtns = statusOpts.map(s => {
+    const active = curStatus === s.val;
+    return `<button onclick="setEquipStatus(${idx},'${s.val}')"
+      style="flex:1;padding:8px 4px;border-radius:var(--r-sm);border:2px solid ${active?s.bg:s.bg+'44'};
+        cursor:pointer;font-family:'Sarabun',sans-serif;font-size:12px;font-weight:600;
+        background:${active?s.bg:s.lt};color:${active?'#fff':s.bg};transition:all .15s;text-align:center">
+      ${s.icon}<br>${s.label}
+    </button>`;
+  }).join('');
+
+  document.getElementById('modal-content').innerHTML = `
+    <div class="modal-nav">
+      <button class="modal-nav-btn" onclick="navModal(-1)" ${modalIdx===0?'disabled':''}>◀</button>
+      <span class="modal-nav-counter">${pos} / ${total}</span>
+      <button class="modal-nav-btn" onclick="navModal(1)" ${modalIdx===total-1?'disabled':''}>▶</button>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <span class="modal-title" style="margin-bottom:0">${em} ${e.name}</span>
+    </div>
+    ${imgHtml}
+    <div class="detail-row">
+      <span class="dl">ตำแหน่ง</span>
+      <span class="dr">${e.floor}</span>
+    </div>
+    <div class="detail-row">
+      <span class="dl">วันหมดอายุ</span>
+      <input type="date" id="modal-exp" value="${e.exp||''}"
+        style="padding:4px 8px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);font-size:12px;font-family:'Sarabun',sans-serif;background:var(--gray-50);color:var(--gray-900)"
+        onchange="updateExp(${idx},this.value)">
+    </div>
+    ${days!==null?`<div class="detail-row"><span class="dl">เหลืออีก</span><span class="dr" id="days-left" style="color:${dayColor};font-family:'IBM Plex Mono',monospace">${days} วัน</span></div>`:''}
+    ${e.fifo?`<div class="detail-row"><span class="dl">FIFO</span><span class="dr" style="color:#C0392B;font-weight:700">⚠ ใช้ก่อน</span></div>`:''}
+    ${e.note?`<div class="detail-row"><span class="dl">หมายเหตุ</span><span class="dr">${e.note}</span></div>`:''}
+    <div style="margin-top:14px;margin-bottom:10px">
+      <div style="font-size:11px;font-weight:700;color:var(--gray-600);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">สถานะ</div>
+      <div style="display:flex;gap:6px">${statusBtns}</div>
+    </div>
+    <button onclick="toggleCheckedModal(${idx})"
+      style="width:100%;padding:11px;border-radius:var(--r-sm);border:none;cursor:pointer;font-family:'Sarabun',sans-serif;font-size:14px;font-weight:600;
+        background:${isChecked?'#1E8449':'#2471A3'};color:#fff;display:flex;align-items:center;justify-content:center;gap:8px">
+      ${isChecked?'✅ ตรวจสอบแล้ว — คลิกเพื่อยกเลิก':'🔲 คลิกเพื่อยืนยันว่าตรวจสอบแล้ว'}
+    </button>
+  `;
+}
+
+function updateExp(idx, val) {
+  equipment[idx].exp = val;
+  const days = val ? Math.floor((new Date(val)-new Date())/86400000) : null;
+  const dayColor = days===null?'inherit':days<60?'#C0392B':days<180?'#B7770D':'#1E8449';
+  const el = document.getElementById('days-left');
+  if(el && days!==null) { el.textContent = days+' วัน'; el.style.color = dayColor; }
+  renderEquip();
+}
+
+function setEquipStatus(idx, val) {
+  if(val === '') delete equipStatus[idx];
+  else equipStatus[idx] = val;
+  localStorage.setItem('equipStatus', JSON.stringify(equipStatus));
+  renderEquip();
+  renderModal(idx);
+}
+
+function toggleCheckedModal(idx) {
+  if(checkedItems.has(idx)) checkedItems.delete(idx);
+  else checkedItems.add(idx);
+  localStorage.setItem('checkedItems', JSON.stringify([...checkedItems]));
+  updateEquipProgress();
+  renderEquip();
+  renderModal(idx);
+}
+
+function updateEquipProgress() {
+  const total = equipment.length;
+  const done  = checkedItems.size;
+  const pct   = Math.round(done / total * 100);
+
+  const fill = document.getElementById('equip-prog-fill');
+  const pctEl = document.getElementById('equip-prog-pct');
+  const btn   = document.getElementById('btn-save-equip');
+  const btnTxt= document.getElementById('btn-save-equip-txt');
+
+  if(fill)   fill.style.width = pct + '%';
+  if(pctEl)  pctEl.textContent = done + '/' + total;
+
+  if(btn && btnTxt) {
+    if(done >= total) {
+      btn.disabled = false;
+      btn.style.cursor = 'pointer';
+      btn.style.background = '#1E8449';
+      btn.style.color = '#fff';
+      btn.style.boxShadow = '0 3px 10px rgba(30,132,73,.35)';
+      btnTxt.textContent = '📊 บันทึกผลการตรวจสอบทั้งหมดลง Google Sheets';
+    } else {
+      btn.disabled = true;
+      btn.style.cursor = 'not-allowed';
+      btn.style.background = 'var(--gray-300)';
+      btn.style.color = 'var(--gray-600)';
+      btn.style.boxShadow = 'none';
+      btnTxt.textContent = `ต้องตรวจสอบให้ครบก่อน (${done}/${total})`;
+    }
+  }
+}
+
+async function saveEquipToSheets() {
+  if(!config.scriptUrl) {
+    showToast('⚙️ กรุณาตั้งค่า Google Sheets ก่อน', '#B7770D');
+    return;
+  }
+  const total = equipment.length;
+  if(checkedItems.size < total) {
+    showToast(`⚠️ ยังตรวจไม่ครบ (${checkedItems.size}/${total})`, '#C0392B');
+    return;
+  }
+
+  const date  = document.getElementById('f-date')?.value  || new Date().toISOString().split('T')[0];
+  const shift = document.getElementById('f-shift')?.value || '';
+  const nurse = document.getElementById('f-nurse')?.value || '';
+  const ts    = new Date().toLocaleString('th-TH');
+
+  showToast(`📤 กำลังบันทึก ${total} รายการ...`, '#185FA5');
+
+  // ส่งทั้งหมดในครั้งเดียว
+  const payload = {
+    type:      'equipCheckBulk',
+    date, shift, nurse,
+    timestamp: ts,
+    items: equipment.map((e, idx) => ({
+      name:    e.name,
+      floor:   e.floor,
+      exp:     e.exp || '-',
+      checked: checkedItems.has(idx),
+      status:  equipStatus[idx] || 'ปกติ',
+    }))
+  };
+
+  try {
+    await fetch(config.scriptUrl, {
+      method: 'POST',
+      mode:   'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    showToast(`✅ บันทึก ${total} รายการลง Sheets เรียบร้อย`, '#1E8449');
+
+    // เพิ่มลงประวัติด้วย
+    records.unshift({ date, shift, nurse, incharge: selectedIncharge||'-',
+      timestamp: ts, type: 'equipCheck', checkedCount: checkedItems.size });
+    localStorage.setItem('records', JSON.stringify(records));
+    renderHistory();
+  } catch(err) {
+    showToast('❌ บันทึกไม่สำเร็จ กรุณาลองใหม่', '#C0392B');
+  }
+}
+
+function closeModal(e) {
+  if(!e || e.target===document.getElementById('modal')) {
+    document.getElementById('modal').classList.remove('open');
+  }
+}
+
+// keyboard navigation
+document.addEventListener('keydown', ev => {
+  if(!document.getElementById('modal').classList.contains('open')) return;
+  if(ev.key==='ArrowRight') navModal(1);
+  if(ev.key==='ArrowLeft')  navModal(-1);
+  if(ev.key==='Escape') document.getElementById('modal').classList.remove('open');
+});
+
+// ─── CHECK FORM ────────────────────────────────────────────
+function renderCheckGrid() {
+  document.getElementById('check-grid').innerHTML = checkDefs.map(item => {
+    if(item.isNum) {
+      return `<div class="check-item" style="grid-column:span 2">
+        <div class="ci-title">${item.icon} ${item.label}</div>
+        <div class="num-input">
+          <button class="num-btn" onclick="adjustNum('ci-${item.id}',-1)">−</button>
+          <input type="number" id="ci-${item.id}" value="10" min="0" max="99" onchange="updateProgress()">
+          <button class="num-btn" onclick="adjustNum('ci-${item.id}',1)">+</button>
+          <span style="font-size:12px;color:var(--gray-600)">แผ่น</span>
+        </div>
+      </div>`;
+    }
+    const optsHtml = item.opts.map((o,i) => `
+      <label class="radio-opt" id="opt-${item.id}-${i}">
+        <input type="radio" name="ci-${item.id}" value="${o}" ${i===0?'checked':''} onchange="onCheckChange('${item.id}')">
+        <span class="dot-status ${i===0?'dot-ok':'dot-bad'}"></span>${o}
+      </label>`).join('');
+    const subHtml = item.sub ? `
+      <div class="sub-divider"></div>
+      <div class="sub-label">${item.sub.label}</div>
+      <div class="radio-group">
+        ${item.sub.opts.map((s,i) => `
+          <label class="radio-opt">
+            <input type="radio" name="ci-${item.id}-s" value="${s}" ${i===0?'checked':''} onchange="updateProgress()">
+            <span class="dot-status ${i===0?'dot-ok':'dot-warn'}"></span>${s}
+          </label>`).join('')}
+      </div>` : '';
+    return `<div class="check-item" id="citem-${item.id}">
+      <div class="ci-title">${item.icon} ${item.label}</div>
+      <div class="radio-group">${optsHtml}</div>
+      ${subHtml}
+    </div>`;
+  }).join('');
+}
+
+function adjustNum(id, delta) {
+  const el = document.getElementById(id);
+  el.value = Math.max(0, Math.min(99, parseInt(el.value||0)+delta));
+  updateProgress();
+}
+
+function onCheckChange(id) {
+  const val = document.querySelector(`input[name="ci-${id}"]:checked`)?.value;
+  const item = document.getElementById('citem-'+id);
+  if(item) {
+    item.classList.remove('all-ok','has-issue');
+    if(val==='พร้อมใช้') item.classList.add('all-ok');
+    else if(val==='ไม่พร้อมใช้') item.classList.add('has-issue');
+  }
+  updateProgress();
+}
+
+function updateProgress() {
+  const done = checkDefs.filter(item => {
+    if(item.isNum) return true;
+    return !!document.querySelector(`input[name="ci-${item.id}"]:checked`);
+  }).length;
+  const pct = Math.round(done/checkDefs.length*100);
+  document.getElementById('prog-fill').style.width = pct+'%';
+  document.getElementById('prog-pct').textContent = pct+'%';
+}
+
+function renderIncharge() {
+  document.getElementById('incharge-chips').innerHTML = inchargeList.map(n =>
+    `<div class="chip" onclick="pickIncharge(this,'${n}')">${n}</div>`
+  ).join('');
+}
+
+function pickIncharge(el, name) {
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  selectedIncharge = name;
+}
+
+function getFormData() {
+  return {
+    date:       document.getElementById('f-date').value,
+    shift:      document.getElementById('f-shift').value,
+    nurse:      document.getElementById('f-nurse').value.trim() || '—',
+    incharge:   selectedIncharge || '—',
+    note:       document.getElementById('f-note').value.trim(),
+    lary1:      getRadio('ci-l1'),
+    lary1_light:getRadio('ci-l1-s'),
+    lary2:      getRadio('ci-l2'),
+    lary2_light:getRadio('ci-l2-s'),
+    box1:       getRadio('ci-b1'),
+    box1_med:   getRadio('ci-b1-s'),
+    box2:       getRadio('ci-b2'),
+    box2_med:   getRadio('ci-b2-s'),
+    defib:      getRadio('ci-df'),
+    battery:    getRadio('ci-df-s'),
+    reddot:     document.getElementById('ci-rd')?.value || '10',
+    timestamp:  new Date().toLocaleString('th-TH'),
+  };
+}
+function getRadio(name) {
+  return document.querySelector(`input[name="${name}"]:checked`)?.value || '—';
+}
+
+function submitCheck() {
+  const d = getFormData();
+  if(!d.nurse || d.nurse==='—') { showToast('⚠️ กรุณาระบุชื่อผู้ตรวจสอบ', '#C0392B'); return; }
+  records.unshift(d);
+  localStorage.setItem('records', JSON.stringify(records));
+  showToast('✅ บันทึกการตรวจสอบเรียบร้อย');
+  if(config.connected) pushToSheets(d);
+  setTimeout(() => switchTab('hist', document.querySelectorAll('.bnav-btn')[2]), 900);
+}
+
+// ─── HISTORY ───────────────────────────────────────────────
+function renderHistory() {
+  const total = records.length;
+  const ok = records.filter(r => r.lary1==='พร้อมใช้' && r.box1==='พร้อมใช้').length;
+  document.getElementById('stat-row').innerHTML = `
+    <div class="stat-box"><div class="stat-num">${total}</div><div class="stat-lbl">ทั้งหมด</div></div>
+    <div class="stat-box"><div class="stat-num" style="color:var(--green)">${ok}</div><div class="stat-lbl">ผ่านปกติ</div></div>
+    <div class="stat-box"><div class="stat-num">${records.filter(r=>r.shift==='เวรดึก').length}</div><div class="stat-lbl">เวรดึก</div></div>
+    <div class="stat-box"><div class="stat-num">${records.filter(r=>r.shift==='เวรเช้า').length}</div><div class="stat-lbl">เวรเช้า</div></div>
+  `;
+  const list = document.getElementById('hist-list');
+  if(!records.length) {
+    list.innerHTML = `<div class="empty-state"><div class="es-icon">📋</div><p>ยังไม่มีประวัติการตรวจสอบ<br>กรอกข้อมูลในหน้า "ตรวจเช็ค" ก่อนครับ</p></div>`;
+    return;
+  }
+  list.innerHTML = records.map(r => {
+    const allOk = ['lary1','lary2','box1','box2','defib'].every(k => r[k]==='พร้อมใช้');
+    const bClass = allOk ? 'badge-ok' : 'badge-warn';
+    const bText  = allOk ? '✅ ปกติ' : '⚠ ต้องติดตาม';
+    return `<div class="hist-card">
+      <div class="hist-top">
+        <span class="hist-date">${r.date}<span class="hist-shift">${r.shift}</span></span>
+        <span class="badge ${bClass}">${bText}</span>
+      </div>
+      <div class="hist-checks">
+        <span class="badge ${r.lary1==='พร้อมใช้'?'badge-ok':'badge-danger'}">🔦 ${r.lary1}</span>
+        <span class="badge ${r.lary2==='พร้อมใช้'?'badge-ok':'badge-danger'}">🔦 ${r.lary2}</span>
+        <span class="badge ${r.box1==='พร้อมใช้'?'badge-ok':'badge-danger'}">📦Box1 ${r.box1_med}</span>
+        <span class="badge ${r.box2==='พร้อมใช้'?'badge-ok':'badge-danger'}">📦Box2 ${r.box2_med}</span>
+        <span class="badge ${r.defib==='พร้อมใช้'?'badge-ok':'badge-danger'}">⚡${r.battery}</span>
+        <span class="badge badge-blue">🔴${r.reddot}</span>
+      </div>
+      <div class="hist-foot">
+        <span class="hist-who">👩‍⚕️ ${r.nurse} · หน.เวร: ${r.incharge}</span>
+        <span class="hist-time">${r.timestamp}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ─── GOOGLE SHEETS ─────────────────────────────────────────
+async function pushToSheets(data) {
+  if(!config.scriptUrl) return;
+  try {
+    await fetch(config.scriptUrl, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(data)
+    });
+    savedCount++;
+    localStorage.setItem('savedCount', savedCount);
+    updateSheetsStatus();
+    showToast('📊 บันทึกไป Google Sheets แล้ว', '#1E8449');
+  } catch(e) {
+    showToast('❌ ไม่สามารถบันทึกไป Sheets ได้', '#C0392B');
+  }
+}
+
+function saveToSheets() {
+  if(!config.connected) {
+    showToast('⚙️ กรุณาตั้งค่า Google Sheets ก่อน', '#B7770D');
+    switchTab('sheets', document.querySelectorAll('.bnav-btn')[3]);
+    return;
+  }
+  const d = getFormData();
+  showToast('📤 กำลังบันทึกไป Sheets...');
+  pushToSheets(d);
+}
+
+function saveConfig() {
+  const url = document.getElementById('cfg-url').value.trim();
+  const sheet = document.getElementById('cfg-sheet').value.trim() || 'EmergencyCheck';
+  if(!url) { showToast('⚠️ กรุณาใส่ Apps Script URL', '#C0392B'); return; }
+  config.scriptUrl = url;
+  config.sheetName = sheet;
+  config.connected = true;
+  localStorage.setItem('scriptUrl', url);
+  localStorage.setItem('sheetName', sheet);
+  updateSheetsStatus();
+  showToast('✅ บันทึกการตั้งค่าเรียบร้อย', '#1E8449');
+}
+
+async function testSheets() {
+  const url = document.getElementById('cfg-url').value.trim();
+  if(!url) { showToast('⚠️ กรุณาใส่ URL ก่อน', '#C0392B'); return; }
+  showToast('🧪 กำลังทดสอบการเชื่อมต่อ...');
+  try {
+    const r = await fetch(url, {mode:'no-cors'});
+    showToast('✅ เชื่อมต่อสำเร็จ (no-cors mode)', '#1E8449');
+  } catch(e) {
+    showToast('❌ ไม่สามารถเชื่อมต่อได้', '#C0392B');
+  }
+}
+
+function updateSheetsStatus() {
+  const dot = document.getElementById('sheets-status-dot');
+  const card = document.getElementById('sheets-connected-card');
+  if(config.connected && config.scriptUrl) {
+    dot.textContent = 'Sheets เชื่อมต่อแล้ว ✓';
+    dot.style.color = '#27AE60';
+    card.style.display = 'block';
+    document.getElementById('sc-id').textContent = config.sheetsId.substring(0,20)+'...';
+    document.getElementById('sc-name').textContent = config.sheetName;
+    document.getElementById('sc-count').textContent = savedCount + ' รายการ';
+    document.getElementById('sc-last').textContent = records.length ? records[0].timestamp : '—';
+  } else {
+    dot.textContent = 'ยังไม่เชื่อมต่อ Sheets';
+    dot.style.color = 'rgba(255,255,255,.7)';
+    card.style.display = 'none';
+  }
+}
+
+async function exportAll() {
+  if(!config.scriptUrl) { showToast('⚠️ กรุณาตั้งค่าก่อน', '#C0392B'); return; }
+  showToast(`📤 กำลัง Export ${records.length} รายการ...`);
+  for(const r of records) await pushToSheets(r);
+  showToast(`✅ Export ${records.length} รายการเสร็จสิ้น`, '#1E8449');
+}
+
+function openSheets() {
+  window.open('https://docs.google.com/spreadsheets/d/'+config.sheetsId+'/edit', '_blank');
+}
+
+// ─── TOAST ─────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg, color='#202124') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.background = color;
+  t.style.display = 'block';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.style.display='none', 2800);
+}
+
+// ─── BOOT ──────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>
