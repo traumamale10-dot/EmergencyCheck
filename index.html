@@ -229,7 +229,7 @@ body {
   position: relative;
 }
 .eq-card:hover { border-color: var(--blue-md); box-shadow: 0 6px 16px rgba(36,113,163,.15); transform: translateY(-2px); }
-.eq-card.fifo { border-color: #E74C3C; }
+.eq-card.fifo { border-color: #C0392B; border-width: 2.5px; background: #FFF0EE; }
 .eq-card.checked { border-color: var(--green); background: var(--green-lt); }
 .eq-card.checked .eq-img::after {
   content: '✅'; position: absolute; top: 4px; right: 4px;
@@ -253,7 +253,7 @@ body {
 .badge-warn { background: var(--amber-lt); color: var(--amber); }
 .badge-danger { background: var(--red-lt); color: var(--red); }
 .badge-blue { background: var(--blue-lt); color: var(--blue-md); }
-.badge-fifo { background: #FDEDEC; color: #C0392B; font-size: 9px; }
+.badge-fifo { background: #C0392B; color: #fff; font-size: 9px; font-weight:700; }
 
 /* ── HISTORY ── */
 .stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px; }
@@ -335,6 +335,7 @@ body {
   animation: toastIn .2s ease;
 }
 @keyframes toastIn { from { transform: translateX(-50%) translateY(10px); opacity: 0; } to { transform: translateX(-50%) translateY(0); opacity: 1; } }
+@keyframes pulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:.7; transform:scale(1.06); } }
 
 /* ── BOTTOM NAV (mobile) ── */
 @media (max-width: 640px) {
@@ -400,7 +401,6 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
     <button class="tab active" onclick="switchTab('equip',this)"><span class="tab-icon">📦</span>คลังอุปกรณ์</button>
     <button class="tab" onclick="switchTab('check',this)"><span class="tab-icon">✅</span>ตรวจเช็ค</button>
     <button class="tab" onclick="switchTab('hist',this)"><span class="tab-icon">📋</span>ประวัติ</button>
-    <button class="tab" onclick="switchTab('sheets',this)"><span class="tab-icon">📊</span>Google Sheets</button>
   </div>
 </div>
 
@@ -409,23 +409,17 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
 ════════════════════════════════════════════ -->
 <div id="page-equip" class="page active">
 
-  <!-- Progress bar ตรวจอุปกรณ์ -->
-  <div style="background:var(--white);border-radius:var(--r);padding:12px 14px;margin-bottom:10px;box-shadow:var(--shadow-sm);border:1px solid var(--gray-200)">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-      <span style="font-size:12px;font-weight:600;color:var(--gray-800)">ความคืบหน้าการตรวจอุปกรณ์</span>
-      <span style="font-size:12px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:var(--blue-md)" id="equip-prog-pct">0/54</span>
-    </div>
-    <div style="height:8px;background:var(--gray-200);border-radius:4px;overflow:hidden;margin-bottom:10px">
-      <div id="equip-prog-fill" style="height:100%;background:linear-gradient(90deg,var(--blue-md),#27AE60);border-radius:4px;transition:width .4s cubic-bezier(.4,0,.2,1);width:0%"></div>
-    </div>
-    <button id="btn-save-equip" onclick="saveEquipToSheets()"
-      style="width:100%;padding:10px;border-radius:var(--r-sm);border:none;cursor:not-allowed;font-family:'Sarabun',sans-serif;font-size:14px;font-weight:600;
-        background:var(--gray-300);color:var(--gray-600);display:flex;align-items:center;justify-content:center;gap:8px;transition:all .3s"
-      disabled>
-      <span>📋</span> <span id="btn-save-equip-txt">ต้องตรวจสอบให้ครบก่อน (0/54)</span>
-    </button>
+  <!-- nurse dropdown for equip check -->
+  <div style="margin-bottom:10px;position:relative">
+    <span style="position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:14px;z-index:1">👩‍⚕️</span>
+    <select id="eq-nurse"
+      style="width:100%;padding:9px 12px 9px 36px;border-radius:var(--r);border:1.5px solid var(--gray-300);font-size:13px;background:var(--white);font-family:'Sarabun',sans-serif;
+        -webkit-appearance:none;appearance:none;
+        background-image:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%2380868B%22 stroke-width=%222%22><polyline points=%226 9 12 15 18 9%22/></svg>');
+        background-repeat:no-repeat;background-position:right 10px center;background-size:18px;padding-right:36px">
+      <option value="">— เลือกชื่อผู้ตรวจสอบ —</option>
+    </select>
   </div>
-
   <div class="search-bar">
     <input type="text" id="eq-search" placeholder="ค้นหาอุปกรณ์..." oninput="renderEquip()">
   </div>
@@ -440,6 +434,23 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
     <div class="filter-pill" onclick="setFilter(this,'__checked')" id="pill-checked">✅ ตรวจแล้ว</div>
   </div>
   <div id="eq-container"></div>
+
+  <!-- Progress + Save button at bottom -->
+  <div style="background:var(--white);border-radius:var(--r);padding:12px 14px;margin-top:14px;box-shadow:var(--shadow-sm);border:1px solid var(--gray-200)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <span style="font-size:12px;font-weight:600;color:var(--gray-800)">ความคืบหน้าการตรวจอุปกรณ์</span>
+      <span style="font-size:12px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:var(--blue-md)" id="equip-prog-pct">0/54</span>
+    </div>
+    <div style="height:8px;background:var(--gray-200);border-radius:4px;overflow:hidden;margin-bottom:10px">
+      <div id="equip-prog-fill" style="height:100%;background:linear-gradient(90deg,var(--blue-md),#27AE60);border-radius:4px;transition:width .4s cubic-bezier(.4,0,.2,1);width:0%"></div>
+    </div>
+    <button id="btn-save-equip" onclick="saveEquipToSheets()"
+      style="width:100%;padding:12px;border-radius:var(--r-sm);border:none;cursor:not-allowed;font-family:'Sarabun',sans-serif;font-size:14px;font-weight:600;
+        background:var(--gray-300);color:var(--gray-600);display:flex;align-items:center;justify-content:center;gap:8px;transition:all .3s"
+      disabled>
+      <span>📋</span> <span id="btn-save-equip-txt">ต้องตรวจสอบให้ครบก่อน (0/54)</span>
+    </button>
+  </div>
 </div>
 
 <!-- ════════════════════════════════════════════
@@ -472,12 +483,6 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
           </select>
         </div>
       </div>
-      <div class="form-row full">
-        <div class="form-group">
-          <label>ชื่อผู้ตรวจสอบ</label>
-          <input type="text" id="f-nurse" placeholder="ชื่อ-นามสกุล หรือชื่อเล่น">
-        </div>
-      </div>
     </div>
   </div>
 
@@ -500,8 +505,17 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
           👩‍⚕️ นางอัญญารัตน์ เจียมธนานุรักษ์
         </div>
       </div>
-      <div class="section-title">เลือกหัวหน้าเวร / ผู้รับผิดชอบเวร</div>
-      <div class="chips" id="incharge-chips"></div>
+      <div class="form-group" style="margin-bottom:0">
+        <label>เลือกหัวหน้าเวร / ผู้รับผิดชอบเวร</label>
+        <select id="incharge-select" onchange="pickInchargeSelect(this.value)"
+          style="padding:10px 12px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);
+            font-family:'Sarabun',sans-serif;font-size:14px;color:var(--gray-900);
+            background:var(--gray-50);width:100%;-webkit-appearance:none;appearance:none;
+            background-image:url('data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"%2380868B\" stroke-width=\"2\"><polyline points=\"6 9 12 15 18 9\"/></svg>');
+            background-repeat:no-repeat;background-position:right 10px center;background-size:18px;padding-right:36px">
+          <option value="">— เลือกชื่อ —</option>
+        </select>
+      </div>
       <hr class="divider">
       <div class="form-group">
         <label>หมายเหตุ</label>
@@ -524,147 +538,50 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
      PAGE 3: HISTORY
 ════════════════════════════════════════════ -->
 <div id="page-hist" class="page">
-  <div class="stat-row" id="stat-row"></div>
-  <div id="hist-list"></div>
+  <!-- Sub-tabs -->
+  <div style="display:flex;gap:0;margin-bottom:12px;border-radius:var(--r);overflow:hidden;border:1.5px solid var(--gray-200);background:var(--white)">
+    <button id="htab-equip" onclick="switchHistTab('equip')"
+      style="flex:1;padding:10px 8px;border:none;cursor:pointer;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:600;
+        background:var(--blue-md);color:#fff;transition:all .2s">
+      📦 คลังอุปกรณ์
+    </button>
+    <button id="htab-check" onclick="switchHistTab('check')"
+      style="flex:1;padding:10px 8px;border:none;cursor:pointer;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:600;
+        background:var(--white);color:var(--gray-600);transition:all .2s;border-left:1.5px solid var(--gray-200)">
+      ✅ ตรวจเช็ค
+    </button>
+  </div>
+
+  <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
+    <button onclick="renderHistory()" style="padding:5px 12px;border-radius:20px;border:1.5px solid var(--blue-md);background:var(--blue-lt);color:var(--blue-md);font-family:'Sarabun',sans-serif;font-size:12px;font-weight:600;cursor:pointer">
+      🔄 โหลดใหม่
+    </button>
+  </div>
+
+  <!-- Equip history -->
+  <div id="hist-equip-section">
+    <div class="stat-row" id="stat-row-equip"></div>
+    <div id="hist-equip-list"></div>
+  </div>
+
+  <!-- Check history -->
+  <div id="hist-check-section" style="display:none">
+    <div class="stat-row" id="stat-row"></div>
+    <div id="hist-list"></div>
+  </div>
+</div>
+
+<!-- Edit History Modal -->
+<div class="modal-overlay" id="edit-hist-modal" onclick="closeEditHistModal(event)">
+  <div class="modal-box">
+    <div class="modal-drag"></div>
+    <div class="modal-content" id="edit-hist-content"></div>
+  </div>
 </div>
 
 <!-- ════════════════════════════════════════════
      PAGE 4: GOOGLE SHEETS CONFIG
 ════════════════════════════════════════════ -->
-<div id="page-sheets" class="page">
-  <div class="config-note">
-    <p>⚙️ ใส่ <code>Spreadsheet ID</code> และ <code>Apps Script URL</code> แล้วกดบันทึก
-    — หลังจากนั้นทุกการตรวจเช็คจะบันทึกไป Google Sheets อัตโนมัติ</p>
-  </div>
-
-  <div class="card">
-    <div class="card-header"><span class="ch-icon">🔗</span><h3>ตั้งค่า Google Sheets</h3></div>
-    <div class="card-body">
-      <div class="form-group" style="margin-bottom:10px">
-        <label>Spreadsheet ID</label>
-        <input type="text" id="cfg-sid" value="1X4NBGK_8xokrgl3qf1F1XtCdUUhFeyKvXjQTaJMMkbI" placeholder="1X4NBGK_8xok...">
-      </div>
-      <div class="form-group" style="margin-bottom:10px">
-        <label>Apps Script Web App URL</label>
-        <input type="text" id="cfg-url" value="https://script.google.com/macros/s/AKfycbyGmBvAaguHwmchbz_SujJUj--QfLSmyIVDlrlPJjo8hk82HvD3dsa3AWTl7AhxdVFP/exec">
-      </div>
-      <div class="form-group" style="margin-bottom:12px">
-        <label>ชื่อ Sheet</label>
-        <input type="text" id="cfg-sheet" value="EmergencyCheck" placeholder="EmergencyCheck">
-      </div>
-      <div class="btn-row">
-        <button class="btn btn-primary" onclick="saveConfig()"><span class="btn-icon">💾</span> บันทึกการตั้งค่า</button>
-        <button class="btn btn-outline" onclick="testSheets()"><span class="btn-icon">🧪</span> ทดสอบ</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="sheets-connected-card" style="display:none">
-    <div class="sheets-status">
-      <h3>📊 Google Sheets เชื่อมต่อแล้ว</h3>
-      <div class="sheets-info-row"><span class="lbl">Sheet ID</span><span class="val" id="sc-id" style="font-size:11px;font-family:'IBM Plex Mono',monospace"></span></div>
-      <div class="sheets-info-row"><span class="lbl">Sheet Name</span><span class="val" id="sc-name"></span></div>
-      <div class="sheets-info-row"><span class="lbl">บันทึกแล้ว</span><span class="val" id="sc-count">0 รายการ</span></div>
-      <div class="sheets-info-row"><span class="lbl">ล่าสุด</span><span class="val" id="sc-last">—</span></div>
-      <div style="display:flex;gap:8px;margin-top:12px">
-        <button class="btn btn-outline" style="flex:1;background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.3)" onclick="openSheets()">🔗 เปิด Sheets</button>
-        <button class="btn btn-outline" style="flex:1;background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.3)" onclick="exportAll()">📤 Export ทั้งหมด</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-header"><span class="ch-icon">📖</span><h3>วิธีสร้าง Apps Script</h3></div>
-    <div class="card-body" style="font-size:12px;color:var(--gray-800);line-height:1.8">
-      <p><strong>1.</strong> เปิด Google Sheets ที่ต้องการ → <strong>Extensions → Apps Script</strong></p>
-      <p><strong>2.</strong> วางโค้ดด้านล่างทั้งหมด แทนที่โค้ดเดิม:</p>
-      <div style="background:var(--gray-900);color:#A8FF78;border-radius:var(--r-sm);padding:12px;margin:8px 0;overflow-x:auto;font-family:'IBM Plex Mono',monospace;font-size:10px;line-height:1.7">
-<pre id="apps-script-code">function doPost(e) {
-  try {
-    var ss = SpreadsheetApp.openById('1X4NBGK_8xokrgl3qf1F1XtCdUUhFeyKvXjQTaJMMkbI');
-    var sheet = ss.getSheetByName('EmergencyCheck')
-                || ss.insertSheet('EmergencyCheck');
-    var data = JSON.parse(e.postData.contents);
-
-    // Add header if sheet is empty
-    if (sheet.getLastRow() === 0) {
-      sheet.appendRow([
-        'วันที่','เวร','ผู้ตรวจสอบ','หัวหน้าหอ',
-        'Laryngoscope(1)','ไฟ Lary1',
-        'Laryngoscope(2)','ไฟ Lary2',
-        'Emergency box 1','ยา box1',
-        'Emergency box 2','ยา box2',
-        'Defibrillator','Battery','Red dot',
-        'หมายเหตุ','เวลาบันทึก'
-      ]);
-      sheet.getRange(1,1,1,17)
-        .setBackground('#1A5276')
-        .setFontColor('#FFFFFF')
-        .setFontWeight('bold');
-      sheet.setFrozenRows(1);
-    }
-
-    sheet.appendRow([
-      data.date, data.shift, data.nurse, data.incharge,
-      data.lary1, data.lary1_light,
-      data.lary2, data.lary2_light,
-      data.box1, data.box1_med,
-      data.box2, data.box2_med,
-      data.defib, data.battery, data.reddot,
-      data.note, data.timestamp
-    ]);
-
-    return ContentService
-      .createTextOutput(JSON.stringify({status:'ok'}))
-      .setMimeType(ContentService.MimeType.JSON);
-  } catch(err) {
-    return ContentService
-      .createTextOutput(JSON.stringify({status:'error',msg:err.toString()}))
-      .setMimeType(ContentService.MimeType.JSON);
-  }
-}
-
-function doGet(e) {
-  return ContentService
-    .createTextOutput(JSON.stringify({status:'alive'}))
-    .setMimeType(ContentService.MimeType.JSON);
-}
-
-// ── ดึง File ID รูปทั้งหมดจาก Drive Folder ──
-function getFileIds() {
-  var folderId = '1tfNKiu55ocZbXF3ovQaH7dz97tSOKsUM';
-  var folder = DriveApp.getFolderById(folderId);
-  var files = folder.getFiles();
-  var ss = SpreadsheetApp.openById('1X4NBGK_8xokrgl3qf1F1XtCdUUhFeyKvXjQTaJMMkbI');
-  var sheet = ss.getSheetByName('FileIDs') || ss.insertSheet('FileIDs');
-  sheet.clearContents();
-  sheet.appendRow(['FileName','FileID','ImgURL']);
-  sheet.getRange(1,1,1,3)
-    .setBackground('#1A5276').setFontColor('#fff').setFontWeight('bold');
-  while (files.hasNext()) {
-    var f = files.next();
-    var id = f.getId();
-    sheet.appendRow([
-      f.getName(), id,
-      'https://lh3.googleusercontent.com/d/' + id
-    ]);
-  }
-  SpreadsheetApp.getUi()
-    .alert('เสร็จแล้ว! ดู Sheet "FileIDs" ใน Spreadsheet');
-}</pre>
-      </div>
-      <p><strong>3.</strong> กด <strong>Deploy → New deployment → Web app</strong></p>
-      <p><strong>4.</strong> Execute as: <strong>Me</strong> · Who has access: <strong>Anyone</strong></p>
-      <p><strong>5.</strong> คัดลอก Web App URL มาใส่ในช่องด้านบน แล้วกด "บันทึกการตั้งค่า"</p>
-      <div style="background:#EBF5FB;border-radius:var(--r-sm);padding:10px;margin-top:8px;border-left:3px solid var(--blue-md)">
-        <p style="font-weight:600;color:var(--blue);margin-bottom:4px">🖼 วิธีดึงรูปภาพจริง (ทำครั้งเดียว)</p>
-        <p><strong>6.</strong> ใน Apps Script เลือก function <strong>getFileIds</strong> → กด <strong>Run</strong></p>
-        <p><strong>7.</strong> เปิด Google Sheets จะเห็น Sheet ใหม่ชื่อ <strong>"FileIDs"</strong></p>
-        <p><strong>8.</strong> ส่ง Sheet นั้น (หรือ copy ข้อมูล) ให้ Claude → จะอัปเดต HTML ให้แสดงรูปจริงทันที</p>
-      </div>
-    </div>
-  </div>
-</div>
 
 <!-- MODAL (Equipment Detail) -->
 <div class="modal-overlay" id="modal" onclick="closeModal(event)">
@@ -679,7 +596,6 @@ function getFileIds() {
   <button class="bnav-btn active" onclick="switchTab('equip',this)"><span class="icon">📦</span>คลัง</button>
   <button class="bnav-btn" onclick="switchTab('check',this)"><span class="icon">✅</span>ตรวจเช็ค</button>
   <button class="bnav-btn" onclick="switchTab('hist',this)"><span class="icon">📋</span>ประวัติ</button>
-  <button class="bnav-btn" onclick="switchTab('sheets',this)"><span class="icon">📊</span>Sheets</button>
 </nav>
 
 <div class="toast" id="toast"></div>
@@ -691,13 +607,15 @@ function getFileIds() {
 // ─── CONFIG ───────────────────────────────────────────────
 const DRIVE_FOLDER   = '1tfNKiu55ocZbXF3ovQaH7dz97tSOKsUM';
 const SPREADSHEET_ID = '1X4NBGK_8xokrgl3qf1F1XtCdUUhFeyKvXjQTaJMMkbI';
-const SCRIPT_URL     = 'https://script.google.com/macros/s/AKfycbyGmBvAaguHwmchbz_SujJUj--QfLSmyIVDlrlPJjo8hk82HvD3dsa3AWTl7AhxdVFP/exec';
+const SCRIPT_URL     = 'https://script.google.com/macros/s/AKfycbxEuWZG1hkI5RsN82oEEAEc1hyEyvfaUNCziUXNtxLXrL1y7kAHHBnoR1nH7ppX-iyg/exec';
 
+// clear old scriptUrl from localStorage to always use hardcoded URL
+localStorage.removeItem('scriptUrl');
 let config = {
   sheetsId:  SPREADSHEET_ID,
-  scriptUrl: localStorage.getItem('scriptUrl') || SCRIPT_URL,
-  sheetName: localStorage.getItem('sheetName') || 'EmergencyCheck',
-  connected: true   // pre-connected
+  scriptUrl: SCRIPT_URL,
+  sheetName: 'EmergencyCheck',
+  connected: true
 };
 let savedCount = parseInt(localStorage.getItem('savedCount') || '0');
 let records = JSON.parse(localStorage.getItem('records') || '[]');
@@ -803,8 +721,8 @@ function init() {
   document.getElementById('hdr-shift').textContent = shift;
   document.getElementById('f-date').value = now.toISOString().split('T')[0];
   document.getElementById('f-shift').value = shift;
-  if(config.scriptUrl) document.getElementById('cfg-url').value = config.scriptUrl;
-  document.getElementById('cfg-sheet').value = config.sheetName;
+  if(document.getElementById('cfg-url')) document.getElementById('cfg-url').value = config.scriptUrl;
+  if(document.getElementById('cfg-sheet')) document.getElementById('cfg-sheet').value = config.sheetName;
   updateSheetsStatus();
   renderEquip();
   updateEquipProgress();
@@ -821,7 +739,7 @@ function switchTab(id, el) {
   // Activate both desktop tab and mobile nav
   const tabs = document.querySelectorAll('.tab');
   const bnavs = document.querySelectorAll('.bnav-btn');
-  const order = ['equip','check','hist','sheets'];
+  const order = ['equip','check','hist'];
   const idx = order.indexOf(id);
   if(tabs[idx]) tabs[idx].classList.add('active');
   if(bnavs[idx]) bnavs[idx].classList.add('active');
@@ -829,24 +747,40 @@ function switchTab(id, el) {
 }
 
 // ─── EQUIPMENT ─────────────────────────────────────────────
-let checkedItems = new Set(JSON.parse(localStorage.getItem('checkedItems')||'[]'));
-let equipStatus  = JSON.parse(localStorage.getItem('equipStatus')||'{}');
+let checkedItems = new Set();  // reset every session
+let equipStatus  = {};
 
 function getExpBadge(exp) {
   if(!exp) return '';
-  const days = Math.floor((new Date(exp) - new Date()) / 86400000);
-  if(days < 0)   return `<span class="badge badge-danger">หมดอายุ</span>`;
-  if(days < 60)  return `<span class="badge badge-danger">${days} วัน</span>`;
-  if(days < 180) return `<span class="badge badge-warn">${days} วัน</span>`;
-  return `<span class="badge badge-ok">${new Date(exp).toLocaleDateString('th-TH',{month:'short',year:'numeric'})}</span>`;
+  const [y,m,d] = exp.split('-').map(Number);
+  const expLocal = new Date(y, m-1, d);  // local midnight
+  const now = new Date();
+  const todayLocal = new Date(now.getFullYear(), now.getMonth(), now.getDate()); // local midnight
+  const days = Math.round((expLocal - todayLocal) / 86400000);
+  const dateStr = expLocal.toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'2-digit'});
+  const dayLabel = days === 0 ? 'วันนี้!' : `${days} วัน`;
+  if(days < 0)   return `<span class="badge badge-danger">หมดอายุ ${dateStr}</span>`;
+  if(days <= 3)  return `<span class="badge badge-danger" style="animation:pulse 1s infinite">🚨 ใกล้หมด! ${dayLabel}</span>`;
+  if(days < 60)  return `<span class="badge badge-danger">⚠ ${dateStr} <span style="opacity:.8;font-size:9px">(${dayLabel})</span></span>`;
+  if(days < 180) return `<span class="badge badge-warn">${dateStr} <span style="opacity:.8;font-size:9px">(${dayLabel})</span></span>`;
+  return `<span class="badge badge-ok">${dateStr} <span style="opacity:.7;font-size:9px">(${dayLabel})</span></span>`;
 }
+
 
 function toggleChecked(idx, ev) {
   ev.stopPropagation();
-  if(checkedItems.has(idx)) checkedItems.delete(idx);
+  const wasChecked = checkedItems.has(idx);
+  if(wasChecked) checkedItems.delete(idx);
   else checkedItems.add(idx);
-  localStorage.setItem('checkedItems', JSON.stringify([...checkedItems]));
+  updateEquipProgress();
   renderEquip();
+  const name = equipment[idx].name;
+  showToast(wasChecked ? `\u21a9\ufe0f \u0e22\u0e01\u0e40\u0e25\u0e34\u0e01: ${name}` : `\u2705 \u0e15\u0e23\u0e27\u0e08\u0e2a\u0e2d\u0e1a\u0e41\u0e25\u0e49\u0e27: ${name}`, wasChecked?'#B7770D':'#1E8449');
+}
+
+function openEditModal(idx, ev) {
+  ev.stopPropagation();
+  showEquipDetail(idx);
 }
 
 function renderEquip() {
@@ -857,7 +791,6 @@ function renderEquip() {
     if(curFilter!=='all' && e.floor!==curFilter) return false;
     return !q || e.name.toLowerCase().includes(q);
   });
-
   const useGroups = curFilter==='all' && !q;
   const container = document.getElementById('eq-container');
 
@@ -867,11 +800,31 @@ function renderEquip() {
   }
 
   // Group by floor
-  const floorOrder = ['ชั้นที่ 1','ชั้นที่ 2','ชั้นที่ 3','ด้านบน','ด้านนอก'];
+  const floorOrder = ['ด้านบน','ด้านนอก','ชั้นที่ 3','ชั้นที่ 2','ชั้นที่ 1'];
   const floorIcon  = {'ชั้นที่ 1':'🔵','ชั้นที่ 2':'🟢','ชั้นที่ 3':'🟡','ด้านบน':'🔴','ด้านนอก':'⚪'};
   const groups = {};
   floorOrder.forEach(f => groups[f] = []);
   items.forEach(e => { if(groups[e.floor]) groups[e.floor].push(e); });
+  // sort within each group: group by base name, FIFO first within same name
+  floorOrder.forEach(f => {
+    const g = groups[f];
+    // get base name = strip trailing (N)
+    const base = e => e.name.replace(/\s*\(\d+\)\s*$/, '').trim();
+    // stable sort: keep original order but put FIFO first within same base name
+    const order = [];
+    const seen = {};
+    g.forEach((e,i) => { e._origIdx = i; });
+    // group by base
+    const byBase = {};
+    g.forEach(e => { const b = base(e); if(!byBase[b]) byBase[b]=[]; byBase[b].push(e); });
+    // sort within each base: fifo first
+    Object.keys(byBase).forEach(b => byBase[b].sort((a,bb) => (bb.fifo==='Use this first'?1:0)-(a.fifo==='Use this first'?1:0)));
+    // rebuild group preserving floor order of bases
+    const baseOrder = [];
+    g.forEach(e => { const b = base(e); if(!baseOrder.includes(b)) baseOrder.push(b); });
+    groups[f] = [];
+    baseOrder.forEach(b => byBase[b].forEach(e => groups[f].push(e)));
+  });
 
   container.innerHTML = floorOrder
     .filter(f => groups[f].length > 0)
@@ -897,6 +850,10 @@ function makeCard(e) {
   const status = equipStatus[idx] || '';
   const imgSrc = e.imgId ? `https://lh3.googleusercontent.com/d/${e.imgId}` : null;
 
+  // days remaining for tooltip
+  const daysLeft = e.exp ? Math.floor((new Date(e.exp)-new Date())/86400000) : null;
+  const daysTitle = daysLeft!==null ? (daysLeft<0?'หมดอายุแล้ว':`เหลือ ${daysLeft} วัน`) : '';
+
   // border color by status
   let borderStyle = '';
   if(status==='ขาด')     borderStyle = 'border-color:#C0392B;';
@@ -909,7 +866,8 @@ function makeCard(e) {
     ? `<span class="badge" style="background:${status==='ขาด'?'#FDEDEC':status==='ส่งนึ่ง'?'#FEF9E7':'#EBF5FB'};color:${status==='ขาด'?'#C0392B':status==='ส่งนึ่ง'?'#B7770D':'#2471A3'};font-size:10px">
         ${status==='ขาด'?'❌':status==='ส่งนึ่ง'?'🔄':'⏳'} ${status}</span>` : '';
 
-  return `<div class="eq-card${isChecked?' checked':''}" style="${borderStyle}" onclick="showEquipDetail(${idx})">
+  return `<div class="eq-card${isChecked?' checked':isFifo?' fifo':''}" style="${borderStyle}" onclick="toggleChecked(${idx},event)" title="${daysTitle}">
+    ${isFifo?'<div style="background:#C0392B;color:#fff;font-size:10px;font-weight:700;text-align:center;padding:3px 0;letter-spacing:.5px">⚠️ ใช้ก่อน</div>':''}
     <div class="eq-img" id="ei-${idx}">
       ${imgSrc
         ? `<img src="${imgSrc}" alt="${e.name}" loading="lazy"
@@ -921,16 +879,21 @@ function makeCard(e) {
     </div>
     <div class="eq-body">
       <div class="eq-name">${e.name}</div>
-      <div style="display:flex;flex-wrap:wrap;gap:3px">
+      <div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:5px">
         ${getExpBadge(e.exp)}
         ${isFifo?'<span class="badge badge-fifo">ใช้ก่อน</span>':''}
         ${statusBadge}
         ${e.note?`<span class="badge badge-blue" style="font-size:9px">${e.note}</span>`:''}
       </div>
+      <button onclick="openEditModal(${idx},event)"
+        style="width:100%;padding:4px 0;border-radius:5px;border:1.5px solid var(--gray-300);background:var(--white);
+          font-family:'Sarabun',sans-serif;font-size:11px;font-weight:600;color:var(--gray-600);cursor:pointer;
+          display:flex;align-items:center;justify-content:center;gap:4px;transition:all .15s">
+        ✏️ แก้ไข
+      </button>
     </div>
   </div>`;
 }
-
 function setFilter(el, f) {
   curFilter = f;
   document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
@@ -1056,7 +1019,12 @@ function renderModal(idx) {
     </div>
     ${days!==null?`<div class="detail-row"><span class="dl">เหลืออีก</span><span class="dr" id="days-left" style="color:${dayColor};font-family:'IBM Plex Mono',monospace">${days} วัน</span></div>`:''}
     ${e.fifo?`<div class="detail-row"><span class="dl">FIFO</span><span class="dr" style="color:#C0392B;font-weight:700">⚠ ใช้ก่อน</span></div>`:''}
-    ${e.note?`<div class="detail-row"><span class="dl">หมายเหตุ</span><span class="dr">${e.note}</span></div>`:''}
+    <div class="detail-row">
+      <span class="dl">หมายเหตุ</span>
+      <input type="text" id="modal-note-${idx}" value="${e.note||''}" placeholder="ใส่หมายเหตุ..."
+        onchange="updateNote(${idx},this.value)"
+        style="text-align:right;padding:4px 8px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);font-size:12px;font-family:'Sarabun',sans-serif;background:var(--gray-50);color:var(--gray-900);width:60%">
+    </div>
     <div style="margin-top:14px;margin-bottom:10px">
       <div style="font-size:11px;font-weight:700;color:var(--gray-600);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">สถานะ</div>
       <div style="display:flex;gap:6px">${statusBtns}</div>
@@ -1078,10 +1046,14 @@ function updateExp(idx, val) {
   renderEquip();
 }
 
+function updateNote(idx, val) {
+  equipment[idx].note = val;
+  renderEquip();
+}
+
 function setEquipStatus(idx, val) {
   if(val === '') delete equipStatus[idx];
   else equipStatus[idx] = val;
-  localStorage.setItem('equipStatus', JSON.stringify(equipStatus));
   renderEquip();
   renderModal(idx);
 }
@@ -1089,7 +1061,6 @@ function setEquipStatus(idx, val) {
 function toggleCheckedModal(idx) {
   if(checkedItems.has(idx)) checkedItems.delete(idx);
   else checkedItems.add(idx);
-  localStorage.setItem('checkedItems', JSON.stringify([...checkedItems]));
   updateEquipProgress();
   renderEquip();
   renderModal(idx);
@@ -1140,7 +1111,7 @@ async function saveEquipToSheets() {
 
   const date  = document.getElementById('f-date')?.value  || new Date().toISOString().split('T')[0];
   const shift = document.getElementById('f-shift')?.value || '';
-  const nurse = document.getElementById('f-nurse')?.value || '';
+  const nurse = document.getElementById('eq-nurse')?.value.trim() || selectedIncharge || '';
   const ts    = new Date().toLocaleString('th-TH');
 
   showToast(`📤 กำลังบันทึก ${total} รายการ...`, '#185FA5');
@@ -1173,6 +1144,12 @@ async function saveEquipToSheets() {
       timestamp: ts, type: 'equipCheck', checkedCount: checkedItems.size });
     localStorage.setItem('records', JSON.stringify(records));
     renderHistory();
+    // เด้งไปหน้าตรวจเช็คและเติมชื่อหัวหน้าเวรอัตโนมัติ
+    if(selectedIncharge) {
+      const sel = document.getElementById('incharge-select');
+      if(sel) sel.value = selectedIncharge;
+    }
+    setTimeout(() => switchTab('check', document.querySelectorAll('.bnav-btn')[1]), 800);
   } catch(err) {
     showToast('❌ บันทึกไม่สำเร็จ กรุณาลองใหม่', '#C0392B');
   }
@@ -1257,14 +1234,31 @@ function updateProgress() {
 }
 
 function renderIncharge() {
-  document.getElementById('incharge-chips').innerHTML = inchargeList.map(n =>
-    `<div class="chip" onclick="pickIncharge(this,'${n}')">${n}</div>`
-  ).join('');
+  // populate check form dropdown
+  const sel = document.getElementById('incharge-select');
+  if(sel) {
+    inchargeList.forEach(n => {
+      const opt = document.createElement('option');
+      opt.value = n; opt.textContent = n;
+      sel.appendChild(opt);
+    });
+  }
+  // populate equip page nurse dropdown
+  const nurSel = document.getElementById('eq-nurse');
+  if(nurSel) {
+    inchargeList.forEach(n => {
+      const opt = document.createElement('option');
+      opt.value = n; opt.textContent = n;
+      nurSel.appendChild(opt);
+    });
+  }
+}
+
+function pickInchargeSelect(name) {
+  selectedIncharge = name || null;
 }
 
 function pickIncharge(el, name) {
-  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-  el.classList.add('active');
   selectedIncharge = name;
 }
 
@@ -1272,7 +1266,7 @@ function getFormData() {
   return {
     date:       document.getElementById('f-date').value,
     shift:      document.getElementById('f-shift').value,
-    nurse:      document.getElementById('f-nurse').value.trim() || '—',
+    nurse:      selectedIncharge || '—',
     ward_head:  'นางอัญญารัตน์ เจียมธนานุรักษ์',
     incharge:   selectedIncharge || '—',
     note:       document.getElementById('f-note').value.trim(),
@@ -1296,7 +1290,7 @@ function getRadio(name) {
 
 function submitCheck() {
   const d = getFormData();
-  if(!d.nurse || d.nurse==='—') { showToast('⚠️ กรุณาระบุชื่อผู้ตรวจสอบ', '#C0392B'); return; }
+  if(!d.nurse || d.nurse==='—') { showToast('⚠️ กรุณาเลือกชื่อหัวหน้าเวรและผู้ตรวจสอบ', '#C0392B'); return; }
   records.unshift(d);
   localStorage.setItem('records', JSON.stringify(records));
   showToast('✅ บันทึกการตรวจสอบเรียบร้อย');
@@ -1305,44 +1299,187 @@ function submitCheck() {
 }
 
 // ─── HISTORY ───────────────────────────────────────────────
-function renderHistory() {
-  const total = records.length;
-  const ok = records.filter(r => r.lary1==='พร้อมใช้' && r.box1==='พร้อมใช้').length;
-  document.getElementById('stat-row').innerHTML = `
+let histTab = 'equip';
+let equipHistory = [];
+
+function switchHistTab(tab) {
+  histTab = tab;
+  document.getElementById('htab-equip').style.background = tab==='equip' ? 'var(--blue-md)' : 'var(--white)';
+  document.getElementById('htab-equip').style.color = tab==='equip' ? '#fff' : 'var(--gray-600)';
+  document.getElementById('htab-check').style.background = tab==='check' ? 'var(--blue-md)' : 'var(--white)';
+  document.getElementById('htab-check').style.color = tab==='check' ? '#fff' : 'var(--gray-600)';
+  document.getElementById('hist-equip-section').style.display = tab==='equip' ? 'block' : 'none';
+  document.getElementById('hist-check-section').style.display = tab==='check' ? 'block' : 'none';
+}
+
+async function renderHistory() {
+  if(config.scriptUrl) {
+    document.getElementById('hist-equip-list').innerHTML = '<div class="empty-state"><div class="es-icon">🔄</div><p>กำลังโหลด...</p></div>';
+    document.getElementById('hist-list').innerHTML = '<div class="empty-state"><div class="es-icon">🔄</div><p>กำลังโหลด...</p></div>';
+    try {
+      const resp = await fetch(config.scriptUrl + '?t=' + Date.now());
+      const json = await resp.json();
+      if(json.checkRows) { records = json.checkRows; localStorage.setItem('records', JSON.stringify(records)); }
+      if(json.equipRows) { equipHistory = json.equipRows; }
+    } catch(e) {}
+  }
+  renderEquipHistory();
+  renderCheckHistory();
+}
+
+function renderEquipHistory() {
+  const statEl = document.getElementById('stat-row-equip');
+  const list   = document.getElementById('hist-equip-list');
+  if(!equipHistory.length) {
+    if(statEl) statEl.innerHTML = '';
+    list.innerHTML = '<div class="empty-state"><div class="es-icon">📦</div><p>ยังไม่มีประวัติคลังอุปกรณ์</p></div>';
+    return;
+  }
+  // Group by session (วันที่-เวลา = batch key)
+  const sessions = {};
+  equipHistory.forEach(r => {
+    const ts    = r['วันที่-เวลา'] || '';
+    const date  = r['วันที่']       || '';
+    const shift = r['เวร']          || '';
+    const nurse = r['ผู้ตรวจสอบ']   || '';
+    const key   = ts || (date + '|' + shift);
+    if(!sessions[key]) sessions[key] = {date, shift, nurse, ts, items:[]};
+    sessions[key].items.push(r);
+  });
+  const keys = Object.keys(sessions);
+  if(statEl) statEl.innerHTML = `
+    <div class="stat-box"><div class="stat-num">${keys.length}</div><div class="stat-lbl">ครั้ง</div></div>
+    <div class="stat-box"><div class="stat-num">${equipHistory.length}</div><div class="stat-lbl">รายการ</div></div>
+  `;
+  list.innerHTML = keys.map(k => {
+    const s       = sessions[k];
+    const total   = s.items.length;
+    const checked = s.items.filter(i => String(i['ผลตรวจ']||'').includes('ตรวจแล้ว')).length;
+    const issues  = s.items.filter(i => {
+      const st = i['สถานะ'] || '';
+      return st && st !== 'ปกติ';
+    });
+    return `<div class="hist-card">
+      <div class="hist-top">
+        <span class="hist-date">${s.date}<span class="hist-shift"> ${s.shift}</span></span>
+        <span class="badge badge-ok">ตรวจ ${checked}/${total}</span>
+      </div>
+      ${issues.length ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin:6px 0">
+        ${issues.map(i=>`<span class="badge badge-warn">⚠ ${i['ชื่ออุปกรณ์']||''}: ${i['สถานะ']||''}</span>`).join('')}
+      </div>` : ''}
+      <div class="hist-foot" style="margin-top:6px">
+        <span class="hist-who">👩‍⚕️ ${s.nurse||'—'}</span>
+        <span class="hist-time">${s.ts||''}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+function renderCheckHistory() {
+  const statEl = document.getElementById('stat-row');
+  const list   = document.getElementById('hist-list');
+  const total  = records.length;
+  const ok     = records.filter(r => r.lary1==='พร้อมใช้' && r.box1==='พร้อมใช้').length;
+  if(statEl) statEl.innerHTML = `
     <div class="stat-box"><div class="stat-num">${total}</div><div class="stat-lbl">ทั้งหมด</div></div>
     <div class="stat-box"><div class="stat-num" style="color:var(--green)">${ok}</div><div class="stat-lbl">ผ่านปกติ</div></div>
     <div class="stat-box"><div class="stat-num">${records.filter(r=>r.shift==='เวรดึก').length}</div><div class="stat-lbl">เวรดึก</div></div>
     <div class="stat-box"><div class="stat-num">${records.filter(r=>r.shift==='เวรเช้า').length}</div><div class="stat-lbl">เวรเช้า</div></div>
   `;
-  const list = document.getElementById('hist-list');
   if(!records.length) {
-    list.innerHTML = `<div class="empty-state"><div class="es-icon">📋</div><p>ยังไม่มีประวัติการตรวจสอบ<br>กรอกข้อมูลในหน้า "ตรวจเช็ค" ก่อนครับ</p></div>`;
+    list.innerHTML = '<div class="empty-state"><div class="es-icon">📋</div><p>ยังไม่มีประวัติ</p></div>';
     return;
   }
-  list.innerHTML = records.map(r => {
-    const allOk = ['lary1','lary2','box1','box2','defib'].every(k => r[k]==='พร้อมใช้');
+  list.innerHTML = records.map((r,i) => {
+    const allOk = ['ลาริ2','ลาริ1','บอก1','บอก2','เดฟิบ'].every(k => r[k]==='พร้อมใช้') ||
+      ['lary1','lary2','box1','box2','defib'].every(k => r[k]==='พร้อมใช้');
     const bClass = allOk ? 'badge-ok' : 'badge-warn';
     const bText  = allOk ? '✅ ปกติ' : '⚠ ต้องติดตาม';
+    const l1 = r.lary1||r['ลาริงโกไสโค้1']||'';
+    const l2 = r.lary2||r['ลาริงโกไสโค้2']||'';
+    const b1 = r.box1||''; const b1m = r.box1_med||'';
+    const b2 = r.box2||''; const b2m = r.box2_med||'';
+    const df = r.defib||''; const bt = r.battery||'';
+    const rd = r.reddot||'';
+    const dateVal = r.date||''; const shiftVal = r.shift||''; const nurseVal = r.nurse||''; const inchVal = r.incharge||''; const ts = r.timestamp||''; const noteVal = r.note||'';
     return `<div class="hist-card">
       <div class="hist-top">
-        <span class="hist-date">${r.date}<span class="hist-shift">${r.shift}</span></span>
-        <span class="badge ${bClass}">${bText}</span>
+        <span class="hist-date">${dateVal}<span class="hist-shift"> ${shiftVal}</span></span>
+        <div style="display:flex;gap:6px;align-items:center">
+          <span class="badge ${bClass}">${bText}</span>
+          <button onclick="openEditCheck(${i})" style="padding:3px 10px;border-radius:20px;border:1.5px solid var(--blue-md);background:var(--blue-lt);color:var(--blue-md);font-family:'Sarabun',sans-serif;font-size:11px;font-weight:600;cursor:pointer">✏️ แก้ไข</button>
+        </div>
       </div>
       <div class="hist-checks">
-        <span class="badge ${r.lary1==='พร้อมใช้'?'badge-ok':'badge-danger'}">🔦 ${r.lary1}</span>
-        <span class="badge ${r.lary2==='พร้อมใช้'?'badge-ok':'badge-danger'}">🔦 ${r.lary2}</span>
-        <span class="badge ${r.box1==='พร้อมใช้'?'badge-ok':'badge-danger'}">📦Box1 ${r.box1_med}</span>
-        <span class="badge ${r.box2==='พร้อมใช้'?'badge-ok':'badge-danger'}">📦Box2 ${r.box2_med}</span>
-        <span class="badge ${r.defib==='พร้อมใช้'?'badge-ok':'badge-danger'}">⚡${r.battery}</span>
-        <span class="badge badge-blue">🔴${r.reddot}</span>
+        <span class="badge ${l1==='พร้อมใช้'?'badge-ok':'badge-danger'}">🔦 Lary1 ${l1}</span>
+        <span class="badge ${l2==='พร้อมใช้'?'badge-ok':'badge-danger'}">🔦 Lary2 ${l2}</span>
+        <span class="badge ${b1==='พร้อมใช้'?'badge-ok':'badge-danger'}">📦 Box1 ${b1m}</span>
+        <span class="badge ${b2==='พร้อมใช้'?'badge-ok':'badge-danger'}">📦 Box2 ${b2m}</span>
+        <span class="badge ${df==='พร้อมใช้'?'badge-ok':'badge-danger'}">⚡ ${bt}</span>
+        <span class="badge badge-blue">🔴 ${rd}</span>
       </div>
       <div class="hist-foot">
-        <span class="hist-who">👩‍⚕️ ${r.nurse} · หน.เวร: ${r.incharge}</span>
-        <span class="hist-time">${r.timestamp}</span>
+        <span class="hist-who">👩‍⚕️ ${nurseVal} · ${inchVal}</span>
+        <span class="hist-time">${ts}</span>
       </div>
+      ${noteVal?`<div style="font-size:11px;color:var(--gray-600);margin-top:4px;padding-top:4px;border-top:1px dashed var(--gray-200)">📝 ${noteVal}</div>`:''}
     </div>`;
   }).join('');
 }
+
+function openEditCheck(i) {
+  const r = records[i];
+  const shiftOpts = ['เวรดึก','เวรเช้า','เวรบ่าย'].map(s=>`<option ${r.shift===s?'selected':''}>${s}</option>`).join('');
+  const readyOpts = (val,name) => ['พร้อมใช้','ไม่พร้อมใช้'].map(v=>`<option value="${v}" ${val===v?'selected':''}>${v}</option>`).join('');
+  document.getElementById('edit-hist-content').innerHTML = `
+    <div style="font-size:15px;font-weight:700;margin-bottom:14px">✏️ แก้ไขประวัติ #${i+1}</div>
+    <div class="form-row"><div class="form-group"><label>วันที่</label><input type="date" id="eh-date" value="${r.date||''}"></div>
+    <div class="form-group"><label>เวร</label><select id="eh-shift">${shiftOpts}</select></div></div>
+    <div class="form-row"><div class="form-group"><label>Lary1</label><select id="eh-l1">${readyOpts(r.lary1,'l1')}</select></div>
+    <div class="form-group"><label>Lary2</label><select id="eh-l2">${readyOpts(r.lary2,'l2')}</select></div></div>
+    <div class="form-row"><div class="form-group"><label>Box1</label><select id="eh-b1">${readyOpts(r.box1,'b1')}</select></div>
+    <div class="form-group"><label>Box2</label><select id="eh-b2">${readyOpts(r.box2,'b2')}</select></div></div>
+    <div class="form-row"><div class="form-group"><label>Defibrillator</label><select id="eh-df">${readyOpts(r.defib,'df')}</select></div>
+    <div class="form-group"><label>Red dot</label><input type="number" id="eh-rd" value="${r.reddot||10}" min="0" max="99"></div></div>
+    <div class="form-row full"><div class="form-group"><label>หมายเหตุ</label><input type="text" id="eh-note" value="${r.note||''}"></div></div>
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button onclick="saveEditCheck(${i})" style="flex:1;padding:11px;border-radius:var(--r-sm);border:none;cursor:pointer;font-family:'Sarabun',sans-serif;font-size:14px;font-weight:600;background:var(--blue-md);color:#fff">💾 บันทึก</button>
+      <button onclick="closeEditHistModal()" style="padding:11px 16px;border-radius:var(--r-sm);border:1.5px solid var(--gray-300);cursor:pointer;font-family:'Sarabun',sans-serif;font-size:14px;background:var(--white);color:var(--gray-600)">ยกเลิก</button>
+    </div>`;
+  document.getElementById('edit-hist-modal').classList.add('open');
+}
+
+async function saveEditCheck(i) {
+  const r = records[i];
+  r.date    = document.getElementById('eh-date').value;
+  r.shift   = document.getElementById('eh-shift').value;
+  r.lary1   = document.getElementById('eh-l1').value;
+  r.lary2   = document.getElementById('eh-l2').value;
+  r.box1    = document.getElementById('eh-b1').value;
+  r.box2    = document.getElementById('eh-b2').value;
+  r.defib   = document.getElementById('eh-df').value;
+  r.reddot  = document.getElementById('eh-rd').value;
+  r.note    = document.getElementById('eh-note').value;
+  // push update to Sheets
+  if(config.scriptUrl && r._row) {
+    try {
+      await fetch(config.scriptUrl, {method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({type:'updateRow', sheet:'EmergencyCheck', row:r._row,
+          values:[r.date,r.shift,r.nurse,r.incharge,r.lary1,r.lary1_light,r.lary2,r.lary2_light,r.box1,r.box1_med,r.box2,r.box2_med,r.defib,r.battery,r.reddot,r.note,r.timestamp]})});
+      showToast('✅ อัปเดต Sheets แล้ว', '#1E8449');
+    } catch(e) { showToast('❌ ไม่สามาำอัปเดต Sheets', '#C0392B'); }
+  }
+  localStorage.setItem('records', JSON.stringify(records));
+  closeEditHistModal();
+  renderCheckHistory();
+}
+
+function closeEditHistModal(e) {
+  if(!e || e.target===document.getElementById('edit-hist-modal')) {
+    document.getElementById('edit-hist-modal').classList.remove('open');
+  }
+}
+
+
 
 // ─── GOOGLE SHEETS ─────────────────────────────────────────
 async function pushToSheets(data) {
@@ -1366,7 +1503,6 @@ async function pushToSheets(data) {
 function saveToSheets() {
   if(!config.connected) {
     showToast('⚙️ กรุณาตั้งค่า Google Sheets ก่อน', '#B7770D');
-    switchTab('sheets', document.querySelectorAll('.bnav-btn')[3]);
     return;
   }
   const d = getFormData();
@@ -1401,19 +1537,13 @@ async function testSheets() {
 
 function updateSheetsStatus() {
   const dot = document.getElementById('sheets-status-dot');
-  const card = document.getElementById('sheets-connected-card');
+  if(!dot) return;
   if(config.connected && config.scriptUrl) {
     dot.textContent = 'Sheets เชื่อมต่อแล้ว ✓';
     dot.style.color = '#27AE60';
-    card.style.display = 'block';
-    document.getElementById('sc-id').textContent = config.sheetsId.substring(0,20)+'...';
-    document.getElementById('sc-name').textContent = config.sheetName;
-    document.getElementById('sc-count').textContent = savedCount + ' รายการ';
-    document.getElementById('sc-last').textContent = records.length ? records[0].timestamp : '—';
   } else {
     dot.textContent = 'ยังไม่เชื่อมต่อ Sheets';
     dot.style.color = 'rgba(255,255,255,.7)';
-    card.style.display = 'none';
   }
 }
 
