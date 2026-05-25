@@ -35,7 +35,7 @@
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-html { font-size: 15px; }
+html { font-size: 18px; }
 body {
   font-family: 'Sarabun', sans-serif;
   background: var(--gray-100);
@@ -197,7 +197,7 @@ body {
 .filter-row { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin-bottom: 12px; padding-bottom: 2px; }
 .filter-row::-webkit-scrollbar { display: none; }
 .filter-pill {
-  padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 500; white-space: nowrap;
+  padding: 5px 14px; border-radius: 20px; font-size: 13px; font-weight: 500; white-space: nowrap;
   cursor: pointer; border: 1.5px solid var(--gray-300); background: var(--white); color: var(--gray-600);
   transition: all .15s;
 }
@@ -206,7 +206,7 @@ body {
 /* กลุ่มแยกชนิด */
 .group-section { margin-bottom: 18px; }
 .group-title {
-  font-size: 11px; font-weight: 700; color: var(--gray-600);
+  font-size: 13px; font-weight: 700; color: var(--gray-600);
   text-transform: uppercase; letter-spacing: .5px;
   padding: 6px 4px 6px; margin-bottom: 8px;
   border-bottom: 2px solid var(--gray-200);
@@ -244,11 +244,11 @@ body {
 }
 .eq-img img { width: 100%; height: 110px; object-fit: contain; display: block; background: var(--gray-50); }
 .eq-body { padding: 8px 9px; }
-.eq-name { font-size: 11px; font-weight: 600; color: var(--gray-800); line-height: 1.3; margin-bottom: 4px; }
+.eq-name { font-size: 13px; font-weight: 600; color: var(--gray-800); line-height: 1.3; margin-bottom: 4px; }
 .eq-floor { font-size: 10px; color: var(--gray-600); margin-bottom: 4px; }
 
 /* ── BADGES ── */
-.badge { display: inline-block; padding: 2px 7px; border-radius: 20px; font-size: 10px; font-weight: 600; }
+.badge { display: inline-block; padding: 3px 8px; border-radius: 20px; font-size: 12px; font-weight: 600; }
 .badge-ok { background: var(--green-lt); color: var(--green); }
 .badge-warn { background: var(--amber-lt); color: var(--amber); }
 .badge-danger { background: var(--red-lt); color: var(--red); }
@@ -399,7 +399,6 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
 <div class="tabs-wrap">
   <div class="tabs">
     <button class="tab active" onclick="switchTab('equip',this)"><span class="tab-icon">📦</span>คลังอุปกรณ์</button>
-    <button class="tab" onclick="switchTab('check',this)"><span class="tab-icon">✅</span>ตรวจเช็ค</button>
     <button class="tab" onclick="switchTab('hist',this)"><span class="tab-icon">📋</span>ประวัติ</button>
   </div>
 </div>
@@ -409,17 +408,6 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
 ════════════════════════════════════════════ -->
 <div id="page-equip" class="page active">
 
-  <!-- nurse dropdown for equip check -->
-  <div style="margin-bottom:10px;position:relative">
-    <span style="position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:14px;z-index:1">👩‍⚕️</span>
-    <select id="eq-nurse"
-      style="width:100%;padding:9px 12px 9px 36px;border-radius:var(--r);border:1.5px solid var(--gray-300);font-size:13px;background:var(--white);font-family:'Sarabun',sans-serif;
-        -webkit-appearance:none;appearance:none;
-        background-image:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%2380868B%22 stroke-width=%222%22><polyline points=%226 9 12 15 18 9%22/></svg>');
-        background-repeat:no-repeat;background-position:right 10px center;background-size:18px;padding-right:36px">
-      <option value="">— เลือกชื่อผู้ตรวจสอบ —</option>
-    </select>
-  </div>
   <div class="search-bar">
     <input type="text" id="eq-search" placeholder="ค้นหาอุปกรณ์..." oninput="renderEquip()">
   </div>
@@ -435,37 +423,13 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
   </div>
   <div id="eq-container"></div>
 
-  <!-- Progress + Save button at bottom -->
-  <div style="background:var(--white);border-radius:var(--r);padding:12px 14px;margin-top:14px;box-shadow:var(--shadow-sm);border:1px solid var(--gray-200)">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-      <span style="font-size:12px;font-weight:600;color:var(--gray-800)">ความคืบหน้าการตรวจอุปกรณ์</span>
-      <span style="font-size:12px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:var(--blue-md)" id="equip-prog-pct">0/54</span>
-    </div>
-    <div style="height:8px;background:var(--gray-200);border-radius:4px;overflow:hidden;margin-bottom:10px">
-      <div id="equip-prog-fill" style="height:100%;background:linear-gradient(90deg,var(--blue-md),#27AE60);border-radius:4px;transition:width .4s cubic-bezier(.4,0,.2,1);width:0%"></div>
-    </div>
-    <button id="btn-save-equip" onclick="saveEquipToSheets()"
-      style="width:100%;padding:12px;border-radius:var(--r-sm);border:none;cursor:not-allowed;font-family:'Sarabun',sans-serif;font-size:14px;font-weight:600;
-        background:var(--gray-300);color:var(--gray-600);display:flex;align-items:center;justify-content:center;gap:8px;transition:all .3s"
-      disabled>
-      <span>📋</span> <span id="btn-save-equip-txt">ต้องตรวจสอบให้ครบก่อน (0/54)</span>
-    </button>
-  </div>
-</div>
+  <hr style="border:none;border-top:2px dashed var(--gray-200);margin:24px 0 16px">
 
-<!-- ════════════════════════════════════════════
-     PAGE 2: CHECK FORM
-════════════════════════════════════════════ -->
-<div id="page-check" class="page">
-  <div class="prog-wrap">
-    <div class="prog-label">
-      <span>ความคืบหน้าการตรวจสอบ</span>
-      <strong id="prog-pct">0%</strong>
-    </div>
-    <div class="prog-bar"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+  <!-- ผลการตรวจสอบอุปกรณ์ -->
+  <div style="font-size:14px;font-weight:700;color:var(--gray-800);margin-bottom:12px;display:flex;align-items:center;gap:8px">
+    ✅ ผลการตรวจสอบอุปกรณ์
   </div>
 
-  <!-- General Info -->
   <div class="card">
     <div class="card-header"><span class="ch-icon">📅</span><h3>ข้อมูลทั่วไป</h3></div>
     <div class="card-body">
@@ -486,15 +450,13 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
     </div>
   </div>
 
-  <!-- Check Items -->
   <div class="card">
-    <div class="card-header"><span class="ch-icon">🏥</span><h3>ผลการตรวจสอบอุปกรณ์</h3></div>
+    <div class="card-header"><span class="ch-icon">🏥</span><h3>ผลการตรวจอุปกรณ์</h3></div>
     <div class="card-body">
       <div class="check-grid" id="check-grid"></div>
     </div>
   </div>
 
-  <!-- Incharge -->
   <div class="card">
     <div class="card-header"><span class="ch-icon">👩‍⚕️</span><h3>หัวหน้าหอ / หัวหน้าเวร</h3></div>
     <div class="card-body">
@@ -511,7 +473,7 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
           style="padding:10px 12px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);
             font-family:'Sarabun',sans-serif;font-size:14px;color:var(--gray-900);
             background:var(--gray-50);width:100%;-webkit-appearance:none;appearance:none;
-            background-image:url('data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"%2380868B\" stroke-width=\"2\"><polyline points=\"6 9 12 15 18 9\"/></svg>');
+            background-image:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%2380868B%22 stroke-width=%222%22><polyline points=%226 9 12 15 18 9%22/></svg>');
             background-repeat:no-repeat;background-position:right 10px center;background-size:18px;padding-right:36px">
           <option value="">— เลือกชื่อ —</option>
         </select>
@@ -524,15 +486,27 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
     </div>
   </div>
 
-  <div class="btn-row">
-    <button class="btn btn-primary" onclick="submitCheck()">
-      <span class="btn-icon">✅</span> ยืนยันการตรวจสอบ
+  <!-- Progress + Save button at bottom -->
+  <div style="background:var(--white);border-radius:var(--r);padding:12px 14px;margin-top:14px;box-shadow:var(--shadow-sm);border:1px solid var(--gray-200)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <span style="font-size:12px;font-weight:600;color:var(--gray-800)">ความคืบหน้าการตรวจอุปกรณ์</span>
+      <span style="font-size:12px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:var(--blue-md)" id="equip-prog-pct">0/54</span>
+    </div>
+    <div style="height:8px;background:var(--gray-200);border-radius:4px;overflow:hidden;margin-bottom:10px">
+      <div id="equip-prog-fill" style="height:100%;background:linear-gradient(90deg,var(--blue-md),#27AE60);border-radius:4px;transition:width .4s cubic-bezier(.4,0,.2,1);width:0%"></div>
+    </div>
+    <button id="btn-save-equip" onclick="saveAllAndCheck()"
+      style="width:100%;padding:14px;border-radius:var(--r-sm);border:none;cursor:not-allowed;font-family:'Sarabun',sans-serif;font-size:15px;font-weight:700;
+        background:var(--gray-300);color:var(--gray-600);display:flex;align-items:center;justify-content:center;gap:8px;transition:all .3s"
+      disabled>
+      <span>💾</span> <span id="btn-save-equip-txt">ต้องตรวจสอบให้ครบก่อน (0/54)</span>
     </button>
-    <button class="btn btn-green" onclick="saveToSheets()" style="flex:0;padding:12px 14px;" title="บันทึกไป Sheets">
-      <span class="btn-icon">📊</span>
-    </button>
+
+
   </div>
 </div>
+
+
 
 <!-- ════════════════════════════════════════════
      PAGE 3: HISTORY
@@ -594,7 +568,6 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
 <!-- BOTTOM NAV (mobile) -->
 <nav class="bottom-nav">
   <button class="bnav-btn active" onclick="switchTab('equip',this)"><span class="icon">📦</span>คลัง</button>
-  <button class="bnav-btn" onclick="switchTab('check',this)"><span class="icon">✅</span>ตรวจเช็ค</button>
   <button class="bnav-btn" onclick="switchTab('hist',this)"><span class="icon">📋</span>ประวัติ</button>
 </nav>
 
@@ -607,10 +580,13 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
 // ─── CONFIG ───────────────────────────────────────────────
 const DRIVE_FOLDER   = '1tfNKiu55ocZbXF3ovQaH7dz97tSOKsUM';
 const SPREADSHEET_ID = '1X4NBGK_8xokrgl3qf1F1XtCdUUhFeyKvXjQTaJMMkbI';
-const SCRIPT_URL     = 'https://script.google.com/macros/s/AKfycbxEuWZG1hkI5RsN82oEEAEc1hyEyvfaUNCziUXNtxLXrL1y7kAHHBnoR1nH7ppX-iyg/exec';
+const SCRIPT_URL     = 'https://script.google.com/macros/s/AKfycbx-s6VguCZeG5ApAlmLdEVN2ihKWYzUehm-bhIVC_FWAJp7RgPA6BZO867gRvdXnZbB/exec';
 
 // clear old scriptUrl from localStorage to always use hardcoded URL
+// force clear all old config from localStorage
 localStorage.removeItem('scriptUrl');
+localStorage.removeItem('sheetName');
+localStorage.removeItem('savedCount');
 let config = {
   sheetsId:  SPREADSHEET_ID,
   scriptUrl: SCRIPT_URL,
@@ -691,10 +667,6 @@ const EMOJIS = {
 function emoji(name){ for(const k in EMOJIS) if(name.includes(k)) return EMOJIS[k]; return '📦'; }
 
 const checkDefs = [
-  {id:'l1',  label:'Laryngoscope(1)', icon:'🔦',
-    opts:['พร้อมใช้','ไม่พร้อมใช้'], sub:{label:'ไฟส่องสว่าง', opts:['เพียงพอ','ไม่เพียงพอ']}},
-  {id:'l2',  label:'Laryngoscope(2)', icon:'🔦',
-    opts:['พร้อมใช้','ไม่พร้อมใช้'], sub:{label:'ไฟส่องสว่าง', opts:['เพียงพอ','ไม่เพียงพอ']}},
   {id:'b1',  label:'Emergency box 1', icon:'📦',
     opts:['พร้อมใช้','ไม่พร้อมใช้'], sub:{label:'สถานะยา', opts:['ยาครบ','กำลังเติมยา','มีการใช้ยา']}},
   {id:'b2',  label:'Emergency box 2', icon:'📦',
@@ -719,15 +691,15 @@ function init() {
   const h = now.getHours();
   const shift = h<8?'เวรดึก':h<16?'เวรเช้า':'เวรบ่าย';
   document.getElementById('hdr-shift').textContent = shift;
-  document.getElementById('f-date').value = now.toISOString().split('T')[0];
+  const localDate = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+  document.getElementById('f-date').value = localDate;
   document.getElementById('f-shift').value = shift;
   if(document.getElementById('cfg-url')) document.getElementById('cfg-url').value = config.scriptUrl;
   if(document.getElementById('cfg-sheet')) document.getElementById('cfg-sheet').value = config.sheetName;
-  updateSheetsStatus();
-  renderEquip();
-  updateEquipProgress();
+  setTimeout(updateSheetsStatus, 100);
   renderCheckGrid();
   renderIncharge();
+  loadEquipMeta();
   renderHistory();
 }
 
@@ -739,7 +711,7 @@ function switchTab(id, el) {
   // Activate both desktop tab and mobile nav
   const tabs = document.querySelectorAll('.tab');
   const bnavs = document.querySelectorAll('.bnav-btn');
-  const order = ['equip','check','hist'];
+  const order = ['equip','hist'];
   const idx = order.indexOf(id);
   if(tabs[idx]) tabs[idx].classList.add('active');
   if(bnavs[idx]) bnavs[idx].classList.add('active');
@@ -1043,17 +1015,20 @@ function updateExp(idx, val) {
   const dayColor = days===null?'inherit':days<60?'#C0392B':days<180?'#B7770D':'#1E8449';
   const el = document.getElementById('days-left');
   if(el && days!==null) { el.textContent = days+' วัน'; el.style.color = dayColor; }
+  saveEquipMeta(idx);
   renderEquip();
 }
 
 function updateNote(idx, val) {
   equipment[idx].note = val;
+  saveEquipMeta(idx);
   renderEquip();
 }
 
 function setEquipStatus(idx, val) {
   if(val === '') delete equipStatus[idx];
   else equipStatus[idx] = val;
+  saveEquipMeta(idx);
   renderEquip();
   renderModal(idx);
 }
@@ -1064,6 +1039,57 @@ function toggleCheckedModal(idx) {
   updateEquipProgress();
   renderEquip();
   renderModal(idx);
+}
+
+// ── บันทึก meta (exp/note/status) ลง Sheets ─────────────
+async function saveEquipMeta(idx) {
+  const e = equipment[idx];
+  // always save to localStorage immediately
+  const meta = JSON.parse(localStorage.getItem('equipMeta') || '{}');
+  meta[e.name] = { exp: e.exp||'', note: e.note||'', status: equipStatus[idx]||'ปกติ' };
+  localStorage.setItem('equipMeta', JSON.stringify(meta));
+  showToast('💾 บันทึกลงเครื่องแล้ว', '#1E8449');
+  // also sync to Sheets in background
+  if(!config.scriptUrl) return;
+  const payload = { type: 'updateEquipMeta', name: e.name, exp: e.exp||'', note: e.note||'', status: equipStatus[idx]||'ปกติ' };
+  try {
+    await fetch(config.scriptUrl, { method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+  } catch(err) {}
+}
+
+// ── โหลด meta จาก Sheets แล้ว patch equipment array ────
+async function loadEquipMeta() {
+  // 1. load from localStorage first (instant)
+  const meta = JSON.parse(localStorage.getItem('equipMeta') || '{}');
+  Object.keys(meta).forEach(name => {
+    const idx = equipment.findIndex(e => e.name === name);
+    if(idx < 0) return;
+    const row = meta[name];
+    if(row.exp)  equipment[idx].exp  = row.exp;
+    if(row.note !== undefined) equipment[idx].note = row.note;
+    if(row.status && row.status !== 'ปกติ') equipStatus[idx] = row.status;
+  });
+  renderEquip();
+  updateEquipProgress();
+  // 2. then try Sheets for latest data
+  if(!config.scriptUrl) return;
+  try {
+    const resp = await fetch(config.scriptUrl + '?t=' + Date.now());
+    const json = await resp.json();
+    if(json.equipMeta && Array.isArray(json.equipMeta)) {
+      const newMeta = JSON.parse(localStorage.getItem('equipMeta') || '{}');
+      json.equipMeta.forEach(row => {
+        const idx = equipment.findIndex(e => e.name === row.name);
+        if(idx < 0) return;
+        if(row.exp)  equipment[idx].exp  = row.exp;
+        if(row.note !== undefined) equipment[idx].note = row.note;
+        if(row.status && row.status !== 'ปกติ') equipStatus[idx] = row.status;
+        newMeta[row.name] = { exp: row.exp||'', note: row.note||'', status: row.status||'ปกติ' };
+      });
+      localStorage.setItem('equipMeta', JSON.stringify(newMeta));
+      renderEquip();
+    }
+  } catch(e) {}
 }
 
 function updateEquipProgress() {
@@ -1086,7 +1112,7 @@ function updateEquipProgress() {
       btn.style.background = '#1E8449';
       btn.style.color = '#fff';
       btn.style.boxShadow = '0 3px 10px rgba(30,132,73,.35)';
-      btnTxt.textContent = '📊 บันทึกผลการตรวจสอบทั้งหมดลง Google Sheets';
+      btnTxt.textContent = '💾 บันทึกคลังอุปกรณ์ + ผลการตรวจสอบลง Sheets';
     } else {
       btn.disabled = true;
       btn.style.cursor = 'not-allowed';
@@ -1096,6 +1122,18 @@ function updateEquipProgress() {
       btnTxt.textContent = `ต้องตรวจสอบให้ครบก่อน (${done}/${total})`;
     }
   }
+}
+
+async function saveAllAndCheck() {
+  // validate check form first
+  const d = getFormData();
+  if(!d.nurse || d.nurse==='—') {
+    showToast('⚠️ กรุณาเลือกชื่อหัวหน้าเวรก่อน', '#C0392B'); return;
+  }
+  showToast('📤 กำลังบันทึก...', '#185FA5');
+  await saveEquipToSheets();   // save equip bulk
+  await new Promise(r => setTimeout(r, 600));
+  submitCheck();               // save shift check
 }
 
 async function saveEquipToSheets() {
@@ -1109,9 +1147,9 @@ async function saveEquipToSheets() {
     return;
   }
 
-  const date  = document.getElementById('f-date')?.value  || new Date().toISOString().split('T')[0];
+  const date  = document.getElementById('f-date')?.value  || (()=>{ const n=new Date(); return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0'); })();
   const shift = document.getElementById('f-shift')?.value || '';
-  const nurse = document.getElementById('eq-nurse')?.value.trim() || selectedIncharge || '';
+  const nurse = selectedIncharge || '';
   const ts    = new Date().toLocaleString('th-TH');
 
   showToast(`📤 กำลังบันทึก ${total} รายการ...`, '#185FA5');
@@ -1149,7 +1187,7 @@ async function saveEquipToSheets() {
       const sel = document.getElementById('incharge-select');
       if(sel) sel.value = selectedIncharge;
     }
-    setTimeout(() => switchTab('check', document.querySelectorAll('.bnav-btn')[1]), 800);
+    // flow continues in saveAllAndCheck
   } catch(err) {
     showToast('❌ บันทึกไม่สำเร็จ กรุณาลองใหม่', '#C0392B');
   }
@@ -1243,15 +1281,6 @@ function renderIncharge() {
       sel.appendChild(opt);
     });
   }
-  // populate equip page nurse dropdown
-  const nurSel = document.getElementById('eq-nurse');
-  if(nurSel) {
-    inchargeList.forEach(n => {
-      const opt = document.createElement('option');
-      opt.value = n; opt.textContent = n;
-      nurSel.appendChild(opt);
-    });
-  }
 }
 
 function pickInchargeSelect(name) {
@@ -1295,7 +1324,7 @@ function submitCheck() {
   localStorage.setItem('records', JSON.stringify(records));
   showToast('✅ บันทึกการตรวจสอบเรียบร้อย');
   if(config.connected) pushToSheets(d);
-  setTimeout(() => switchTab('hist', document.querySelectorAll('.bnav-btn')[2]), 900);
+  setTimeout(() => switchTab('hist', document.querySelectorAll('.bnav-btn')[1]), 900);
 }
 
 // ─── HISTORY ───────────────────────────────────────────────
