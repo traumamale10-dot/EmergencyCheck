@@ -580,7 +580,7 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
 // ─── CONFIG ───────────────────────────────────────────────
 const DRIVE_FOLDER   = '1tfNKiu55ocZbXF3ovQaH7dz97tSOKsUM';
 const SPREADSHEET_ID = '1X4NBGK_8xokrgl3qf1F1XtCdUUhFeyKvXjQTaJMMkbI';
-const SCRIPT_URL     = 'https://script.google.com/macros/s/AKfycbx-s6VguCZeG5ApAlmLdEVN2ihKWYzUehm-bhIVC_FWAJp7RgPA6BZO867gRvdXnZbB/exec';
+const SCRIPT_URL     = 'https://script.google.com/macros/s/AKfycbyRf86KZVSb8CVGRUesgzhHJsMr0KP97TGY5xGhloLJEEPTfl5cwnWZmWAniGjMnasH/exec';
 
 // clear old scriptUrl from localStorage to always use hardcoded URL
 // force clear all old config from localStorage
@@ -1089,7 +1089,7 @@ async function loadEquipMeta() {
       localStorage.setItem('equipMeta', JSON.stringify(newMeta));
       renderEquip();
     }
-  } catch(e) {}
+  } catch(err) { console.error("loadEquipMeta:",err); showToast("❌ ดึงข้อมูลไม่สำเร็จ: "+err.message,"#C0392B"); }
 }
 
 function updateEquipProgress() {
