@@ -580,7 +580,7 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
 // ─── CONFIG ───────────────────────────────────────────────
 const DRIVE_FOLDER   = '1tfNKiu55ocZbXF3ovQaH7dz97tSOKsUM';
 const SPREADSHEET_ID = '1X4NBGK_8xokrgl3qf1F1XtCdUUhFeyKvXjQTaJMMkbI';
-const SCRIPT_URL     = 'https://script.google.com/macros/s/AKfycbyRf86KZVSb8CVGRUesgzhHJsMr0KP97TGY5xGhloLJEEPTfl5cwnWZmWAniGjMnasH/exec';
+const SCRIPT_URL     = 'https://script.google.com/macros/s/AKfycbxHmS_MuoJZbnywWh9vS40u5i6JA3bZZc-LFiLck79UQMQOH-9qy6J0h1kno9EnfBbK/exec';
 
 // clear old scriptUrl from localStorage to always use hardcoded URL
 // force clear all old config from localStorage
@@ -722,10 +722,29 @@ function switchTab(id, el) {
 let checkedItems = new Set();  // reset every session
 let equipStatus  = {};
 
+// parse exp string in any common format → Date (local midnight) or null
+function parseExpDate(exp) {
+  if(!exp || exp === '-') return null;
+  // YYYY-MM-DD (standard)
+  if(/^\d{4}-\d{2}-\d{2}$/.test(exp)) {
+    const [y,m,d] = exp.split('-').map(Number);
+    return new Date(y, m-1, d);
+  }
+  // DD/MM/YYYY or D/M/YYYY (Thai Google Sheets export)
+  if(/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(exp)) {
+    const [d,m,y] = exp.split('/').map(Number);
+    return new Date(y, m-1, d);
+  }
+  // fallback: let JS try (may handle "Jul 30, 2026" etc.)
+  const fallback = new Date(exp);
+  if(!isNaN(fallback)) return new Date(fallback.getFullYear(), fallback.getMonth(), fallback.getDate());
+  return null;
+}
+
 function getExpBadge(exp) {
   if(!exp) return '';
-  const [y,m,d] = exp.split('-').map(Number);
-  const expLocal = new Date(y, m-1, d);  // local midnight
+  const expLocal = parseExpDate(exp);
+  if(!expLocal) return '';
   const now = new Date();
   const todayLocal = new Date(now.getFullYear(), now.getMonth(), now.getDate()); // local midnight
   const days = Math.round((expLocal - todayLocal) / 86400000);
@@ -823,7 +842,9 @@ function makeCard(e) {
   const imgSrc = e.imgId ? `https://lh3.googleusercontent.com/d/${e.imgId}` : null;
 
   // days remaining for tooltip
-  const daysLeft = e.exp ? Math.floor((new Date(e.exp)-new Date())/86400000) : null;
+  const _expD = parseExpDate(e.exp);
+  const _today = new Date(); const _t0 = new Date(_today.getFullYear(),_today.getMonth(),_today.getDate());
+  const daysLeft = _expD ? Math.round((_expD - _t0)/86400000) : null;
   const daysTitle = daysLeft!==null ? (daysLeft<0?'หมดอายุแล้ว':`เหลือ ${daysLeft} วัน`) : '';
 
   // border color by status
@@ -924,7 +945,9 @@ function renderModal(idx) {
   const em = emoji(e.name);
   const isChecked = checkedItems.has(idx);
   const curStatus = equipStatus[idx] || '';
-  const days = e.exp ? Math.floor((new Date(e.exp)-new Date())/86400000) : null;
+  const _expDate = parseExpDate(e.exp);
+  const _now0 = new Date(); const _today0 = new Date(_now0.getFullYear(),_now0.getMonth(),_now0.getDate());
+  const days = _expDate ? Math.round((_expDate - _today0)/86400000) : null;
   const dayColor = days===null?'inherit':days<60?'#C0392B':days<180?'#B7770D':'#1E8449';
   const imgHtml = e.imgId
     ? `<img src="https://lh3.googleusercontent.com/d/${e.imgId}" class="modal-img" alt="${e.name}" loading="lazy"
@@ -1011,7 +1034,9 @@ function renderModal(idx) {
 
 function updateExp(idx, val) {
   equipment[idx].exp = val;
-  const days = val ? Math.floor((new Date(val)-new Date())/86400000) : null;
+  const _expD2 = parseExpDate(val);
+  const _n2 = new Date(); const _t2 = new Date(_n2.getFullYear(),_n2.getMonth(),_n2.getDate());
+  const days = _expD2 ? Math.round((_expD2 - _t2)/86400000) : null;
   const dayColor = days===null?'inherit':days<60?'#C0392B':days<180?'#B7770D':'#1E8449';
   const el = document.getElementById('days-left');
   if(el && days!==null) { el.textContent = days+' วัน'; el.style.color = dayColor; }
@@ -1081,6 +1106,11 @@ async function loadEquipMeta() {
       json.equipMeta.forEach(row => {
         const idx = equipment.findIndex(e => e.name === row.name);
         if(idx < 0) return;
+        // normalize exp to YYYY-MM-DD
+        if(row.exp) {
+          const d = parseExpDate(row.exp);
+          if(d) row.exp = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+        }
         if(row.exp)  equipment[idx].exp  = row.exp;
         if(row.note !== undefined) equipment[idx].note = row.note;
         if(row.status && row.status !== 'ปกติ') equipStatus[idx] = row.status;
