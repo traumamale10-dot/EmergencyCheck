@@ -657,6 +657,45 @@ const equipment = [
   {name:"Elastic gum bougie",floor:"ด้านนอก",   exp:"",           fifo:"Use this first",  note:"ส่งนึ่ง",      imgId:"1txoay5OUMHGGgM9V5IPW1KEtxOj_UiCe"},
 ];
 
+// ─── AUTO-COMPUTE FIFO FROM EXPIRY DATE ────────────────────
+// For items sharing the same base name (e.g. "ET Tube No.7"),
+// the one with the earliest exp date gets fifo = "Use this first".
+// Items with no exp date are never promoted to FIFO unless all
+// siblings also lack exp dates (then original manual fifo wins).
+function computeFifo() {
+  const base = name => name.replace(/\s*[\(\（]\d+[\)\）]\s*$/, '').trim();
+  // group indices by base name
+  const groups = {};
+  equipment.forEach((e, i) => {
+    const b = base(e.name);
+    if (!groups[b]) groups[b] = [];
+    groups[b].push(i);
+  });
+  // for each group, find earliest exp
+  Object.values(groups).forEach(indices => {
+    if (indices.length <= 1) return; // single item: keep original fifo
+    // parse exp for each
+    const withExp = indices
+      .map(i => ({ i, d: parseExpDate(equipment[i].exp) }))
+      .filter(x => x.d !== null);
+    if (withExp.length === 0) return; // no exp dates → keep original fifo
+    // sort ascending: earliest first
+    withExp.sort((a, b) => a.d - b.d);
+    const earliest = withExp[0].d;
+    // clear all fifo in group first
+    indices.forEach(i => { equipment[i]._fifoAuto = false; });
+    // mark all items sharing the earliest exp date
+    withExp.filter(x => x.d.getTime() === earliest.getTime())
+           .forEach(x => { equipment[x.i]._fifoAuto = true; });
+  });
+}
+
+function isFifoItem(e) {
+  // _fifoAuto is set by computeFifo(); fall back to manual fifo field
+  if (typeof e._fifoAuto === 'boolean') return e._fifoAuto;
+  return e.fifo === 'Use this first';
+}
+
 const EMOJIS = {
   'Ambubag':'🫁','Hold mask':'😷','Air way':'💨','หมวกคลุมผม':'🧢',
   'Face mesk':'😷','สายออกซิเจน':'🔗','N95':'😷','ET Tube':'🩺',
@@ -697,6 +736,7 @@ function init() {
   if(document.getElementById('cfg-url')) document.getElementById('cfg-url').value = config.scriptUrl;
   if(document.getElementById('cfg-sheet')) document.getElementById('cfg-sheet').value = config.sheetName;
   setTimeout(updateSheetsStatus, 100);
+  computeFifo();
   renderCheckGrid();
   renderIncharge();
   loadEquipMeta();
@@ -777,7 +817,7 @@ function openEditModal(idx, ev) {
 function renderEquip() {
   const q = document.getElementById('eq-search').value.toLowerCase();
   let items = equipment.map((e,idx) => ({...e,idx})).filter(e => {
-    if(curFilter==='__fifo') return e.fifo==='Use this first';
+    if(curFilter==='__fifo') return isFifoItem(e);
     if(curFilter==='__checked') return checkedItems.has(e.idx);
     if(curFilter!=='all' && e.floor!==curFilter) return false;
     return !q || e.name.toLowerCase().includes(q);
@@ -809,7 +849,7 @@ function renderEquip() {
     const byBase = {};
     g.forEach(e => { const b = base(e); if(!byBase[b]) byBase[b]=[]; byBase[b].push(e); });
     // sort within each base: fifo first
-    Object.keys(byBase).forEach(b => byBase[b].sort((a,bb) => (bb.fifo==='Use this first'?1:0)-(a.fifo==='Use this first'?1:0)));
+    Object.keys(byBase).forEach(b => byBase[b].sort((a,bb) => (isFifoItem(bb)?1:0)-(isFifoItem(a)?1:0)));
     // rebuild group preserving floor order of bases
     const baseOrder = [];
     g.forEach(e => { const b = base(e); if(!baseOrder.includes(b)) baseOrder.push(b); });
@@ -836,7 +876,7 @@ function renderEquip() {
 function makeCard(e) {
   const idx = e.idx;
   const em = emoji(e.name);
-  const isFifo = e.fifo==='Use this first';
+  const isFifo = isFifoItem(e);
   const isChecked = checkedItems.has(idx);
   const status = equipStatus[idx] || '';
   const imgSrc = e.imgId ? `https://lh3.googleusercontent.com/d/${e.imgId}` : null;
@@ -906,7 +946,7 @@ function showEquipDetail(idx, listOverride) {
     const q = document.getElementById('eq-search').value.toLowerCase();
     modalList = equipment.map((_,i)=>i).filter(i => {
       const e = equipment[i];
-      if(curFilter==='__fifo') return e.fifo==='Use this first';
+      if(curFilter==='__fifo') return isFifoItem(e);
       if(curFilter==='__checked') return checkedItems.has(i);
       if(curFilter!=='all' && e.floor!==curFilter) return false;
       return !q || e.name.toLowerCase().includes(q);
@@ -1013,7 +1053,7 @@ function renderModal(idx) {
         onchange="updateExp(${idx},this.value)">
     </div>
     ${days!==null?`<div class="detail-row"><span class="dl">เหลืออีก</span><span class="dr" id="days-left" style="color:${dayColor};font-family:'IBM Plex Mono',monospace">${days} วัน</span></div>`:''}
-    ${e.fifo?`<div class="detail-row"><span class="dl">FIFO</span><span class="dr" style="color:#C0392B;font-weight:700">⚠ ใช้ก่อน</span></div>`:''}
+    ${isFifoItem(e)?`<div class="detail-row"><span class="dl">FIFO</span><span class="dr" style="color:#C0392B;font-weight:700">⚠ ใช้ก่อน</span></div>`:''}
     <div class="detail-row">
       <span class="dl">หมายเหตุ</span>
       <input type="text" id="modal-note-${idx}" value="${e.note||''}" placeholder="ใส่หมายเหตุ..."
@@ -1034,6 +1074,7 @@ function renderModal(idx) {
 
 function updateExp(idx, val) {
   equipment[idx].exp = val;
+  computeFifo();
   const _expD2 = parseExpDate(val);
   const _n2 = new Date(); const _t2 = new Date(_n2.getFullYear(),_n2.getMonth(),_n2.getDate());
   const days = _expD2 ? Math.round((_expD2 - _t2)/86400000) : null;
@@ -1094,6 +1135,7 @@ async function loadEquipMeta() {
     if(row.note !== undefined) equipment[idx].note = row.note;
     if(row.status && row.status !== 'ปกติ') equipStatus[idx] = row.status;
   });
+  computeFifo();
   renderEquip();
   updateEquipProgress();
   // 2. then try Sheets for latest data
@@ -1117,6 +1159,7 @@ async function loadEquipMeta() {
         newMeta[row.name] = { exp: row.exp||'', note: row.note||'', status: row.status||'ปกติ' };
       });
       localStorage.setItem('equipMeta', JSON.stringify(newMeta));
+      computeFifo();
       renderEquip();
     }
   } catch(err) { console.error("loadEquipMeta:",err); showToast("❌ ดึงข้อมูลไม่สำเร็จ: "+err.message,"#C0392B"); }
