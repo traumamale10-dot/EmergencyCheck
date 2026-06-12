@@ -580,7 +580,7 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
 // ─── CONFIG ───────────────────────────────────────────────
 const DRIVE_FOLDER   = '1tfNKiu55ocZbXF3ovQaH7dz97tSOKsUM';
 const SPREADSHEET_ID = '1X4NBGK_8xokrgl3qf1F1XtCdUUhFeyKvXjQTaJMMkbI';
-const SCRIPT_URL     = 'https://script.google.com/macros/s/AKfycbxHmS_MuoJZbnywWh9vS40u5i6JA3bZZc-LFiLck79UQMQOH-9qy6J0h1kno9EnfBbK/exec';
+const SCRIPT_URL     = 'https://script.google.com/macros/s/AKfycbws0ay_NiyT7yDD-pbCTvbAAVff68UhKcEWmRQ3beSNXkgEjwHQzYah90UmMu3_Kf6L/exec';
 
 // clear old scriptUrl from localStorage to always use hardcoded URL
 // force clear all old config from localStorage
@@ -684,9 +684,9 @@ function computeFifo() {
     const earliest = withExp[0].d;
     // clear all fifo in group first
     indices.forEach(i => { equipment[i]._fifoAuto = false; });
-    // mark all items sharing the earliest exp date
-    withExp.filter(x => x.d.getTime() === earliest.getTime())
-           .forEach(x => { equipment[x.i]._fifoAuto = true; });
+    // mark only the first item (by original order) among those sharing the earliest exp date
+    const earliestItems = withExp.filter(x => x.d.getTime() === earliest.getTime());
+    equipment[earliestItems[0].i]._fifoAuto = true;
   });
 }
 
