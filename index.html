@@ -804,9 +804,38 @@ function toggleChecked(idx, ev) {
   if(wasChecked) checkedItems.delete(idx);
   else checkedItems.add(idx);
   updateEquipProgress();
-  renderEquip();
+  updateGroupCheckedCounts();
+  // อัปเดตเฉพาะการ์ดนี้ ไม่ re-render ทั้งกริด (ป้องกันภาพกระพริบ/โหลดใหม่)
+  const oldCard = document.querySelector(`.eq-card[data-idx="${idx}"]`);
+  if(oldCard) {
+    const tmp = document.createElement('div');
+    tmp.innerHTML = makeCard({...equipment[idx], idx});
+    const newCard = tmp.firstElementChild;
+    oldCard.replaceWith(newCard);
+  } else {
+    renderEquip();
+  }
   const name = equipment[idx].name;
   showToast(wasChecked ? `\u21a9\ufe0f \u0e22\u0e01\u0e40\u0e25\u0e34\u0e01: ${name}` : `\u2705 \u0e15\u0e23\u0e27\u0e08\u0e2a\u0e2d\u0e1a\u0e41\u0e25\u0e49\u0e27: ${name}`, wasChecked?'#B7770D':'#1E8449');
+}
+
+// อัปเดตตัวเลข "✅ x/y" ในหัวกลุ่ม โดยไม่ต้อง re-render ทั้งกริด
+function updateGroupCheckedCounts() {
+  document.querySelectorAll('.group-section').forEach(section => {
+    const total = section.querySelectorAll('.eq-card').length;
+    const checked = section.querySelectorAll('.eq-card.checked').length;
+    let badge = section.querySelector('.g-checked');
+    if(checked > 0) {
+      if(!badge) {
+        badge = document.createElement('span');
+        badge.className = 'g-checked';
+        section.querySelector('.group-title').appendChild(badge);
+      }
+      badge.textContent = `✅ ${checked}/${total}`;
+    } else if(badge) {
+      badge.remove();
+    }
+  });
 }
 
 function openEditModal(idx, ev) {
@@ -899,7 +928,7 @@ function makeCard(e) {
     ? `<span class="badge" style="background:${status==='ขาด'?'#FDEDEC':status==='ส่งนึ่ง'?'#FEF9E7':'#EBF5FB'};color:${status==='ขาด'?'#C0392B':status==='ส่งนึ่ง'?'#B7770D':'#2471A3'};font-size:10px">
         ${status==='ขาด'?'❌':status==='ส่งนึ่ง'?'🔄':'⏳'} ${status}</span>` : '';
 
-  return `<div class="eq-card${isChecked?' checked':isFifo?' fifo':''}" style="${borderStyle}" onclick="toggleChecked(${idx},event)" title="${daysTitle}">
+  return `<div class="eq-card${isChecked?' checked':isFifo?' fifo':''}" data-idx="${idx}" style="${borderStyle}" onclick="toggleChecked(${idx},event)" title="${daysTitle}">
     ${isFifo?'<div style="background:#C0392B;color:#fff;font-size:10px;font-weight:700;text-align:center;padding:3px 0;letter-spacing:.5px">⚠️ ใช้ก่อน</div>':''}
     <div class="eq-img" id="ei-${idx}">
       ${imgSrc
@@ -1103,7 +1132,15 @@ function toggleCheckedModal(idx) {
   if(checkedItems.has(idx)) checkedItems.delete(idx);
   else checkedItems.add(idx);
   updateEquipProgress();
-  renderEquip();
+  updateGroupCheckedCounts();
+  const oldCard = document.querySelector(`.eq-card[data-idx="${idx}"]`);
+  if(oldCard) {
+    const tmp = document.createElement('div');
+    tmp.innerHTML = makeCard({...equipment[idx], idx});
+    oldCard.replaceWith(tmp.firstElementChild);
+  } else {
+    renderEquip();
+  }
   renderModal(idx);
 }
 
