@@ -1528,13 +1528,36 @@ function renderCheckHistory() {
     list.innerHTML = '<div class="empty-state"><div class="es-icon">📋</div><p>ยังไม่มีประวัติ</p></div>';
     return;
   }
+  // ── เช็คว่าในชุดตรวจอุปกรณ์ (equipHistory) วันที่/เวรเดียวกัน
+  //    มีการตรวจ Laryngoscope(1)/(2) แล้วหรือไม่ → ใช้ override สถานะ Lary1/Lary2
+  const laryStatusBySession = {};
+  equipHistory.forEach(r => {
+    const date  = r['วันที่'] || '';
+    const shift = r['เวร']    || '';
+    const name  = r['ชื่ออุปกรณ์'] || '';
+    const done  = String(r['ผลตรวจ']||'').includes('ตรวจแล้ว');
+    const key   = date + '|' + shift;
+    if(!laryStatusBySession[key]) laryStatusBySession[key] = {};
+    if(name === 'Laryngoscope(1)') laryStatusBySession[key].l1 = done;
+    if(name === 'Laryngoscope(2)') laryStatusBySession[key].l2 = done;
+  });
+
   list.innerHTML = records.map((r,i) => {
-    const allOk = ['ลาริ2','ลาริ1','บอก1','บอก2','เดฟิบ'].every(k => r[k]==='พร้อมใช้') ||
-      ['lary1','lary2','box1','box2','defib'].every(k => r[k]==='พร้อมใช้');
+    let l1 = r.lary1||r['ลาริงโกไสโค้1']||'';
+    let l2 = r.lary2||r['ลาริงโกไสโค้2']||'';
+    // override ด้วยผลตรวจ Laryngoscope จากชุดตรวจอุปกรณ์ (วันที่/เวรเดียวกัน) ถ้ามี
+    const laryKey = (r.date||'') + '|' + (r.shift||'');
+    const laryStatus = laryStatusBySession[laryKey];
+    if(laryStatus) {
+      if(laryStatus.l1 === true) l1 = 'พร้อมใช้';
+      if(laryStatus.l2 === true) l2 = 'พร้อมใช้';
+    }
+    const allOk = (l1==='พร้อมใช้' && l2==='พร้อมใช้' &&
+        ['box1','box2','defib'].every(k => r[k]==='พร้อมใช้')) ||
+      (l1==='พร้อมใช้' && l2==='พร้อมใช้' &&
+        ['บอก1','บอก2','เดฟิบ'].every(k => r[k]==='พร้อมใช้'));
     const bClass = allOk ? 'badge-ok' : 'badge-warn';
     const bText  = allOk ? '✅ ปกติ' : '⚠ ต้องติดตาม';
-    const l1 = r.lary1||r['ลาริงโกไสโค้1']||'';
-    const l2 = r.lary2||r['ลาริงโกไสโค้2']||'';
     const b1 = r.box1||''; const b1m = r.box1_med||'';
     const b2 = r.box2||''; const b2m = r.box2_med||'';
     const df = r.defib||''; const bt = r.battery||'';
