@@ -1030,6 +1030,9 @@ function renderModal(idx) {
   document.getElementById('modal-content').innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
       <span class="modal-title" style="margin-bottom:0">${em} ${e.name}</span>
+      <button onclick="closeModal()" aria-label="ปิด"
+        style="width:32px;height:32px;border-radius:50%;border:none;background:var(--gray-100);color:var(--gray-600);
+          font-size:18px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">✕</button>
     </div>
     <div style="position:relative;margin-bottom:12px">
       ${e.imgId
@@ -1062,9 +1065,14 @@ function renderModal(idx) {
     </div>
     <div class="detail-row">
       <span class="dl">วันหมดอายุ</span>
-      <input type="date" id="modal-exp" value="${e.exp||''}"
-        style="padding:4px 8px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);font-size:12px;font-family:'Sarabun',sans-serif;background:var(--gray-50);color:var(--gray-900)"
-        onchange="updateExp(${idx},this.value)">
+      <div style="display:flex;gap:6px;align-items:center">
+        <input type="date" id="modal-exp" value="${e.exp||''}"
+          style="padding:4px 8px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);font-size:12px;font-family:'Sarabun',sans-serif;background:var(--gray-50);color:var(--gray-900)"
+          onchange="updateExp(${idx},this.value)">
+        <button onclick="document.getElementById('modal-exp').value='';updateExp(${idx},'')" title="ล้างวันหมดอายุ (กรณีของขาด/รอเบิก)"
+          style="padding:4px 8px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);background:var(--white);color:var(--gray-600);
+            font-size:12px;font-family:'Sarabun',sans-serif;cursor:pointer;white-space:nowrap">✕ ล้าง</button>
+      </div>
     </div>
     ${days!==null?`<div class="detail-row"><span class="dl">เหลืออีก</span><span class="dr" id="days-left" style="color:${dayColor};font-family:'IBM Plex Mono',monospace">${days} วัน</span></div>`:''}
     ${isFifoItem(e)?`<div class="detail-row"><span class="dl">FIFO</span><span class="dr" style="color:#C0392B;font-weight:700">⚠ ใช้ก่อน</span></div>`:''}
@@ -1089,6 +1097,13 @@ function renderModal(idx) {
 function updateExp(idx, val) {
   equipment[idx].exp = val;
   computeFifo();
+  if(val === '') {
+    // ล้างวันหมดอายุ — re-render modal ทั้งหมดเพื่อซ่อนแถว "เหลืออีก"/FIFO
+    saveEquipMeta(idx);
+    renderEquip();
+    renderModal(idx);
+    return;
+  }
   const _expD2 = parseExpDate(val);
   const _n2 = new Date(); const _t2 = new Date(_n2.getFullYear(),_n2.getMonth(),_n2.getDate());
   const days = _expD2 ? Math.round((_expD2 - _t2)/86400000) : null;
