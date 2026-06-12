@@ -1498,7 +1498,7 @@ function renderEquipHistory() {
     <div class="stat-box"><div class="stat-num">${keys.length}</div><div class="stat-lbl">ครั้ง</div></div>
     <div class="stat-box"><div class="stat-num">${equipHistory.length}</div><div class="stat-lbl">รายการ</div></div>
   `;
-  list.innerHTML = keys.map(k => {
+  list.innerHTML = keys.map((k,si) => {
     const s       = sessions[k];
     const total   = s.items.length;
     const checked = s.items.filter(i => String(i['ผลตรวจ']||'').includes('ตรวจแล้ว')).length;
@@ -1506,7 +1506,7 @@ function renderEquipHistory() {
       const st = i['สถานะ'] || '';
       return st && st !== 'ปกติ';
     });
-    return `<div class="hist-card">
+    return `<div class="hist-card" style="cursor:pointer" onclick="openEquipHistDetail('${k.replace(/'/g,"\\'")}')">
       <div class="hist-top">
         <span class="hist-date">${s.date}<span class="hist-shift"> ${s.shift}</span></span>
         <span class="badge badge-ok">ตรวจ ${checked}/${total}</span>
@@ -1518,8 +1518,66 @@ function renderEquipHistory() {
         <span class="hist-who">👩‍⚕️ ${s.nurse||'—'}</span>
         <span class="hist-time">${s.ts||''}</span>
       </div>
+      <div style="text-align:center;margin-top:8px;font-size:11px;color:var(--blue-md);font-weight:600">👁 แตะเพื่อดูรายละเอียด</div>
     </div>`;
   }).join('');
+  equipHistSessions = sessions;
+}
+
+// ── โชว์รายละเอียดของชุดตรวจคลังอุปกรณ์ ──────────────────
+let equipHistSessions = {};
+function openEquipHistDetail(key) {
+  const s = equipHistSessions[key];
+  if(!s) return;
+  const statusMeta = {
+    'ขาด':     {icon:'❌', bg:'#FDEDEC', color:'#C0392B', label:'ของขาด'},
+    'ส่งนึ่ง': {icon:'🔄', bg:'#FEF9E7', color:'#B7770D', label:'ส่งนึ่ง'},
+    'รอเบิก':  {icon:'⏳', bg:'#EBF5FB', color:'#2471A3', label:'รอเบิก'},
+  };
+  const itemsHtml = s.items.map(i => {
+    const name    = i['ชื่ออุปกรณ์'] || '';
+    const floor   = i['ตำแหน่ง'] || '';
+    const exp     = i['วันหมดอายุ'] || '';
+    const checked = String(i['ผลตรวจ']||'').includes('ตรวจแล้ว');
+    const status  = i['สถานะ'] || '';
+    const em      = emoji(name);
+    const sm      = statusMeta[status];
+    return `<div style="display:flex;align-items:center;gap:10px;padding:9px 4px;border-bottom:1px solid var(--gray-100)">
+      <div style="width:34px;height:34px;border-radius:8px;background:${checked?'var(--green-lt)':'var(--gray-100)'};
+        display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">${em}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;color:var(--gray-900)">${name}</div>
+        <div style="font-size:11px;color:var(--gray-600);margin-top:1px">${floor}${exp?' · หมดอายุ '+exp:''}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px">
+        <span class="badge ${checked?'badge-ok':'badge-danger'}" style="font-size:10px">${checked?'✅ ตรวจแล้ว':'⬜ ไม่ได้ตรวจ'}</span>
+        ${sm?`<span class="badge" style="font-size:10px;background:${sm.bg};color:${sm.color}">${sm.icon} ${sm.label}</span>`:''}
+      </div>
+    </div>`;
+  }).join('');
+
+  const total   = s.items.length;
+  const checked = s.items.filter(i => String(i['ผลตรวจ']||'').includes('ตรวจแล้ว')).length;
+  const pct     = total ? Math.round(checked/total*100) : 0;
+
+  document.getElementById('edit-hist-content').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">
+      <div>
+        <div style="font-size:16px;font-weight:700;color:var(--gray-900)">📦 ${s.date} <span style="font-size:13px;color:var(--gray-600);font-weight:500">${s.shift}</span></div>
+        <div style="font-size:12px;color:var(--gray-600);margin-top:2px">👩‍⚕️ ผู้ตรวจ: ${s.nurse||'—'}</div>
+      </div>
+      <span class="badge badge-ok" style="font-size:12px">✅ ${checked}/${total}</span>
+    </div>
+    <div class="prog-bar" style="margin:10px 0 14px">
+      <div class="prog-fill" style="width:${pct}%"></div>
+    </div>
+    <div style="max-height:55vh;overflow-y:auto;border-top:1px solid var(--gray-100)">
+      ${itemsHtml}
+    </div>
+    <div style="font-size:10px;color:var(--gray-400);text-align:right;margin-top:8px;font-family:'IBM Plex Mono',monospace">${s.ts||''}</div>
+    <button onclick="closeEditHistModal()" style="width:100%;padding:11px;margin-top:14px;border-radius:var(--r-sm);border:1.5px solid var(--gray-300);cursor:pointer;font-family:'Sarabun',sans-serif;font-size:14px;font-weight:600;background:var(--white);color:var(--gray-600)">ปิด</button>
+  `;
+  document.getElementById('edit-hist-modal').classList.add('open');
 }
 function renderCheckHistory() {
   const statEl = document.getElementById('stat-row');
