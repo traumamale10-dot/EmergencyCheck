@@ -520,37 +520,14 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
      PAGE 3: HISTORY
 ════════════════════════════════════════════ -->
 <div id="page-hist" class="page">
-  <!-- Sub-tabs -->
-  <div style="display:flex;gap:0;margin-bottom:12px;border-radius:var(--r);overflow:hidden;border:1.5px solid var(--gray-200);background:var(--white)">
-    <button id="htab-equip" onclick="switchHistTab('equip')"
-      style="flex:1;padding:10px 8px;border:none;cursor:pointer;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:600;
-        background:var(--blue-md);color:#fff;transition:all .2s">
-      📦 คลังอุปกรณ์
-    </button>
-    <button id="htab-check" onclick="switchHistTab('check')"
-      style="flex:1;padding:10px 8px;border:none;cursor:pointer;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:600;
-        background:var(--white);color:var(--gray-600);transition:all .2s;border-left:1.5px solid var(--gray-200)">
-      ✅ ตรวจเช็ค
-    </button>
-  </div>
-
   <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
     <button onclick="renderHistory()" style="padding:5px 12px;border-radius:20px;border:1.5px solid var(--blue-md);background:var(--blue-lt);color:var(--blue-md);font-family:'Sarabun',sans-serif;font-size:12px;font-weight:600;cursor:pointer">
       🔄 โหลดใหม่
     </button>
   </div>
 
-  <!-- Equip history -->
-  <div id="hist-equip-section">
-    <div class="stat-row" id="stat-row-equip"></div>
-    <div id="hist-equip-list"></div>
-  </div>
-
-  <!-- Check history -->
-  <div id="hist-check-section" style="display:none">
-    <div class="stat-row" id="stat-row"></div>
-    <div id="hist-list"></div>
-  </div>
+  <div class="stat-row" id="stat-row"></div>
+  <div id="hist-list"></div>
 </div>
 
 <!-- Edit History Modal -->
@@ -1446,22 +1423,10 @@ function submitCheck() {
 }
 
 // ─── HISTORY ───────────────────────────────────────────────
-let histTab = 'equip';
 let equipHistory = [];
-
-function switchHistTab(tab) {
-  histTab = tab;
-  document.getElementById('htab-equip').style.background = tab==='equip' ? 'var(--blue-md)' : 'var(--white)';
-  document.getElementById('htab-equip').style.color = tab==='equip' ? '#fff' : 'var(--gray-600)';
-  document.getElementById('htab-check').style.background = tab==='check' ? 'var(--blue-md)' : 'var(--white)';
-  document.getElementById('htab-check').style.color = tab==='check' ? '#fff' : 'var(--gray-600)';
-  document.getElementById('hist-equip-section').style.display = tab==='equip' ? 'block' : 'none';
-  document.getElementById('hist-check-section').style.display = tab==='check' ? 'block' : 'none';
-}
 
 async function renderHistory() {
   if(config.scriptUrl) {
-    document.getElementById('hist-equip-list').innerHTML = '<div class="empty-state"><div class="es-icon">🔄</div><p>กำลังโหลด...</p></div>';
     document.getElementById('hist-list').innerHTML = '<div class="empty-state"><div class="es-icon">🔄</div><p>กำลังโหลด...</p></div>';
     try {
       const resp = await fetch(config.scriptUrl + '?t=' + Date.now());
@@ -1470,62 +1435,36 @@ async function renderHistory() {
       if(json.equipRows) { equipHistory = json.equipRows; }
     } catch(e) {}
   }
-  renderEquipHistory();
+  buildEquipHistSessions();
   renderCheckHistory();
 }
 
-function renderEquipHistory() {
-  const statEl = document.getElementById('stat-row-equip');
-  const list   = document.getElementById('hist-equip-list');
-  if(!equipHistory.length) {
-    if(statEl) statEl.innerHTML = '';
-    list.innerHTML = '<div class="empty-state"><div class="es-icon">📦</div><p>ยังไม่มีประวัติคลังอุปกรณ์</p></div>';
-    return;
-  }
-  // Group by session (วันที่-เวลา = batch key)
+// สร้าง map ของชุดตรวจคลังอุปกรณ์ ตาม key "วันที่|เวร" (ใช้เชื่อมกับ records และเปิด modal รายละเอียด)
+let equipHistSessions = {};
+function buildEquipHistSessions() {
   const sessions = {};
+  const seenKeyTs = {}; // เก็บ timestamp ของชุดล่าสุดที่เจอ ต่อ key
   equipHistory.forEach(r => {
     const ts    = r['วันที่-เวลา'] || '';
     const date  = r['วันที่']       || '';
     const shift = r['เวร']          || '';
     const nurse = r['ผู้ตรวจสอบ']   || '';
-    const key   = ts || (date + '|' + shift);
-    if(!sessions[key]) sessions[key] = {date, shift, nurse, ts, items:[]};
-    sessions[key].items.push(r);
+    const key   = date + '|' + shift;
+    // equipHistory เรียงล่าสุด→เก่าสุด (reverse แล้วจาก backend)
+    // ถ้า key นี้ยังไม่เคยเจอ ให้เริ่ม session ใหม่ (= ชุดล่าสุดของ key นี้)
+    if(!(key in seenKeyTs)) {
+      seenKeyTs[key] = ts;
+      sessions[key] = {date, shift, nurse, ts, items:[]};
+    }
+    // เก็บแถวเฉพาะที่ timestamp ตรงกับชุดล่าสุดของ key นี้ (กันชุดซ้ำเก่าปนกัน)
+    if(ts === seenKeyTs[key]) {
+      sessions[key].items.push(r);
+    }
   });
-  const keys = Object.keys(sessions);
-  if(statEl) statEl.innerHTML = `
-    <div class="stat-box"><div class="stat-num">${keys.length}</div><div class="stat-lbl">ครั้ง</div></div>
-    <div class="stat-box"><div class="stat-num">${equipHistory.length}</div><div class="stat-lbl">รายการ</div></div>
-  `;
-  list.innerHTML = keys.map((k,si) => {
-    const s       = sessions[k];
-    const total   = s.items.length;
-    const checked = s.items.filter(i => String(i['ผลตรวจ']||'').includes('ตรวจแล้ว')).length;
-    const issues  = s.items.filter(i => {
-      const st = i['สถานะ'] || '';
-      return st && st !== 'ปกติ';
-    });
-    return `<div class="hist-card" style="cursor:pointer" onclick="openEquipHistDetail('${k.replace(/'/g,"\\'")}')">
-      <div class="hist-top">
-        <span class="hist-date">${s.date}<span class="hist-shift"> ${s.shift}</span></span>
-        <span class="badge badge-ok">ตรวจ ${checked}/${total}</span>
-      </div>
-      ${issues.length ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin:6px 0">
-        ${issues.map(i=>`<span class="badge badge-warn">⚠ ${i['ชื่ออุปกรณ์']||''}: ${i['สถานะ']||''}</span>`).join('')}
-      </div>` : ''}
-      <div class="hist-foot" style="margin-top:6px">
-        <span class="hist-who">👩‍⚕️ ${s.nurse||'—'}</span>
-        <span class="hist-time">${s.ts||''}</span>
-      </div>
-      <div style="text-align:center;margin-top:8px;font-size:11px;color:var(--blue-md);font-weight:600">👁 แตะเพื่อดูรายละเอียด</div>
-    </div>`;
-  }).join('');
   equipHistSessions = sessions;
 }
 
 // ── โชว์รายละเอียดของชุดตรวจคลังอุปกรณ์ ──────────────────
-let equipHistSessions = {};
 function openEquipHistDetail(key) {
   const s = equipHistSessions[key];
   if(!s) return;
@@ -1629,6 +1568,18 @@ function renderCheckHistory() {
     const df = r.defib||''; const bt = r.battery||'';
     const rd = r.reddot||'';
     const dateVal = r.date||''; const shiftVal = r.shift||''; const nurseVal = r.nurse||''; const inchVal = r.incharge||''; const ts = r.timestamp||''; const noteVal = r.note||'';
+    const sessionKey = dateVal + '|' + shiftVal;
+    const equipSession = equipHistSessions[sessionKey];
+    let equipBtn = '';
+    if(equipSession) {
+      const eTotal   = equipSession.items.length;
+      const eChecked = equipSession.items.filter(it => String(it['ผลตรวจ']||'').includes('ตรวจแล้ว')).length;
+      equipBtn = `<button onclick="openEquipHistDetail('${sessionKey.replace(/'/g,"\\'")}')"
+        style="margin-top:8px;width:100%;padding:8px;border-radius:var(--r-sm);border:1.5px solid var(--blue-md);background:var(--blue-lt);
+          color:var(--blue-md);font-family:'Sarabun',sans-serif;font-size:12px;font-weight:600;cursor:pointer">
+        📦 ดูรายการอุปกรณ์ที่เช็ค (${eChecked}/${eTotal})
+      </button>`;
+    }
     return `<div class="hist-card">
       <div class="hist-top">
         <span class="hist-date">${dateVal}<span class="hist-shift"> ${shiftVal}</span></span>
@@ -1650,6 +1601,7 @@ function renderCheckHistory() {
         <span class="hist-time">${ts}</span>
       </div>
       ${noteVal?`<div style="font-size:11px;color:var(--gray-600);margin-top:4px;padding-top:4px;border-top:1px dashed var(--gray-200)">📝 ${noteVal}</div>`:''}
+      ${equipBtn}
     </div>`;
   }).join('');
 }
