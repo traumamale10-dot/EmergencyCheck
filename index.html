@@ -1065,10 +1065,21 @@ function renderModal(idx) {
     </div>
     <div class="detail-row">
       <span class="dl">วันหมดอายุ</span>
-      <div style="display:flex;gap:6px;align-items:center">
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
         <input type="date" id="modal-exp" value="${e.exp||''}"
           style="padding:4px 8px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);font-size:12px;font-family:'Sarabun',sans-serif;background:var(--gray-50);color:var(--gray-900)"
-          onchange="updateExp(${idx},this.value)">
+          onchange="onExpDateChange(${idx},this.value)">
+        <div style="display:flex;align-items:center;gap:4px">
+          <input type="number" id="modal-exp-year" inputmode="numeric" placeholder="ปี"
+            value="${e.exp ? (parseExpDate(e.exp) ? parseExpDate(e.exp).getFullYear() : '') : ''}"
+            data-mode="ce"
+            style="width:64px;padding:4px 6px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);font-size:12px;font-family:'IBM Plex Mono',monospace;background:var(--gray-50);color:var(--gray-900);text-align:center"
+            onchange="onExpYearChange(${idx},this)">
+          <button type="button" onclick="toggleExpYearMode(${idx})" id="modal-exp-yearmode"
+            title="สลับปี พ.ศ. / ค.ศ."
+            style="padding:4px 8px;border:1.5px solid var(--blue-md);border-radius:var(--r-sm);background:var(--blue-lt);color:var(--blue-md);
+              font-size:11px;font-family:'Sarabun',sans-serif;font-weight:700;cursor:pointer;white-space:nowrap">ค.ศ.</button>
+        </div>
         <button onclick="document.getElementById('modal-exp').value='';updateExp(${idx},'')" title="ล้างวันหมดอายุ (กรณีของขาด/รอเบิก)"
           style="padding:4px 8px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);background:var(--white);color:var(--gray-600);
             font-size:12px;font-family:'Sarabun',sans-serif;cursor:pointer;white-space:nowrap">✕ ล้าง</button>
@@ -1092,6 +1103,54 @@ function renderModal(idx) {
       ${isChecked?'✅ ตรวจสอบแล้ว — คลิกเพื่อยกเลิก':'🔲 คลิกเพื่อยืนยันว่าตรวจสอบแล้ว'}
     </button>
   `;
+}
+
+// ── ตัวช่วยปี พ.ศ./ค.ศ. สำหรับวันหมดอายุ ─────────────────
+// เมื่อเปลี่ยนวันที่ผ่าน date picker (ค.ศ. เสมอ) ให้อัปเดตช่องปีให้ตรงกับ mode ปัจจุบัน
+function onExpDateChange(idx, val) {
+  const yearInput = document.getElementById('modal-exp-year');
+  const modeBtn   = document.getElementById('modal-exp-yearmode');
+  if(yearInput && modeBtn) {
+    const d = parseExpDate(val);
+    if(d) {
+      const ceYear = d.getFullYear();
+      yearInput.value = modeBtn.textContent.trim()==='พ.ศ.' ? ceYear+543 : ceYear;
+    } else {
+      yearInput.value = '';
+    }
+  }
+  updateExp(idx, val);
+}
+
+// เมื่อแก้ปีในช่องปี (ตามโหมด พ.ศ./ค.ศ. ที่เลือกอยู่) ให้แปลงเป็น ค.ศ. แล้วอัปเดต date input
+function onExpYearChange(idx, input) {
+  const modeBtn = document.getElementById('modal-exp-yearmode');
+  const dateInput = document.getElementById('modal-exp');
+  let year = parseInt(input.value, 10);
+  if(isNaN(year)) return;
+  const isBE = modeBtn && modeBtn.textContent.trim()==='พ.ศ.';
+  const ceYear = isBE ? year - 543 : year;
+  if(ceYear < 1900 || ceYear > 2200) { showToast('⚠️ ปีไม่ถูกต้อง', '#C0392B'); return; }
+  // ใช้วัน/เดือนเดิมจาก date input ถ้ามี ไม่งั้นใช้ 01-01
+  const existing = parseExpDate(dateInput.value);
+  const mm = existing ? String(existing.getMonth()+1).padStart(2,'0') : '01';
+  const dd = existing ? String(existing.getDate()).padStart(2,'0') : '01';
+  const newVal = `${ceYear}-${mm}-${dd}`;
+  dateInput.value = newVal;
+  updateExp(idx, newVal);
+}
+
+// สลับโหมดแสดงปี พ.ศ. ↔ ค.ศ. (ปรับเฉพาะตัวเลขในช่องปี ไม่กระทบค่าที่บันทึกจริง)
+function toggleExpYearMode(idx) {
+  const yearInput = document.getElementById('modal-exp-year');
+  const modeBtn   = document.getElementById('modal-exp-yearmode');
+  if(!yearInput || !modeBtn) return;
+  const isBE = modeBtn.textContent.trim()==='พ.ศ.';
+  const cur = parseInt(yearInput.value, 10);
+  if(!isNaN(cur)) {
+    yearInput.value = isBE ? cur - 543 : cur + 543; // สลับค่าที่แสดง
+  }
+  modeBtn.textContent = isBE ? 'ค.ศ.' : 'พ.ศ.';
 }
 
 function updateExp(idx, val) {
