@@ -565,7 +565,7 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
 // ─── CONFIG ───────────────────────────────────────────────
 const DRIVE_FOLDER   = '1tfNKiu55ocZbXF3ovQaH7dz97tSOKsUM';
 const SPREADSHEET_ID = '1X4NBGK_8xokrgl3qf1F1XtCdUUhFeyKvXjQTaJMMkbI';
-const SCRIPT_URL     = 'https://script.google.com/macros/s/AKfycbws0ay_NiyT7yDD-pbCTvbAAVff68UhKcEWmRQ3beSNXkgEjwHQzYah90UmMu3_Kf6L/exec';
+const SCRIPT_URL     = 'https://script.google.com/macros/s/AKfycbxB9Fm3eqBL9uN1uEDS3x2sbdKvyrscDCz3ajr3IqvdnrVU8rFBFCNmW6d3DNa2T_w3/exec';
 
 // clear old scriptUrl from localStorage to always use hardcoded URL
 // force clear all old config from localStorage
@@ -1567,14 +1567,31 @@ function renderCheckHistory() {
     const b2 = r.box2||''; const b2m = r.box2_med||'';
     const df = r.defib||''; const bt = r.battery||'';
     const rd = r.reddot||'';
-    const dateVal = r.date||''; const shiftVal = r.shift||''; const nurseVal = r.nurse||''; const inchVal = r.incharge||''; const ts = r.timestamp||''; const noteVal = r.note||'';
+    const dateValRaw = r.date||''; const shiftVal = r.shift||''; const nurseVal = r.nurse||''; const inchVal = r.incharge||''; const ts = r.timestamp||''; const noteVal = r.note||'';
+    // date จาก backend เป็น YYYY-MM-DD อยู่แล้ว (fmtDate ฝั่ง Apps Script) แต่เผื่อข้อมูลเก่าที่ยังเป็น ISO string
+    let dateVal = dateValRaw;
+    const isoMatch = String(dateValRaw).match(/^\d{4}-\d{2}-\d{2}T/);
+    if(isoMatch) {
+      const d = new Date(dateValRaw);
+      const thaiMs = d.getTime() + 7*60*60*1000;
+      dateVal = new Date(thaiMs).toISOString().slice(0,10);
+    }
     const sessionKey = dateVal + '|' + shiftVal;
-    const equipSession = equipHistSessions[sessionKey];
+    let equipSession = equipHistSessions[sessionKey];
+    let matchedKey = sessionKey;
+    if(!equipSession) {
+      // fallback: หา key ที่ตรงกันแบบ trim ช่องว่าง หรือวันที่ตรงกันอย่างเดียว
+      const foundKey = Object.keys(equipHistSessions).find(k => {
+        const [kd, ks] = k.split('|');
+        return kd.trim() === dateVal.trim() && (ks.trim() === shiftVal.trim() || !ks.trim() || !shiftVal.trim());
+      }) || Object.keys(equipHistSessions).find(k => k.split('|')[0].trim() === dateVal.trim());
+      if(foundKey) { equipSession = equipHistSessions[foundKey]; matchedKey = foundKey; }
+    }
     let equipBtn = '';
     if(equipSession) {
       const eTotal   = equipSession.items.length;
       const eChecked = equipSession.items.filter(it => String(it['ผลตรวจ']||'').includes('ตรวจแล้ว')).length;
-      equipBtn = `<button onclick="openEquipHistDetail('${sessionKey.replace(/'/g,"\\'")}')"
+      equipBtn = `<button onclick="openEquipHistDetail('${matchedKey.replace(/'/g,"\\'")}')"
         style="margin-top:8px;width:100%;padding:8px;border-radius:var(--r-sm);border:1.5px solid var(--blue-md);background:var(--blue-lt);
           color:var(--blue-md);font-family:'Sarabun',sans-serif;font-size:12px;font-weight:600;cursor:pointer">
         📦 ดูรายการอุปกรณ์ที่เช็ค (${eChecked}/${eTotal})
