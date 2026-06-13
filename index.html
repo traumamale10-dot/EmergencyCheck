@@ -569,6 +569,15 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
       </button>
     </div>
   </div>
+  <!-- Filter pills for manage page -->
+  <div id="manage-floor-filters" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">
+    <div class="filter-pill active" onclick="setManageFilter(this,'all')" style="padding:5px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--blue-md);background:var(--blue-md);color:#fff;font-family:'Sarabun',sans-serif">ทั้งหมด</div>
+    <div class="filter-pill" onclick="setManageFilter(this,'ชั้นที่ 1')" style="padding:5px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--gray-300);background:var(--white);color:var(--gray-600);font-family:'Sarabun',sans-serif">ชั้นที่ 1</div>
+    <div class="filter-pill" onclick="setManageFilter(this,'ชั้นที่ 2')" style="padding:5px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--gray-300);background:var(--white);color:var(--gray-600);font-family:'Sarabun',sans-serif">ชั้นที่ 2</div>
+    <div class="filter-pill" onclick="setManageFilter(this,'ชั้นที่ 3')" style="padding:5px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--gray-300);background:var(--white);color:var(--gray-600);font-family:'Sarabun',sans-serif">ชั้นที่ 3</div>
+    <div class="filter-pill" onclick="setManageFilter(this,'ด้านบน')" style="padding:5px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--gray-300);background:var(--white);color:var(--gray-600);font-family:'Sarabun',sans-serif">ด้านบน</div>
+    <div class="filter-pill" onclick="setManageFilter(this,'ด้านนอก')" style="padding:5px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--gray-300);background:var(--white);color:var(--gray-600);font-family:'Sarabun',sans-serif">ด้านนอก</div>
+  </div>
   <div id="manage-list"></div>
 </div>
 
@@ -907,7 +916,11 @@ function renderEquip() {
   const floorIcon  = {'ชั้นที่ 1':'🔵','ชั้นที่ 2':'🟢','ชั้นที่ 3':'🟡','ด้านบน':'🔴','ด้านนอก':'⚪'};
   const groups = {};
   floorOrder.forEach(f => groups[f] = []);
-  items.forEach(e => { if(groups[e.floor]) groups[e.floor].push(e); });
+  groups['__other'] = [];
+  items.forEach(e => {
+    if(groups[e.floor]) groups[e.floor].push(e);
+    else groups['__other'].push(e);
+  });
   // sort within each group: group by base name, FIFO first within same name
   floorOrder.forEach(f => {
     const g = groups[f];
@@ -942,7 +955,19 @@ function renderEquip() {
         </div>
         <div class="eq-grid">${grpItems.map(e => makeCard(e)).join('')}</div>
       </div>`;
-    }).join('');
+    }).join('')
+    + (groups['__other'].length > 0 ? (() => {
+        const grpItems = groups['__other'];
+        const chkCount = grpItems.filter(e => checkedItems.has(e.idx)).length;
+        return `<div class="group-section">
+          <div class="group-title">
+            📌 อื่นๆ
+            <span class="g-count">${grpItems.length}</span>
+            ${chkCount>0?`<span class="g-checked">✅ ${chkCount}/${grpItems.length}</span>`:''}
+          </div>
+          <div class="eq-grid">${grpItems.map(e => makeCard(e)).join('')}</div>
+        </div>`;
+      })() : '');
 }
 
 function makeCard(e) {
@@ -1424,13 +1449,32 @@ async function saveEquipMeta(idx) {
 // จัดการรายการอุปกรณ์ (Master List) — เพิ่ม/ลบ/แก้ไข ผ่าน UI
 // บันทึกลงชีต "รายการอุปกรณ์" ผ่าน Apps Script (addEquipItem/editEquipItem/deleteEquipItem)
 // ════════════════════════════════════════════════════════
+let manageFilter = 'all';
+
+function setManageFilter(el, val) {
+  manageFilter = val;
+  document.querySelectorAll('#manage-floor-filters .filter-pill').forEach(p => {
+    const active = p === el;
+    p.style.background = active ? 'var(--blue-md)' : 'var(--white)';
+    p.style.color = active ? '#fff' : 'var(--gray-600)';
+    p.style.borderColor = active ? 'var(--blue-md)' : 'var(--gray-300)';
+  });
+  renderManagePage();
+}
+
 function renderManagePage() {
   const list = document.getElementById('manage-list');
   if(!equipment.length) {
     list.innerHTML = '<div class="empty-state"><div class="es-icon">📭</div><p>ไม่มีรายการอุปกรณ์</p></div>';
     return;
   }
-  list.innerHTML = equipment.map((e, idx) => `
+  const filtered = equipment.map((e, idx) => ({e, idx}))
+    .filter(({e}) => manageFilter === 'all' || e.floor === manageFilter);
+  if(!filtered.length) {
+    list.innerHTML = '<div class="empty-state"><div class="es-icon">🔍</div><p>ไม่มีรายการในตำแหน่งนี้</p></div>';
+    return;
+  }
+  list.innerHTML = filtered.map(({e, idx}) => `
     <div style="display:flex;align-items:center;gap:10px;padding:10px;border:1px solid var(--gray-200);border-radius:var(--r-sm);margin-bottom:6px;background:var(--white)">
       <img src="https://lh3.googleusercontent.com/d/${e.imgId}" alt="" loading="lazy"
         style="width:40px;height:40px;object-fit:cover;border-radius:var(--r-sm);background:var(--gray-100);flex-shrink:0"
@@ -1467,8 +1511,15 @@ function openManageItemModal(idx) {
       </div>
       <div>
         <label style="font-size:12px;font-weight:600;color:var(--gray-600);display:block;margin-bottom:4px">ตำแหน่ง/ชั้น</label>
-        <input type="text" id="mi-floor" value="${(e.floor||'').replace(/"/g,'&quot;')}" placeholder="เช่น ชั้นที่ 1"
-          style="width:100%;padding:8px 10px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);font-size:13px;font-family:'Sarabun',sans-serif;background:var(--gray-50)">
+        <select id="mi-floor"
+          style="width:100%;padding:8px 10px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);font-size:13px;font-family:'Sarabun',sans-serif;background:var(--gray-50);-webkit-appearance:none;appearance:none">
+          <option value="" ${!(e.floor)?'selected':''}>— เลือกตำแหน่ง —</option>
+          <option value="ชั้นที่ 1" ${ e.floor==='ชั้นที่ 1' ?'selected':''}>ชั้นที่ 1</option>
+          <option value="ชั้นที่ 2" ${ e.floor==='ชั้นที่ 2' ?'selected':''}>ชั้นที่ 2</option>
+          <option value="ชั้นที่ 3" ${ e.floor==='ชั้นที่ 3' ?'selected':''}>ชั้นที่ 3</option>
+          <option value="ด้านบน"   ${ e.floor==='ด้านบน'   ?'selected':''}>ด้านบน</option>
+          <option value="ด้านนอก"  ${ e.floor==='ด้านนอก'  ?'selected':''}>ด้านนอก</option>
+        </select>
       </div>
       <div>
         <label style="font-size:12px;font-weight:600;color:var(--gray-600);display:block;margin-bottom:4px">Image ID (Google Drive)</label>
@@ -1496,47 +1547,52 @@ function closeManageItemModal(ev) {
 
 async function saveManageItem(idx) {
   const name  = document.getElementById('mi-name').value.trim();
-  const floor = document.getElementById('mi-floor').value.trim();
+  const floor = document.getElementById('mi-floor').value;
   const imgId = document.getElementById('mi-imgid').value.trim();
   if(!name) { showToast('⚠️ กรุณากรอกชื่ออุปกรณ์', '#C0392B'); return; }
 
   const isEdit = (idx !== null && idx !== undefined && equipment[idx]);
-  const payload = isEdit
-    ? { type:'editEquipItem', oldName: equipment[idx].name, name, floor, imgId }
-    : { type:'addEquipItem', name, floor, imgId };
 
-  if(!config.scriptUrl) { showToast('⚠️ ยังไม่ได้เชื่อมต่อ Google Sheets', '#C0392B'); return; }
-  try {
-    await fetch(config.scriptUrl, {method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)});
-    if(isEdit) {
-      equipment[idx] = {...equipment[idx], name, floor, imgId};
-    } else {
-      equipment.push({name, floor, exp:'', fifo:'', note:'', imgId});
-    }
-    computeFifo();
-    showToast(isEdit ? '✅ บันทึกการแก้ไขแล้ว' : '✅ เพิ่มอุปกรณ์แล้ว');
-    closeManageItemModal();
-    renderManagePage();
-    renderEquip();
-  } catch(err) {
-    showToast('❌ บันทึกไม่สำเร็จ: ' + err.message, '#C0392B');
+  // อัปเดต equipment array ทันที (ไม่รอ Sheets)
+  if(isEdit) {
+    equipment[idx] = {...equipment[idx], name, floor, imgId};
+  } else {
+    equipment.push({name, floor, exp:'', fifo:'', note:'', imgId});
   }
+  // บันทึกลง localStorage ทันที
+  saveEquipListLocal();
+
+  // ส่งไป Sheets ถ้าเชื่อมต่ออยู่ (fire-and-forget)
+  if(config.scriptUrl) {
+    const payload = isEdit
+      ? { type:'editEquipItem', oldName: isEdit ? equipment[idx]?.name || name : name, name, floor, imgId }
+      : { type:'addEquipItem', name, floor, imgId };
+    fetch(config.scriptUrl, {method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)})
+      .catch(err => console.error('Sheets sync error:', err));
+  }
+
+  computeFifo();
+  showToast(isEdit ? '✅ บันทึกการแก้ไขแล้ว' : '✅ เพิ่มอุปกรณ์แล้ว');
+  closeManageItemModal();
+  renderManagePage();
+  renderEquip();
 }
 
 async function confirmDeleteManageItem(idx) {
   const e = equipment[idx];
   if(!e) return;
   if(!confirm(`ลบ "${e.name}" ออกจากรายการอุปกรณ์?\n(จะลบออกจากชีต "รายการอุปกรณ์" ด้วย)`)) return;
-  if(!config.scriptUrl) { showToast('⚠️ ยังไม่ได้เชื่อมต่อ Google Sheets', '#C0392B'); return; }
-  try {
-    await fetch(config.scriptUrl, {method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'}, body: JSON.stringify({type:'deleteEquipItem', name: e.name})});
-    equipment.splice(idx, 1);
-    computeFifo();
-    showToast('✅ ลบอุปกรณ์แล้ว');
-    renderManagePage();
-    renderEquip();
-  } catch(err) {
-    showToast('❌ ลบไม่สำเร็จ: ' + err.message, '#C0392B');
+
+  equipment.splice(idx, 1);
+  saveEquipListLocal();
+  computeFifo();
+  showToast('✅ ลบอุปกรณ์แล้ว');
+  renderManagePage();
+  renderEquip();
+
+  if(config.scriptUrl) {
+    fetch(config.scriptUrl, {method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'}, body: JSON.stringify({type:'deleteEquipItem', name: e.name})})
+      .catch(err => console.error('Sheets sync error:', err));
   }
 }
 
@@ -1544,17 +1600,55 @@ async function confirmDeleteManageItem(idx) {
 // ถ้าสำเร็จ: สร้าง equipment array ใหม่จากข้อมูลใน Sheets (ชื่อ/ชั้น/รูป)
 // ถ้าไม่สำเร็จ/ไม่มีข้อมูล: ใช้ EQUIPMENT_FALLBACK (hardcode) ต่อไป
 // จากนั้นเรียก loadEquipMeta() เพื่อ merge exp/note/status ตามเดิม
+function saveEquipListLocal() {
+  // บันทึก equipment array (ชื่อ/ชั้น/imgId) ลง localStorage เพื่อให้คงอยู่เมื่อโหลดใหม่
+  const toSave = equipment.map(e => ({name: e.name, floor: e.floor||'', imgId: e.imgId||''}));
+  localStorage.setItem('equipList', JSON.stringify(toSave));
+}
+
+function mergeLocalEquipList(base) {
+  // merge รายการที่บันทึกใน localStorage เข้ากับ base array
+  // ถ้ามีชื่อซ้ำ → ใช้ข้อมูลจาก localStorage (ใหม่กว่า)
+  // ถ้าไม่มีใน base → เพิ่มเข้าไป
+  const local = JSON.parse(localStorage.getItem('equipList') || '[]');
+  if(!local.length) return base;
+  const nameSet = new Set(base.map(e => e.name));
+  local.forEach(item => {
+    if(!nameSet.has(item.name)) {
+      base.push({name: item.name, floor: item.floor||'', exp:'', fifo:'', note:'', imgId: item.imgId||''});
+    } else {
+      // อัปเดต floor/imgId ถ้าต่างกัน (เผื่อแก้ไขใน manage แล้ว Sheets ยังไม่อัป)
+      const idx = base.findIndex(e => e.name === item.name);
+      if(idx >= 0) {
+        if(item.floor) base[idx].floor = item.floor;
+        if(item.imgId) base[idx].imgId = item.imgId;
+      }
+    }
+  });
+  return base;
+}
+
 async function loadEquipList() {
   if(config.scriptUrl) {
     try {
       const resp = await fetch(config.scriptUrl + '?t=' + Date.now());
       const json = await resp.json();
       if(json.equipList && Array.isArray(json.equipList) && json.equipList.length > 0) {
-        equipment = json.equipList.map(item => ({
+        let base = json.equipList.map(item => ({
           name: item.name, floor: item.floor||'', exp: '', fifo: '', note: '', imgId: item.imgId||''
         }));
+        equipment = mergeLocalEquipList(base);
+        saveEquipListLocal(); // sync local ให้ตรงกับ Sheets + local additions
+      } else {
+        // Sheets ไม่มี equipList → ใช้ fallback แล้ว merge local
+        equipment = mergeLocalEquipList(EQUIPMENT_FALLBACK.map(e => ({...e})));
       }
-    } catch(err) { console.error("loadEquipList:", err); }
+    } catch(err) {
+      console.error("loadEquipList:", err);
+      equipment = mergeLocalEquipList(EQUIPMENT_FALLBACK.map(e => ({...e})));
+    }
+  } else {
+    equipment = mergeLocalEquipList(EQUIPMENT_FALLBACK.map(e => ({...e})));
   }
   loadEquipMeta();
 }
