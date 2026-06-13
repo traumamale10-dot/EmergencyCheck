@@ -380,6 +380,27 @@ body {
 .empty-state p { font-size: 13px; }
 .section-title { font-size: 11px; font-weight: 700; color: var(--gray-600); text-transform: uppercase; letter-spacing: .6px; margin-bottom: 8px; }
 hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0; }
+/* ── Custom date picker (รองรับ พ.ศ./ค.ศ.) ───────────── */
+.cal-popup {
+  position: fixed; z-index: 500; background: var(--white); border-radius: var(--r);
+  box-shadow: var(--shadow-md); border: 1px solid var(--gray-200);
+  width: 280px; padding: 10px; font-family: 'Sarabun', sans-serif;
+}
+.cal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; gap:4px; }
+.cal-header button { border:none; background:var(--gray-100); border-radius:var(--r-sm); width:28px; height:28px;
+  font-size:14px; cursor:pointer; color:var(--gray-800); display:flex; align-items:center; justify-content:center; }
+.cal-header button:hover { background:var(--gray-200); }
+.cal-title { font-size:13px; font-weight:700; color:var(--gray-900); flex:1; text-align:center; }
+.cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:2px; text-align:center; }
+.cal-dow { font-size:10px; color:var(--gray-600); font-weight:700; padding:4px 0; }
+.cal-day { font-size:12px; padding:6px 0; border-radius:var(--r-sm); cursor:pointer; color:var(--gray-900); }
+.cal-day:hover { background:var(--blue-lt); }
+.cal-day.other-month { color:var(--gray-400); }
+.cal-day.selected { background:var(--blue-md); color:#fff; font-weight:700; }
+.cal-day.today { border:1.5px solid var(--blue-md); }
+.cal-footer { display:flex; justify-content:space-between; margin-top:8px; padding-top:8px; border-top:1px solid var(--gray-100); }
+.cal-footer button { border:none; background:none; color:var(--blue-md); font-size:12px; font-weight:600; cursor:pointer; font-family:'Sarabun',sans-serif; }
+.cal-overlay { position:fixed; inset:0; z-index:499; background:transparent; }
 </style>
 </head>
 <body>
@@ -991,6 +1012,7 @@ function navModal(dir) {
   const newPos = modalIdx + dir;
   if(newPos < 0 || newPos >= modalList.length) return;
   modalIdx = newPos;
+  closeExpCalendar();
   renderModal(modalList[modalIdx]);
 }
 
@@ -1063,24 +1085,16 @@ function renderModal(idx) {
       <span class="dl">ตำแหน่ง</span>
       <span class="dr">${e.floor}</span>
     </div>
-    <div class="detail-row">
+    <div class="detail-row" style="flex-direction:column;align-items:stretch;gap:6px">
       <span class="dl">วันหมดอายุ</span>
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
-        <input type="date" id="modal-exp" value="${e.exp||''}"
-          style="padding:4px 8px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);font-size:12px;font-family:'Sarabun',sans-serif;background:var(--gray-50);color:var(--gray-900)"
-          onchange="onExpDateChange(${idx},this.value)">
-        <div style="display:flex;align-items:center;gap:4px">
-          <input type="number" id="modal-exp-year" inputmode="numeric" placeholder="ปี"
-            value="${e.exp ? (parseExpDate(e.exp) ? parseExpDate(e.exp).getFullYear() : '') : ''}"
-            data-mode="ce"
-            style="width:64px;padding:4px 6px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);font-size:12px;font-family:'IBM Plex Mono',monospace;background:var(--gray-50);color:var(--gray-900);text-align:center"
-            onchange="onExpYearChange(${idx},this)">
-          <button type="button" onclick="toggleExpYearMode(${idx})" id="modal-exp-yearmode"
-            title="สลับปี พ.ศ. / ค.ศ."
-            style="padding:4px 8px;border:1.5px solid var(--blue-md);border-radius:var(--r-sm);background:var(--blue-lt);color:var(--blue-md);
-              font-size:11px;font-family:'Sarabun',sans-serif;font-weight:700;cursor:pointer;white-space:nowrap">ค.ศ.</button>
-        </div>
-        <button onclick="document.getElementById('modal-exp').value='';updateExp(${idx},'')" title="ล้างวันหมดอายุ (กรณีของขาด/รอเบิก)"
+        <span id="modal-exp-display" style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;color:var(--gray-900)">${formatExpDisplay(e.exp, expYearMode)}</span>
+        <button type="button" onclick="toggleExpYearMode(${idx})" id="modal-exp-yearmode"
+          title="สลับการแสดงผล พ.ศ. / ค.ศ."
+          style="padding:4px 10px;border:1.5px solid var(--blue-md);border-radius:var(--r-sm);background:var(--blue-lt);color:var(--blue-md);
+            font-size:11px;font-family:'Sarabun',sans-serif;font-weight:700;cursor:pointer;white-space:nowrap">${expYearMode==='be'?'พ.ศ.':'ค.ศ.'}</button>
+        <span id="modal-exp-picker-wrap">${renderExpPickerInput(idx, e.exp)}</span>
+        <button onclick="onExpDateChange(${idx},'')" title="ล้างวันหมดอายุ (กรณีของขาด/รอเบิก)"
           style="padding:4px 8px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);background:var(--white);color:var(--gray-600);
             font-size:12px;font-family:'Sarabun',sans-serif;cursor:pointer;white-space:nowrap">✕ ล้าง</button>
       </div>
@@ -1105,52 +1119,201 @@ function renderModal(idx) {
   `;
 }
 
-// ── ตัวช่วยปี พ.ศ./ค.ศ. สำหรับวันหมดอายุ ─────────────────
-// เมื่อเปลี่ยนวันที่ผ่าน date picker (ค.ศ. เสมอ) ให้อัปเดตช่องปีให้ตรงกับ mode ปัจจุบัน
+// ── แสดงวันหมดอายุเป็น พ.ศ. หรือ ค.ศ. ─────────────────────
+let expYearMode = 'ce'; // 'ce' = ค.ศ. (default), 'be' = พ.ศ.
+
+// คืนค่าวันที่ในรูปแบบ DD/MM/YYYY ตามโหมดที่เลือก (พ.ศ. หรือ ค.ศ.)
+function formatExpDisplay(exp, mode) {
+  const d = parseExpDate(exp);
+  if(!d) return '—';
+  const dd = String(d.getDate()).padStart(2,'0');
+  const mm = String(d.getMonth()+1).padStart(2,'0');
+  const yyyy = d.getFullYear() + (mode==='be' ? 543 : 0);
+  return `${dd}/${mm}/${yyyy} (${mode==='be'?'พ.ศ.':'ค.ศ.'})`;
+}
+
+// สร้างช่องเลือกวันที่แบบ วว/ดด/ปปปป เสมอ (ทั้ง ค.ศ. และ พ.ศ.) + ปุ่ม 📅 เปิด date picker ช่วยเลือก
+function renderExpPickerInput(idx, exp) {
+  const d = parseExpDate(exp);
+  const yearOffset = expYearMode==='be' ? 543 : 0;
+  const val = d ? `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()+yearOffset}` : '';
+  const placeholder = expYearMode==='be' ? 'วว/ดด/ปปปป (พ.ศ.)' : 'วว/ดด/ปปปป (ค.ศ.)';
+  const onchangeFn = expYearMode==='be' ? 'onExpTextChangeBE' : 'onExpTextChangeCE';
+  return `<span style="display:inline-flex;align-items:center;gap:2px">
+    <input type="text" id="modal-exp" inputmode="numeric" placeholder="${placeholder}" value="${val}"
+      style="padding:4px 8px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);font-size:12px;font-family:'IBM Plex Mono',monospace;background:var(--gray-50);color:var(--gray-900);width:118px;text-align:center"
+      onchange="${onchangeFn}(${idx},this.value)">
+    <button type="button" onclick="openExpCalendar(${idx},event)"
+      style="width:28px;height:28px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);background:var(--white);
+        display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;padding:0">📅</button>
+  </span>`;
+}
+
+// สลับโหมดแสดงผล/ช่องกรอก พ.ศ. ↔ ค.ศ. แล้ว re-render ทั้งข้อความและช่องกรอก
+function toggleExpYearMode(idx) {
+  expYearMode = expYearMode==='be' ? 'ce' : 'be';
+  const disp = document.getElementById('modal-exp-display');
+  const btn  = document.getElementById('modal-exp-yearmode');
+  const wrap = document.getElementById('modal-exp-picker-wrap');
+  const cur  = equipment[idx].exp;
+  if(disp) disp.textContent = formatExpDisplay(cur, expYearMode);
+  if(btn)  btn.textContent  = expYearMode==='be' ? 'พ.ศ.' : 'ค.ศ.';
+  if(wrap) wrap.innerHTML   = renderExpPickerInput(idx, cur);
+}
+
+// เมื่อเปลี่ยนวันที่ผ่าน date picker (ค.ศ.) ให้อัปเดตข้อความแสดงผลตามโหมดปัจจุบัน แล้วบันทึก
 function onExpDateChange(idx, val) {
-  const yearInput = document.getElementById('modal-exp-year');
-  const modeBtn   = document.getElementById('modal-exp-yearmode');
-  if(yearInput && modeBtn) {
-    const d = parseExpDate(val);
-    if(d) {
-      const ceYear = d.getFullYear();
-      yearInput.value = modeBtn.textContent.trim()==='พ.ศ.' ? ceYear+543 : ceYear;
-    } else {
-      yearInput.value = '';
-    }
-  }
+  const disp = document.getElementById('modal-exp-display');
+  if(disp) disp.textContent = formatExpDisplay(val, expYearMode);
+  const wrap = document.getElementById('modal-exp-picker-wrap');
+  if(wrap) wrap.innerHTML = renderExpPickerInput(idx, val);
   updateExp(idx, val);
 }
 
-// เมื่อแก้ปีในช่องปี (ตามโหมด พ.ศ./ค.ศ. ที่เลือกอยู่) ให้แปลงเป็น ค.ศ. แล้วอัปเดต date input
-function onExpYearChange(idx, input) {
-  const modeBtn = document.getElementById('modal-exp-yearmode');
-  const dateInput = document.getElementById('modal-exp');
-  let year = parseInt(input.value, 10);
-  if(isNaN(year)) return;
-  const isBE = modeBtn && modeBtn.textContent.trim()==='พ.ศ.';
-  const ceYear = isBE ? year - 543 : year;
-  if(ceYear < 1900 || ceYear > 2200) { showToast('⚠️ ปีไม่ถูกต้อง', '#C0392B'); return; }
-  // ใช้วัน/เดือนเดิมจาก date input ถ้ามี ไม่งั้นใช้ 01-01
-  const existing = parseExpDate(dateInput.value);
-  const mm = existing ? String(existing.getMonth()+1).padStart(2,'0') : '01';
-  const dd = existing ? String(existing.getDate()).padStart(2,'0') : '01';
-  const newVal = `${ceYear}-${mm}-${dd}`;
-  dateInput.value = newVal;
-  updateExp(idx, newVal);
+// ── ปฏิทินกำหนดเอง (รองรับ พ.ศ./ค.ศ.) ─────────────────────
+let calState = { idx: null, year: 0, month: 0 }; // year/month เป็น ค.ศ. เสมอ (internal)
+
+function openExpCalendar(idx, ev) {
+  ev.stopPropagation();
+  closeExpCalendar();
+  const exp = equipment[idx].exp;
+  const d = parseExpDate(exp) || new Date();
+  calState = { idx, year: d.getFullYear(), month: d.getMonth() }; // month: 0-11
+  const btn = ev.currentTarget;
+  const rect = btn.getBoundingClientRect();
+
+  const overlay = document.createElement('div');
+  overlay.className = 'cal-overlay';
+  overlay.id = 'cal-overlay';
+  overlay.onclick = closeExpCalendar;
+  document.body.appendChild(overlay);
+
+  const pop = document.createElement('div');
+  pop.className = 'cal-popup';
+  pop.id = 'cal-popup';
+  pop.onclick = (e) => e.stopPropagation();
+  document.body.appendChild(pop);
+
+  // ตำแหน่ง: ใต้ปุ่ม ถ้าล้นขอบจอให้เลื่อนเข้ามา
+  let top = rect.bottom + 6, left = rect.left - 240;
+  if(left < 8) left = 8;
+  if(left + 280 > window.innerWidth - 8) left = window.innerWidth - 288;
+  if(top + 320 > window.innerHeight) top = rect.top - 326;
+  pop.style.top = top + 'px';
+  pop.style.left = left + 'px';
+
+  renderCalGrid();
 }
 
-// สลับโหมดแสดงปี พ.ศ. ↔ ค.ศ. (ปรับเฉพาะตัวเลขในช่องปี ไม่กระทบค่าที่บันทึกจริง)
-function toggleExpYearMode(idx) {
-  const yearInput = document.getElementById('modal-exp-year');
-  const modeBtn   = document.getElementById('modal-exp-yearmode');
-  if(!yearInput || !modeBtn) return;
-  const isBE = modeBtn.textContent.trim()==='พ.ศ.';
-  const cur = parseInt(yearInput.value, 10);
-  if(!isNaN(cur)) {
-    yearInput.value = isBE ? cur - 543 : cur + 543; // สลับค่าที่แสดง
+function closeExpCalendar() {
+  const ov = document.getElementById('cal-overlay');
+  const pop = document.getElementById('cal-popup');
+  if(ov) ov.remove();
+  if(pop) pop.remove();
+}
+
+function calNavMonth(delta) {
+  calState.month += delta;
+  if(calState.month < 0) { calState.month = 11; calState.year--; }
+  if(calState.month > 11) { calState.month = 0; calState.year++; }
+  renderCalGrid();
+}
+
+function renderCalGrid() {
+  const pop = document.getElementById('cal-popup');
+  if(!pop) return;
+  const { idx, year, month } = calState;
+  const yearOffset = expYearMode==='be' ? 543 : 0;
+  const monthNames = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+  const dows = ['อา','จ','อ','พ','พฤ','ศ','ส'];
+
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+  const daysInPrevMonth = new Date(year, month, 0).getDate();
+
+  const curExp = parseExpDate(equipment[idx].exp);
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  let cells = '';
+  // วันจากเดือนก่อนหน้า
+  for(let i=firstDay-1; i>=0; i--) {
+    cells += `<div class="cal-day other-month">${daysInPrevMonth-i}</div>`;
   }
-  modeBtn.textContent = isBE ? 'ค.ศ.' : 'พ.ศ.';
+  // วันในเดือนนี้
+  for(let day=1; day<=daysInMonth; day++) {
+    const thisDate = new Date(year, month, day);
+    const isSelected = curExp && curExp.getFullYear()===year && curExp.getMonth()===month && curExp.getDate()===day;
+    const isToday = thisDate.getTime()===today.getTime();
+    cells += `<div class="cal-day${isSelected?' selected':''}${isToday?' today':''}" onclick="calSelectDay(${day})">${day}</div>`;
+  }
+  // วันจากเดือนถัดไป (เติมให้ครบแถว)
+  const totalCells = firstDay + daysInMonth;
+  const remaining = (7 - (totalCells % 7)) % 7;
+  for(let day=1; day<=remaining; day++) {
+    cells += `<div class="cal-day other-month">${day}</div>`;
+  }
+
+  pop.innerHTML = `
+    <div class="cal-header">
+      <button onclick="calNavMonth(-1)">◀</button>
+      <span class="cal-title">${monthNames[month]} ${year+yearOffset}</span>
+      <button onclick="calNavMonth(1)">▶</button>
+    </div>
+    <div class="cal-grid">
+      ${dows.map(d=>`<div class="cal-dow">${d}</div>`).join('')}
+      ${cells}
+    </div>
+    <div class="cal-footer">
+      <button onclick="calClear()">ล้างวันที่</button>
+      <button onclick="calToday()">วันนี้</button>
+    </div>
+  `;
+}
+
+function calSelectDay(day) {
+  const { idx, year, month } = calState;
+  const yyyy = year, mm = String(month+1).padStart(2,'0'), dd = String(day).padStart(2,'0');
+  const ceVal = `${yyyy}-${mm}-${dd}`;
+  onExpDateChange(idx, ceVal);
+  closeExpCalendar();
+}
+
+function calClear() {
+  const idx = calState.idx;
+  onExpDateChange(idx, '');
+  closeExpCalendar();
+}
+
+function calToday() {
+  const today = new Date();
+  calState.year = today.getFullYear();
+  calState.month = today.getMonth();
+  calSelectDay(today.getDate());
+}
+
+
+function onExpTextChangeCE(idx, val) {
+  val = val.trim();
+  if(val==='') { onExpDateChange(idx, ''); return; }
+  const m = val.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if(!m) { showToast('⚠️ รูปแบบวันที่ไม่ถูกต้อง (วว/ดด/ปปปป)', '#C0392B'); return; }
+  const dd = parseInt(m[1],10), mm = parseInt(m[2],10), yyyy = parseInt(m[3],10);
+  if(yyyy < 1900 || yyyy > 2200 || mm<1 || mm>12 || dd<1 || dd>31) { showToast('⚠️ วันที่ไม่ถูกต้อง', '#C0392B'); return; }
+  const ceVal = `${yyyy}-${String(mm).padStart(2,'0')}-${String(dd).padStart(2,'0')}`;
+  onExpDateChange(idx, ceVal);
+}
+
+// เมื่อกรอกวันที่แบบ พ.ศ. (DD/MM/YYYY) ให้แปลงเป็น ค.ศ. แล้วบันทึก
+function onExpTextChangeBE(idx, val) {
+  val = val.trim();
+  if(val==='') { onExpDateChange(idx, ''); return; }
+  const m = val.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if(!m) { showToast('⚠️ รูปแบบวันที่ไม่ถูกต้อง (วว/ดด/ปปปป)', '#C0392B'); return; }
+  const dd = parseInt(m[1],10), mm = parseInt(m[2],10), yyyyBE = parseInt(m[3],10);
+  const yyyyCE = yyyyBE - 543;
+  if(yyyyCE < 1900 || yyyyCE > 2200 || mm<1 || mm>12 || dd<1 || dd>31) { showToast('⚠️ วันที่ไม่ถูกต้อง', '#C0392B'); return; }
+  const ceVal = `${yyyyCE}-${String(mm).padStart(2,'0')}-${String(dd).padStart(2,'0')}`;
+  onExpDateChange(idx, ceVal);
 }
 
 function updateExp(idx, val) {
@@ -1365,6 +1528,7 @@ async function saveEquipToSheets() {
 function closeModal(e) {
   if(!e || e.target===document.getElementById('modal')) {
     document.getElementById('modal').classList.remove('open');
+    closeExpCalendar();
   }
 }
 
