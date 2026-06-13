@@ -170,7 +170,25 @@ body {
 }
 .num-btn:hover { background: var(--blue-lt); border-color: var(--blue-md); color: var(--blue-md); }
 
-/* ── INCHARGE CHIPS ── */
+/* ── PIN MODAL ── */
+.pin-dot {
+  width: 14px; height: 14px; border-radius: 50%;
+  border: 2px solid var(--gray-400); background: var(--white);
+  transition: background .15s, border-color .15s;
+}
+.pin-dot.filled { background: var(--blue-md); border-color: var(--blue-md); }
+.pin-dot.error  { background: var(--red);     border-color: var(--red); }
+.pin-key {
+  padding: 14px 0; border-radius: var(--r-sm); border: 1.5px solid var(--gray-200);
+  background: var(--white); font-family: 'IBM Plex Mono', monospace;
+  font-size: 20px; font-weight: 600; color: var(--gray-900);
+  cursor: pointer; transition: all .15s; -webkit-tap-highlight-color: transparent;
+}
+.pin-key:active { background: var(--blue-lt); border-color: var(--blue-md); color: var(--blue-md); transform: scale(.95); }
+.pin-key-del { font-size: 18px; color: var(--gray-600); }
+.pin-key-clear { font-family: 'Sarabun', sans-serif; color: var(--red); border-color: #E6B0AA; background: #FDEDEC; }
+
+
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chip {
   padding: 5px 12px; border-radius: 20px; font-size: 12px; cursor: pointer;
@@ -610,6 +628,44 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
   </div>
 </div>
 
+<!-- PIN Modal -->
+<div class="modal-overlay" id="pin-modal" onclick="closePinModal(event)">
+  <div class="modal-box" style="max-width:320px">
+    <div class="modal-drag"></div>
+    <div style="padding:4px 0 16px">
+      <div style="text-align:center;font-size:22px;margin-bottom:6px">🔒</div>
+      <div style="text-align:center;font-family:'Sarabun',sans-serif;font-size:15px;font-weight:700;color:var(--gray-900);margin-bottom:4px">ยืนยันตัวตน</div>
+      <div style="text-align:center;font-family:'Sarabun',sans-serif;font-size:12px;color:var(--gray-600);margin-bottom:18px">กรอก PIN เพื่อแก้ไข/ลบรายการอุปกรณ์</div>
+
+      <!-- PIN dots display -->
+      <div style="display:flex;justify-content:center;gap:14px;margin-bottom:20px" id="pin-dots">
+        <div class="pin-dot"></div>
+        <div class="pin-dot"></div>
+        <div class="pin-dot"></div>
+        <div class="pin-dot"></div>
+      </div>
+
+      <!-- Numpad -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:240px;margin:0 auto">
+        <button class="pin-key" onclick="pinPress('1')">1</button>
+        <button class="pin-key" onclick="pinPress('2')">2</button>
+        <button class="pin-key" onclick="pinPress('3')">3</button>
+        <button class="pin-key" onclick="pinPress('4')">4</button>
+        <button class="pin-key" onclick="pinPress('5')">5</button>
+        <button class="pin-key" onclick="pinPress('6')">6</button>
+        <button class="pin-key" onclick="pinPress('7')">7</button>
+        <button class="pin-key" onclick="pinPress('8')">8</button>
+        <button class="pin-key" onclick="pinPress('9')">9</button>
+        <button class="pin-key pin-key-clear" onclick="pinClear()" style="font-size:13px">ล้าง</button>
+        <button class="pin-key" onclick="pinPress('0')">0</button>
+        <button class="pin-key pin-key-del" onclick="pinDel()">⌫</button>
+      </div>
+
+      <div id="pin-error" style="text-align:center;color:#C0392B;font-family:'Sarabun',sans-serif;font-size:12px;margin-top:12px;min-height:18px"></div>
+    </div>
+  </div>
+</div>
+
 <!-- BOTTOM NAV (mobile) -->
 <nav class="bottom-nav">
   <button class="bnav-btn active" onclick="switchTab('equip',this)"><span class="icon">📦</span>ตรวจสอบรถEmergency</button>
@@ -772,6 +828,99 @@ const inchargeList = [
   'สรวงสุดา','ศิริรัตน์','พุทธชาติ','อรอุมา','อุ้มบุญ','อริสรา',
   'สุพรรณี','ชนาภา','กนกพร','วริศรา'
 ];
+
+function onImgSelectChange(sel) {
+  const customWrap = document.getElementById('mi-imgid-custom-wrap');
+  const preview    = document.getElementById('mi-img-preview');
+  const previewImg = document.getElementById('mi-img-preview-img');
+
+  if(sel.value === '__custom' || sel.value === '') {
+    customWrap.style.display = 'block';
+    const customVal = document.getElementById('mi-imgid')?.value.trim() || '';
+    updateImgPreview(customVal);
+  } else {
+    customWrap.style.display = 'none';
+    previewImg.style.display = 'block';
+    previewImg.src = 'https://lh3.googleusercontent.com/d/' + sel.value;
+    preview.style.display = 'block';
+  }
+}
+
+function updateImgPreview(imgId) {
+  const preview    = document.getElementById('mi-img-preview');
+  const previewImg = document.getElementById('mi-img-preview-img');
+  if(imgId) {
+    previewImg.style.display = 'block';
+    previewImg.src = 'https://lh3.googleusercontent.com/d/' + imgId;
+    preview.style.display = 'block';
+  } else {
+    preview.style.display = 'none';
+  }
+}
+
+// ─── PIN PROTECTION ────────────────────────────────────────
+const MANAGE_PIN = '952';
+let pinBuffer = '';
+let pinCallback = null;
+
+function checkManagePin(callback) {
+  pinBuffer = '';
+  pinCallback = callback;
+  updatePinDots();
+  document.getElementById('pin-error').textContent = '';
+  document.getElementById('pin-modal').classList.add('open');
+}
+
+function closePinModal(ev) {
+  if(!ev || ev.target === document.getElementById('pin-modal')) {
+    document.getElementById('pin-modal').classList.remove('open');
+    pinBuffer = '';
+    pinCallback = null;
+  }
+}
+
+function updatePinDots() {
+  const dots = document.querySelectorAll('.pin-dot');
+  dots.forEach((d, i) => {
+    d.classList.toggle('filled', i < pinBuffer.length);
+    d.classList.remove('error');
+  });
+}
+
+function pinPress(digit) {
+  if(pinBuffer.length >= MANAGE_PIN.length) return;
+  pinBuffer += digit;
+  updatePinDots();
+  document.getElementById('pin-error').textContent = '';
+  if(pinBuffer.length === MANAGE_PIN.length) {
+    setTimeout(() => {
+      if(pinBuffer === MANAGE_PIN) {
+        document.getElementById('pin-modal').classList.remove('open');
+        const cb = pinCallback;
+        pinBuffer = '';
+        pinCallback = null;
+        if(cb) cb();
+      } else {
+        // shake & show error
+        document.querySelectorAll('.pin-dot').forEach(d => d.classList.add('error'));
+        document.getElementById('pin-error').textContent = '❌ PIN ไม่ถูกต้อง';
+        setTimeout(() => { pinBuffer = ''; updatePinDots(); }, 900);
+      }
+    }, 120);
+  }
+}
+
+function pinDel() {
+  pinBuffer = pinBuffer.slice(0, -1);
+  updatePinDots();
+  document.getElementById('pin-error').textContent = '';
+}
+
+function pinClear() {
+  pinBuffer = '';
+  updatePinDots();
+  document.getElementById('pin-error').textContent = '';
+}
 
 // ─── INIT ──────────────────────────────────────────────────
 function init() {
@@ -1483,9 +1632,9 @@ function renderManagePage() {
         <div style="font-family:'Sarabun',sans-serif;font-size:13px;font-weight:600;color:var(--gray-900);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${e.name}</div>
         <div style="font-family:'Sarabun',sans-serif;font-size:11px;color:var(--gray-600)">${e.floor||'-'}</div>
       </div>
-      <button onclick="openManageItemModal(${idx})" title="แก้ไข"
+      <button onclick="checkManagePin(() => openManageItemModal(${idx}))" title="แก้ไข"
         style="width:32px;height:32px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);background:var(--white);font-size:14px;cursor:pointer;flex-shrink:0">✏️</button>
-      <button onclick="confirmDeleteManageItem(${idx})" title="ลบ"
+      <button onclick="checkManagePin(() => confirmDeleteManageItem(${idx}))" title="ลบ"
         style="width:32px;height:32px;border:1.5px solid #E6B0AA;border-radius:var(--r-sm);background:#FDEDEC;color:#C0392B;font-size:14px;cursor:pointer;flex-shrink:0">🗑️</button>
     </div>
   `).join('');
@@ -1522,11 +1671,35 @@ function openManageItemModal(idx) {
         </select>
       </div>
       <div>
-        <label style="font-size:12px;font-weight:600;color:var(--gray-600);display:block;margin-bottom:4px">Image ID (Google Drive)</label>
-        <input type="text" id="mi-imgid" value="${(e.imgId||'').replace(/"/g,'&quot;')}" placeholder="วาง Image ID จาก Google Drive"
-          style="width:100%;padding:8px 10px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);font-size:12px;font-family:'IBM Plex Mono',monospace;background:var(--gray-50)">
-        <div style="font-size:11px;color:var(--gray-600);margin-top:4px">
-          คัด ID จากลิงก์แชร์ Google Drive เช่น https://drive.google.com/file/d/<b>ID_อยู่ตรงนี้</b>/view
+        <label style="font-size:12px;font-weight:600;color:var(--gray-600);display:block;margin-bottom:4px">รูปอุปกรณ์</label>
+
+        <!-- Dropdown เลือกรูปจากที่มีอยู่ -->
+        <select id="mi-imgid-select" onchange="onImgSelectChange(this)"
+          style="width:100%;padding:8px 10px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);font-size:12px;font-family:'Sarabun',sans-serif;background:var(--gray-50);-webkit-appearance:none;appearance:none;margin-bottom:6px">
+          <option value="">— เลือกรูปจากอุปกรณ์ที่มี —</option>
+          ${[...new Map(EQUIPMENT_FALLBACK.filter(x=>x.imgId).map(x=>[x.imgId,x])).values()]
+            .map(x => `<option value="${x.imgId}" ${e.imgId===x.imgId?'selected':''}>${x.name}</option>`)
+            .join('')}
+          <option value="__custom" ${!e.imgId || !EQUIPMENT_FALLBACK.some(x=>x.imgId===e.imgId) ? 'selected':''}>✏️ พิมพ์ Image ID เอง</option>
+        </select>
+
+        <!-- ช่องพิมพ์เอง (แสดงเฉพาะเมื่อเลือก "พิมพ์เอง" หรือ imgId ไม่อยู่ใน list) -->
+        <div id="mi-imgid-custom-wrap" style="display:${!e.imgId || !EQUIPMENT_FALLBACK.some(x=>x.imgId===e.imgId)?'block':'none'}">
+          <input type="text" id="mi-imgid" value="${(e.imgId||'').replace(/"/g,'&quot;')}" placeholder="วาง Image ID จาก Google Drive"
+            oninput="updateImgPreview(this.value)"
+            style="width:100%;padding:8px 10px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);font-size:12px;font-family:'IBM Plex Mono',monospace;background:var(--gray-50)">
+          <div style="font-size:11px;color:var(--gray-600);margin-top:3px">
+            คัด ID จากลิงก์ Google Drive เช่น …/file/d/<b>ID_อยู่ตรงนี้</b>/view
+          </div>
+        </div>
+
+        <!-- Preview รูป -->
+        <div id="mi-img-preview" style="margin-top:8px;text-align:center;display:${e.imgId?'block':'none'}">
+          <img id="mi-img-preview-img"
+            src="${e.imgId ? 'https://lh3.googleusercontent.com/d/'+e.imgId : ''}"
+            alt="preview"
+            style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1.5px solid var(--gray-200);background:var(--gray-100)"
+            onerror="this.style.display='none'">
         </div>
       </div>
       <button onclick="saveManageItem(${isEdit ? idx : 'null'})"
@@ -1548,7 +1721,11 @@ function closeManageItemModal(ev) {
 async function saveManageItem(idx) {
   const name  = document.getElementById('mi-name').value.trim();
   const floor = document.getElementById('mi-floor').value;
-  const imgId = document.getElementById('mi-imgid').value.trim();
+  // อ่าน imgId: ถ้า dropdown เป็น __custom หรือ ว่าง → ใช้ช่องพิมพ์เอง
+  const sel = document.getElementById('mi-imgid-select');
+  const imgId = (sel && sel.value && sel.value !== '__custom')
+    ? sel.value
+    : (document.getElementById('mi-imgid')?.value.trim() || '');
   if(!name) { showToast('⚠️ กรุณากรอกชื่ออุปกรณ์', '#C0392B'); return; }
 
   const isEdit = (idx !== null && idx !== undefined && equipment[idx]);
