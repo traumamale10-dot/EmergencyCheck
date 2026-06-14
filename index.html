@@ -170,25 +170,7 @@ body {
 }
 .num-btn:hover { background: var(--blue-lt); border-color: var(--blue-md); color: var(--blue-md); }
 
-/* ── PIN MODAL ── */
-.pin-dot {
-  width: 14px; height: 14px; border-radius: 50%;
-  border: 2px solid var(--gray-400); background: var(--white);
-  transition: background .15s, border-color .15s;
-}
-.pin-dot.filled { background: var(--blue-md); border-color: var(--blue-md); }
-.pin-dot.error  { background: var(--red);     border-color: var(--red); }
-.pin-key {
-  padding: 14px 0; border-radius: var(--r-sm); border: 1.5px solid var(--gray-200);
-  background: var(--white); font-family: 'IBM Plex Mono', monospace;
-  font-size: 20px; font-weight: 600; color: var(--gray-900);
-  cursor: pointer; transition: all .15s; -webkit-tap-highlight-color: transparent;
-}
-.pin-key:active { background: var(--blue-lt); border-color: var(--blue-md); color: var(--blue-md); transform: scale(.95); }
-.pin-key-del { font-size: 18px; color: var(--gray-600); }
-.pin-key-clear { font-family: 'Sarabun', sans-serif; color: var(--red); border-color: #E6B0AA; background: #FDEDEC; }
-
-
+/* ── INCHARGE CHIPS ── */
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chip {
   padding: 5px 12px; border-radius: 20px; font-size: 12px; cursor: pointer;
@@ -361,6 +343,51 @@ body {
 }
 @keyframes toastIn { from { transform: translateX(-50%) translateY(10px); opacity: 0; } to { transform: translateX(-50%) translateY(0); opacity: 1; } }
 @keyframes pulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:.7; transform:scale(1.06); } }
+
+/* ── LOADING OVERLAY (โหลดข้อมูลจาก Google Sheets) ── */
+.load-overlay {
+  position: fixed; inset: 0; z-index: 600; display: none;
+  align-items: center; justify-content: center;
+  background: rgba(32,33,36,.35); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+  animation: loadFadeIn .15s ease;
+}
+.load-overlay.open { display: flex; }
+@keyframes loadFadeIn { from { opacity: 0; } to { opacity: 1; } }
+.load-card {
+  background: var(--white); border-radius: 20px; box-shadow: 0 12px 40px rgba(0,0,0,.18), 0 4px 12px rgba(0,0,0,.08);
+  padding: 32px 36px; display: flex; flex-direction: column; align-items: center; gap: 6px;
+  font-family: 'Sarabun', sans-serif; min-width: 260px; max-width: 320px;
+  animation: loadPop .25s cubic-bezier(.4,0,.2,1);
+}
+@keyframes loadPop { from { transform: scale(.92); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.load-icon {
+  font-size: 40px; line-height: 1; margin-bottom: 8px;
+  display: inline-block;
+  animation: loadClockSpin 1.4s linear infinite;
+}
+@keyframes loadClockSpin {
+  to { transform: rotate(360deg); }
+}
+.load-text { font-size: 17px; font-weight: 700; color: var(--gray-900); text-align: center; margin-bottom: 4px; }
+.load-sub { font-size: 12.5px; color: var(--gray-600); text-align: center; line-height: 1.6; }
+.load-sub b { color: var(--blue-md); font-weight: 700; }
+.load-progress {
+  width: 100%; height: 6px; border-radius: 6px; background: var(--gray-100); overflow: hidden;
+  margin: 14px 0 4px;
+}
+.load-progress-fill {
+  height: 100%; width: 40%; border-radius: 6px;
+  background: linear-gradient(90deg, var(--blue-md), #5DADE2, var(--blue-md));
+  background-size: 200% 100%;
+  animation: loadBar 1.2s ease-in-out infinite, loadShimmer 1.6s linear infinite;
+}
+@keyframes loadBar {
+  0% { transform: translateX(-100%); width: 40%; }
+  50% { width: 60%; }
+  100% { transform: translateX(250%); width: 40%; }
+}
+@keyframes loadShimmer { 0% { background-position: 0% 0; } 100% { background-position: 200% 0; } }
+.load-status { font-size: 11.5px; color: var(--gray-400); text-align: center; font-style: italic; }
 
 /* ── BOTTOM NAV (mobile) ── */
 @media (max-width: 640px) {
@@ -582,19 +609,10 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
       <button onclick="openManageItemModal()" style="padding:6px 14px;border-radius:20px;border:none;background:var(--blue-md);color:#fff;font-family:'Sarabun',sans-serif;font-size:12px;font-weight:600;cursor:pointer">
         ➕ เพิ่มอุปกรณ์
       </button>
-      <button onclick="renderManagePage()" style="padding:6px 14px;border-radius:20px;border:1.5px solid var(--blue-md);background:var(--blue-lt);color:var(--blue-md);font-family:'Sarabun',sans-serif;font-size:12px;font-weight:600;cursor:pointer">
+      <button onclick="reloadManagePage()" style="padding:6px 14px;border-radius:20px;border:1.5px solid var(--blue-md);background:var(--blue-lt);color:var(--blue-md);font-family:'Sarabun',sans-serif;font-size:12px;font-weight:600;cursor:pointer">
         🔄 โหลดใหม่
       </button>
     </div>
-  </div>
-  <!-- Filter pills for manage page -->
-  <div id="manage-floor-filters" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">
-    <div class="filter-pill active" onclick="setManageFilter(this,'all')" style="padding:5px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--blue-md);background:var(--blue-md);color:#fff;font-family:'Sarabun',sans-serif">ทั้งหมด</div>
-    <div class="filter-pill" onclick="setManageFilter(this,'ชั้นที่ 1')" style="padding:5px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--gray-300);background:var(--white);color:var(--gray-600);font-family:'Sarabun',sans-serif">ชั้นที่ 1</div>
-    <div class="filter-pill" onclick="setManageFilter(this,'ชั้นที่ 2')" style="padding:5px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--gray-300);background:var(--white);color:var(--gray-600);font-family:'Sarabun',sans-serif">ชั้นที่ 2</div>
-    <div class="filter-pill" onclick="setManageFilter(this,'ชั้นที่ 3')" style="padding:5px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--gray-300);background:var(--white);color:var(--gray-600);font-family:'Sarabun',sans-serif">ชั้นที่ 3</div>
-    <div class="filter-pill" onclick="setManageFilter(this,'ด้านบน')" style="padding:5px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--gray-300);background:var(--white);color:var(--gray-600);font-family:'Sarabun',sans-serif">ด้านบน</div>
-    <div class="filter-pill" onclick="setManageFilter(this,'ด้านนอก')" style="padding:5px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--gray-300);background:var(--white);color:var(--gray-600);font-family:'Sarabun',sans-serif">ด้านนอก</div>
   </div>
   <div id="manage-list"></div>
 </div>
@@ -628,44 +646,6 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
   </div>
 </div>
 
-<!-- PIN Modal -->
-<div class="modal-overlay" id="pin-modal" onclick="closePinModal(event)">
-  <div class="modal-box" style="max-width:320px">
-    <div class="modal-drag"></div>
-    <div style="padding:4px 0 16px">
-      <div style="text-align:center;font-size:22px;margin-bottom:6px">🔒</div>
-      <div style="text-align:center;font-family:'Sarabun',sans-serif;font-size:15px;font-weight:700;color:var(--gray-900);margin-bottom:4px">ยืนยันตัวตน</div>
-      <div style="text-align:center;font-family:'Sarabun',sans-serif;font-size:12px;color:var(--gray-600);margin-bottom:18px">กรอก PIN เพื่อแก้ไข/ลบรายการอุปกรณ์</div>
-
-      <!-- PIN dots display -->
-      <div style="display:flex;justify-content:center;gap:14px;margin-bottom:20px" id="pin-dots">
-        <div class="pin-dot"></div>
-        <div class="pin-dot"></div>
-        <div class="pin-dot"></div>
-        <div class="pin-dot"></div>
-      </div>
-
-      <!-- Numpad -->
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:240px;margin:0 auto">
-        <button class="pin-key" onclick="pinPress('1')">1</button>
-        <button class="pin-key" onclick="pinPress('2')">2</button>
-        <button class="pin-key" onclick="pinPress('3')">3</button>
-        <button class="pin-key" onclick="pinPress('4')">4</button>
-        <button class="pin-key" onclick="pinPress('5')">5</button>
-        <button class="pin-key" onclick="pinPress('6')">6</button>
-        <button class="pin-key" onclick="pinPress('7')">7</button>
-        <button class="pin-key" onclick="pinPress('8')">8</button>
-        <button class="pin-key" onclick="pinPress('9')">9</button>
-        <button class="pin-key pin-key-clear" onclick="pinClear()" style="font-size:13px">ล้าง</button>
-        <button class="pin-key" onclick="pinPress('0')">0</button>
-        <button class="pin-key pin-key-del" onclick="pinDel()">⌫</button>
-      </div>
-
-      <div id="pin-error" style="text-align:center;color:#C0392B;font-family:'Sarabun',sans-serif;font-size:12px;margin-top:12px;min-height:18px"></div>
-    </div>
-  </div>
-</div>
-
 <!-- BOTTOM NAV (mobile) -->
 <nav class="bottom-nav">
   <button class="bnav-btn active" onclick="switchTab('equip',this)"><span class="icon">📦</span>ตรวจสอบรถEmergency</button>
@@ -674,6 +654,19 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
 </nav>
 
 <div class="toast" id="toast"></div>
+<div class="load-overlay" id="load-overlay">
+  <div class="load-card">
+    <div class="load-icon">🕐</div>
+    <div class="load-text" id="load-text">กำลังโหลดข้อมูล</div>
+    <div class="load-sub" id="load-sub">
+      กรุณารอสักครู่<br>
+      ระบบกำลังดึงข้อมูลจาก <b>Google Sheets</b><br>
+      <span style="color:#B7770D">อย่าเพิ่งกดออกจากหน้านี้ จนกว่าจะโหลดเสร็จ</span>
+    </div>
+    <div class="load-progress"><div class="load-progress-fill"></div></div>
+    <div class="load-status" id="load-status">กำลังประมวลผล...</div>
+  </div>
+</div>
 
 <!-- ════════════════════════════════════════════
      JAVASCRIPT
@@ -829,99 +822,6 @@ const inchargeList = [
   'สุพรรณี','ชนาภา','กนกพร','วริศรา'
 ];
 
-function onImgSelectChange(sel) {
-  const customWrap = document.getElementById('mi-imgid-custom-wrap');
-  const preview    = document.getElementById('mi-img-preview');
-  const previewImg = document.getElementById('mi-img-preview-img');
-
-  if(sel.value === '__custom' || sel.value === '') {
-    customWrap.style.display = 'block';
-    const customVal = document.getElementById('mi-imgid')?.value.trim() || '';
-    updateImgPreview(customVal);
-  } else {
-    customWrap.style.display = 'none';
-    previewImg.style.display = 'block';
-    previewImg.src = 'https://lh3.googleusercontent.com/d/' + sel.value;
-    preview.style.display = 'block';
-  }
-}
-
-function updateImgPreview(imgId) {
-  const preview    = document.getElementById('mi-img-preview');
-  const previewImg = document.getElementById('mi-img-preview-img');
-  if(imgId) {
-    previewImg.style.display = 'block';
-    previewImg.src = 'https://lh3.googleusercontent.com/d/' + imgId;
-    preview.style.display = 'block';
-  } else {
-    preview.style.display = 'none';
-  }
-}
-
-// ─── PIN PROTECTION ────────────────────────────────────────
-const MANAGE_PIN = '952';
-let pinBuffer = '';
-let pinCallback = null;
-
-function checkManagePin(callback) {
-  pinBuffer = '';
-  pinCallback = callback;
-  updatePinDots();
-  document.getElementById('pin-error').textContent = '';
-  document.getElementById('pin-modal').classList.add('open');
-}
-
-function closePinModal(ev) {
-  if(!ev || ev.target === document.getElementById('pin-modal')) {
-    document.getElementById('pin-modal').classList.remove('open');
-    pinBuffer = '';
-    pinCallback = null;
-  }
-}
-
-function updatePinDots() {
-  const dots = document.querySelectorAll('.pin-dot');
-  dots.forEach((d, i) => {
-    d.classList.toggle('filled', i < pinBuffer.length);
-    d.classList.remove('error');
-  });
-}
-
-function pinPress(digit) {
-  if(pinBuffer.length >= MANAGE_PIN.length) return;
-  pinBuffer += digit;
-  updatePinDots();
-  document.getElementById('pin-error').textContent = '';
-  if(pinBuffer.length === MANAGE_PIN.length) {
-    setTimeout(() => {
-      if(pinBuffer === MANAGE_PIN) {
-        document.getElementById('pin-modal').classList.remove('open');
-        const cb = pinCallback;
-        pinBuffer = '';
-        pinCallback = null;
-        if(cb) cb();
-      } else {
-        // shake & show error
-        document.querySelectorAll('.pin-dot').forEach(d => d.classList.add('error'));
-        document.getElementById('pin-error').textContent = '❌ PIN ไม่ถูกต้อง';
-        setTimeout(() => { pinBuffer = ''; updatePinDots(); }, 900);
-      }
-    }, 120);
-  }
-}
-
-function pinDel() {
-  pinBuffer = pinBuffer.slice(0, -1);
-  updatePinDots();
-  document.getElementById('pin-error').textContent = '';
-}
-
-function pinClear() {
-  pinBuffer = '';
-  updatePinDots();
-  document.getElementById('pin-error').textContent = '';
-}
-
 // ─── INIT ──────────────────────────────────────────────────
 function init() {
   const now = new Date();
@@ -1065,11 +965,7 @@ function renderEquip() {
   const floorIcon  = {'ชั้นที่ 1':'🔵','ชั้นที่ 2':'🟢','ชั้นที่ 3':'🟡','ด้านบน':'🔴','ด้านนอก':'⚪'};
   const groups = {};
   floorOrder.forEach(f => groups[f] = []);
-  groups['__other'] = [];
-  items.forEach(e => {
-    if(groups[e.floor]) groups[e.floor].push(e);
-    else groups['__other'].push(e);
-  });
+  items.forEach(e => { if(groups[e.floor]) groups[e.floor].push(e); });
   // sort within each group: group by base name, FIFO first within same name
   floorOrder.forEach(f => {
     const g = groups[f];
@@ -1104,19 +1000,7 @@ function renderEquip() {
         </div>
         <div class="eq-grid">${grpItems.map(e => makeCard(e)).join('')}</div>
       </div>`;
-    }).join('')
-    + (groups['__other'].length > 0 ? (() => {
-        const grpItems = groups['__other'];
-        const chkCount = grpItems.filter(e => checkedItems.has(e.idx)).length;
-        return `<div class="group-section">
-          <div class="group-title">
-            📌 อื่นๆ
-            <span class="g-count">${grpItems.length}</span>
-            ${chkCount>0?`<span class="g-checked">✅ ${chkCount}/${grpItems.length}</span>`:''}
-          </div>
-          <div class="eq-grid">${grpItems.map(e => makeCard(e)).join('')}</div>
-        </div>`;
-      })() : '');
+    }).join('');
 }
 
 function makeCard(e) {
@@ -1598,16 +1482,9 @@ async function saveEquipMeta(idx) {
 // จัดการรายการอุปกรณ์ (Master List) — เพิ่ม/ลบ/แก้ไข ผ่าน UI
 // บันทึกลงชีต "รายการอุปกรณ์" ผ่าน Apps Script (addEquipItem/editEquipItem/deleteEquipItem)
 // ════════════════════════════════════════════════════════
-let manageFilter = 'all';
-
-function setManageFilter(el, val) {
-  manageFilter = val;
-  document.querySelectorAll('#manage-floor-filters .filter-pill').forEach(p => {
-    const active = p === el;
-    p.style.background = active ? 'var(--blue-md)' : 'var(--white)';
-    p.style.color = active ? '#fff' : 'var(--gray-600)';
-    p.style.borderColor = active ? 'var(--blue-md)' : 'var(--gray-300)';
-  });
+// โหลดรายการอุปกรณ์ใหม่จาก Sheets แล้ว re-render หน้าจัดการ (ใช้กับปุ่ม "โหลดใหม่")
+async function reloadManagePage() {
+  await loadEquipList();
   renderManagePage();
 }
 
@@ -1617,13 +1494,7 @@ function renderManagePage() {
     list.innerHTML = '<div class="empty-state"><div class="es-icon">📭</div><p>ไม่มีรายการอุปกรณ์</p></div>';
     return;
   }
-  const filtered = equipment.map((e, idx) => ({e, idx}))
-    .filter(({e}) => manageFilter === 'all' || e.floor === manageFilter);
-  if(!filtered.length) {
-    list.innerHTML = '<div class="empty-state"><div class="es-icon">🔍</div><p>ไม่มีรายการในตำแหน่งนี้</p></div>';
-    return;
-  }
-  list.innerHTML = filtered.map(({e, idx}) => `
+  list.innerHTML = equipment.map((e, idx) => `
     <div style="display:flex;align-items:center;gap:10px;padding:10px;border:1px solid var(--gray-200);border-radius:var(--r-sm);margin-bottom:6px;background:var(--white)">
       <img src="https://lh3.googleusercontent.com/d/${e.imgId}" alt="" loading="lazy"
         style="width:40px;height:40px;object-fit:cover;border-radius:var(--r-sm);background:var(--gray-100);flex-shrink:0"
@@ -1632,9 +1503,9 @@ function renderManagePage() {
         <div style="font-family:'Sarabun',sans-serif;font-size:13px;font-weight:600;color:var(--gray-900);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${e.name}</div>
         <div style="font-family:'Sarabun',sans-serif;font-size:11px;color:var(--gray-600)">${e.floor||'-'}</div>
       </div>
-      <button onclick="checkManagePin(() => openManageItemModal(${idx}))" title="แก้ไข"
+      <button onclick="openManageItemModal(${idx})" title="แก้ไข"
         style="width:32px;height:32px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);background:var(--white);font-size:14px;cursor:pointer;flex-shrink:0">✏️</button>
-      <button onclick="checkManagePin(() => confirmDeleteManageItem(${idx}))" title="ลบ"
+      <button onclick="confirmDeleteManageItem(${idx})" title="ลบ"
         style="width:32px;height:32px;border:1.5px solid #E6B0AA;border-radius:var(--r-sm);background:#FDEDEC;color:#C0392B;font-size:14px;cursor:pointer;flex-shrink:0">🗑️</button>
     </div>
   `).join('');
@@ -1660,46 +1531,15 @@ function openManageItemModal(idx) {
       </div>
       <div>
         <label style="font-size:12px;font-weight:600;color:var(--gray-600);display:block;margin-bottom:4px">ตำแหน่ง/ชั้น</label>
-        <select id="mi-floor"
-          style="width:100%;padding:8px 10px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);font-size:13px;font-family:'Sarabun',sans-serif;background:var(--gray-50);-webkit-appearance:none;appearance:none">
-          <option value="" ${!(e.floor)?'selected':''}>— เลือกตำแหน่ง —</option>
-          <option value="ชั้นที่ 1" ${ e.floor==='ชั้นที่ 1' ?'selected':''}>ชั้นที่ 1</option>
-          <option value="ชั้นที่ 2" ${ e.floor==='ชั้นที่ 2' ?'selected':''}>ชั้นที่ 2</option>
-          <option value="ชั้นที่ 3" ${ e.floor==='ชั้นที่ 3' ?'selected':''}>ชั้นที่ 3</option>
-          <option value="ด้านบน"   ${ e.floor==='ด้านบน'   ?'selected':''}>ด้านบน</option>
-          <option value="ด้านนอก"  ${ e.floor==='ด้านนอก'  ?'selected':''}>ด้านนอก</option>
-        </select>
+        <input type="text" id="mi-floor" value="${(e.floor||'').replace(/"/g,'&quot;')}" placeholder="เช่น ชั้นที่ 1"
+          style="width:100%;padding:8px 10px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);font-size:13px;font-family:'Sarabun',sans-serif;background:var(--gray-50)">
       </div>
       <div>
-        <label style="font-size:12px;font-weight:600;color:var(--gray-600);display:block;margin-bottom:4px">รูปอุปกรณ์</label>
-
-        <!-- Dropdown เลือกรูปจากที่มีอยู่ -->
-        <select id="mi-imgid-select" onchange="onImgSelectChange(this)"
-          style="width:100%;padding:8px 10px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);font-size:12px;font-family:'Sarabun',sans-serif;background:var(--gray-50);-webkit-appearance:none;appearance:none;margin-bottom:6px">
-          <option value="">— เลือกรูปจากอุปกรณ์ที่มี —</option>
-          ${[...new Map(EQUIPMENT_FALLBACK.filter(x=>x.imgId).map(x=>[x.imgId,x])).values()]
-            .map(x => `<option value="${x.imgId}" ${e.imgId===x.imgId?'selected':''}>${x.name}</option>`)
-            .join('')}
-          <option value="__custom" ${!e.imgId || !EQUIPMENT_FALLBACK.some(x=>x.imgId===e.imgId) ? 'selected':''}>✏️ พิมพ์ Image ID เอง</option>
-        </select>
-
-        <!-- ช่องพิมพ์เอง (แสดงเฉพาะเมื่อเลือก "พิมพ์เอง" หรือ imgId ไม่อยู่ใน list) -->
-        <div id="mi-imgid-custom-wrap" style="display:${!e.imgId || !EQUIPMENT_FALLBACK.some(x=>x.imgId===e.imgId)?'block':'none'}">
-          <input type="text" id="mi-imgid" value="${(e.imgId||'').replace(/"/g,'&quot;')}" placeholder="วาง Image ID จาก Google Drive"
-            oninput="updateImgPreview(this.value)"
-            style="width:100%;padding:8px 10px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);font-size:12px;font-family:'IBM Plex Mono',monospace;background:var(--gray-50)">
-          <div style="font-size:11px;color:var(--gray-600);margin-top:3px">
-            คัด ID จากลิงก์ Google Drive เช่น …/file/d/<b>ID_อยู่ตรงนี้</b>/view
-          </div>
-        </div>
-
-        <!-- Preview รูป -->
-        <div id="mi-img-preview" style="margin-top:8px;text-align:center;display:${e.imgId?'block':'none'}">
-          <img id="mi-img-preview-img"
-            src="${e.imgId ? 'https://lh3.googleusercontent.com/d/'+e.imgId : ''}"
-            alt="preview"
-            style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1.5px solid var(--gray-200);background:var(--gray-100)"
-            onerror="this.style.display='none'">
+        <label style="font-size:12px;font-weight:600;color:var(--gray-600);display:block;margin-bottom:4px">Image ID (Google Drive)</label>
+        <input type="text" id="mi-imgid" value="${(e.imgId||'').replace(/"/g,'&quot;')}" placeholder="วาง Image ID จาก Google Drive"
+          style="width:100%;padding:8px 10px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);font-size:12px;font-family:'IBM Plex Mono',monospace;background:var(--gray-50)">
+        <div style="font-size:11px;color:var(--gray-600);margin-top:4px">
+          คัด ID จากลิงก์แชร์ Google Drive เช่น https://drive.google.com/file/d/<b>ID_อยู่ตรงนี้</b>/view
         </div>
       </div>
       <button onclick="saveManageItem(${isEdit ? idx : 'null'})"
@@ -1720,56 +1560,47 @@ function closeManageItemModal(ev) {
 
 async function saveManageItem(idx) {
   const name  = document.getElementById('mi-name').value.trim();
-  const floor = document.getElementById('mi-floor').value;
-  // อ่าน imgId: ถ้า dropdown เป็น __custom หรือ ว่าง → ใช้ช่องพิมพ์เอง
-  const sel = document.getElementById('mi-imgid-select');
-  const imgId = (sel && sel.value && sel.value !== '__custom')
-    ? sel.value
-    : (document.getElementById('mi-imgid')?.value.trim() || '');
+  const floor = document.getElementById('mi-floor').value.trim();
+  const imgId = document.getElementById('mi-imgid').value.trim();
   if(!name) { showToast('⚠️ กรุณากรอกชื่ออุปกรณ์', '#C0392B'); return; }
 
   const isEdit = (idx !== null && idx !== undefined && equipment[idx]);
+  const payload = isEdit
+    ? { type:'editEquipItem', oldName: equipment[idx].name, name, floor, imgId }
+    : { type:'addEquipItem', name, floor, imgId };
 
-  // อัปเดต equipment array ทันที (ไม่รอ Sheets)
-  if(isEdit) {
-    equipment[idx] = {...equipment[idx], name, floor, imgId};
-  } else {
-    equipment.push({name, floor, exp:'', fifo:'', note:'', imgId});
+  if(!config.scriptUrl) { showToast('⚠️ ยังไม่ได้เชื่อมต่อ Google Sheets', '#C0392B'); return; }
+  try {
+    await fetch(config.scriptUrl, {method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)});
+    if(isEdit) {
+      equipment[idx] = {...equipment[idx], name, floor, imgId};
+    } else {
+      equipment.push({name, floor, exp:'', fifo:'', note:'', imgId});
+    }
+    computeFifo();
+    showToast(isEdit ? '✅ บันทึกการแก้ไขแล้ว' : '✅ เพิ่มอุปกรณ์แล้ว');
+    closeManageItemModal();
+    renderManagePage();
+    renderEquip();
+  } catch(err) {
+    showToast('❌ บันทึกไม่สำเร็จ: ' + err.message, '#C0392B');
   }
-  // บันทึกลง localStorage ทันที
-  saveEquipListLocal();
-
-  // ส่งไป Sheets ถ้าเชื่อมต่ออยู่ (fire-and-forget)
-  if(config.scriptUrl) {
-    const payload = isEdit
-      ? { type:'editEquipItem', oldName: isEdit ? equipment[idx]?.name || name : name, name, floor, imgId }
-      : { type:'addEquipItem', name, floor, imgId };
-    fetch(config.scriptUrl, {method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)})
-      .catch(err => console.error('Sheets sync error:', err));
-  }
-
-  computeFifo();
-  showToast(isEdit ? '✅ บันทึกการแก้ไขแล้ว' : '✅ เพิ่มอุปกรณ์แล้ว');
-  closeManageItemModal();
-  renderManagePage();
-  renderEquip();
 }
 
 async function confirmDeleteManageItem(idx) {
   const e = equipment[idx];
   if(!e) return;
   if(!confirm(`ลบ "${e.name}" ออกจากรายการอุปกรณ์?\n(จะลบออกจากชีต "รายการอุปกรณ์" ด้วย)`)) return;
-
-  equipment.splice(idx, 1);
-  saveEquipListLocal();
-  computeFifo();
-  showToast('✅ ลบอุปกรณ์แล้ว');
-  renderManagePage();
-  renderEquip();
-
-  if(config.scriptUrl) {
-    fetch(config.scriptUrl, {method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'}, body: JSON.stringify({type:'deleteEquipItem', name: e.name})})
-      .catch(err => console.error('Sheets sync error:', err));
+  if(!config.scriptUrl) { showToast('⚠️ ยังไม่ได้เชื่อมต่อ Google Sheets', '#C0392B'); return; }
+  try {
+    await fetch(config.scriptUrl, {method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'}, body: JSON.stringify({type:'deleteEquipItem', name: e.name})});
+    equipment.splice(idx, 1);
+    computeFifo();
+    showToast('✅ ลบอุปกรณ์แล้ว');
+    renderManagePage();
+    renderEquip();
+  } catch(err) {
+    showToast('❌ ลบไม่สำเร็จ: ' + err.message, '#C0392B');
   }
 }
 
@@ -1777,55 +1608,19 @@ async function confirmDeleteManageItem(idx) {
 // ถ้าสำเร็จ: สร้าง equipment array ใหม่จากข้อมูลใน Sheets (ชื่อ/ชั้น/รูป)
 // ถ้าไม่สำเร็จ/ไม่มีข้อมูล: ใช้ EQUIPMENT_FALLBACK (hardcode) ต่อไป
 // จากนั้นเรียก loadEquipMeta() เพื่อ merge exp/note/status ตามเดิม
-function saveEquipListLocal() {
-  // บันทึก equipment array (ชื่อ/ชั้น/imgId) ลง localStorage เพื่อให้คงอยู่เมื่อโหลดใหม่
-  const toSave = equipment.map(e => ({name: e.name, floor: e.floor||'', imgId: e.imgId||''}));
-  localStorage.setItem('equipList', JSON.stringify(toSave));
-}
-
-function mergeLocalEquipList(base) {
-  // merge รายการที่บันทึกใน localStorage เข้ากับ base array
-  // ถ้ามีชื่อซ้ำ → ใช้ข้อมูลจาก localStorage (ใหม่กว่า)
-  // ถ้าไม่มีใน base → เพิ่มเข้าไป
-  const local = JSON.parse(localStorage.getItem('equipList') || '[]');
-  if(!local.length) return base;
-  const nameSet = new Set(base.map(e => e.name));
-  local.forEach(item => {
-    if(!nameSet.has(item.name)) {
-      base.push({name: item.name, floor: item.floor||'', exp:'', fifo:'', note:'', imgId: item.imgId||''});
-    } else {
-      // อัปเดต floor/imgId ถ้าต่างกัน (เผื่อแก้ไขใน manage แล้ว Sheets ยังไม่อัป)
-      const idx = base.findIndex(e => e.name === item.name);
-      if(idx >= 0) {
-        if(item.floor) base[idx].floor = item.floor;
-        if(item.imgId) base[idx].imgId = item.imgId;
-      }
-    }
-  });
-  return base;
-}
-
 async function loadEquipList() {
   if(config.scriptUrl) {
+    showLoadOverlay('กำลังโหลดรายการอุปกรณ์', 'กำลังดึงข้อมูลจาก Sheets...');
     try {
       const resp = await fetch(config.scriptUrl + '?t=' + Date.now());
       const json = await resp.json();
       if(json.equipList && Array.isArray(json.equipList) && json.equipList.length > 0) {
-        let base = json.equipList.map(item => ({
+        equipment = json.equipList.map(item => ({
           name: item.name, floor: item.floor||'', exp: '', fifo: '', note: '', imgId: item.imgId||''
         }));
-        equipment = mergeLocalEquipList(base);
-        saveEquipListLocal(); // sync local ให้ตรงกับ Sheets + local additions
-      } else {
-        // Sheets ไม่มี equipList → ใช้ fallback แล้ว merge local
-        equipment = mergeLocalEquipList(EQUIPMENT_FALLBACK.map(e => ({...e})));
       }
-    } catch(err) {
-      console.error("loadEquipList:", err);
-      equipment = mergeLocalEquipList(EQUIPMENT_FALLBACK.map(e => ({...e})));
-    }
-  } else {
-    equipment = mergeLocalEquipList(EQUIPMENT_FALLBACK.map(e => ({...e})));
+    } catch(err) { console.error("loadEquipList:", err); }
+    finally { hideLoadOverlay(); }
   }
   loadEquipMeta();
 }
@@ -2113,12 +1908,14 @@ let equipHistory = [];
 async function renderHistory() {
   if(config.scriptUrl) {
     document.getElementById('hist-list').innerHTML = '<div class="empty-state"><div class="es-icon">🔄</div><p>กำลังโหลด...</p></div>';
+    showLoadOverlay('กำลังโหลดประวัติ', 'กำลังดึงข้อมูลจาก Sheets...');
     try {
       const resp = await fetch(config.scriptUrl + '?t=' + Date.now());
       const json = await resp.json();
       if(json.checkRows) { records = json.checkRows; localStorage.setItem('records', JSON.stringify(records)); }
       if(json.equipRows) { equipHistory = json.equipRows; }
     } catch(e) {}
+    finally { hideLoadOverlay(); }
   }
   buildEquipHistSessions();
   renderCheckHistory();
@@ -2442,6 +2239,17 @@ function openSheets() {
 
 // ─── TOAST ─────────────────────────────────────────────────
 let toastTimer;
+// ── Popup โหลดข้อมูลจาก Google Sheets ─────────────────────
+function showLoadOverlay(text='กำลังโหลดข้อมูล', status='กำลังประมวลผล...') {
+  const ov = document.getElementById('load-overlay');
+  document.getElementById('load-text').textContent = text;
+  document.getElementById('load-status').textContent = status;
+  ov.classList.add('open');
+}
+function hideLoadOverlay() {
+  document.getElementById('load-overlay').classList.remove('open');
+}
+
 function showToast(msg, color='#202124') {
   const t = document.getElementById('toast');
   t.textContent = msg;
