@@ -999,6 +999,28 @@ function getExpBadge(exp) {
 }
 
 
+// อัปเดต class/สีขอบของการ์ดตามสถานะติ๊กตรวจสอบ โดยไม่แตะ <img> (ป้องกันภาพกระพริบ/โหลดใหม่บนมือถือ)
+function applyCardCheckedVisual(idx) {
+  const card = document.querySelector(`.eq-card[data-idx="${idx}"]`);
+  if(!card) return;
+  const e = equipment[idx];
+  const isFifo = isFifoItem({...e, idx});
+  const isChecked = checkedItems.has(idx);
+  const status = equipStatus[idx] || '';
+
+  card.classList.remove('checked','fifo');
+  if(isChecked) card.classList.add('checked');
+  else if(isFifo) card.classList.add('fifo');
+
+  let borderStyle = '';
+  if(status==='ขาด')     borderStyle = 'border-color:#C4708A;';
+  else if(status==='ส่งนึ่ง') borderStyle = 'border-color:#C9A05E;';
+  else if(status==='รอเบิก') borderStyle = 'border-color:#A98FD2;';
+  else if(isChecked)     borderStyle = 'border-color:var(--green);';
+  else if(isFifo)        borderStyle = 'border-color:#E74C3C;';
+  card.style.cssText = borderStyle;
+}
+
 function toggleChecked(idx, ev) {
   ev.stopPropagation();
   const wasChecked = checkedItems.has(idx);
@@ -1006,16 +1028,8 @@ function toggleChecked(idx, ev) {
   else checkedItems.add(idx);
   updateEquipProgress();
   updateGroupCheckedCounts();
-  // อัปเดตเฉพาะการ์ดนี้ ไม่ re-render ทั้งกริด (ป้องกันภาพกระพริบ/โหลดใหม่)
-  const oldCard = document.querySelector(`.eq-card[data-idx="${idx}"]`);
-  if(oldCard) {
-    const tmp = document.createElement('div');
-    tmp.innerHTML = makeCard({...equipment[idx], idx});
-    const newCard = tmp.firstElementChild;
-    oldCard.replaceWith(newCard);
-  } else {
-    renderEquip();
-  }
+  // อัปเดตเฉพาะ class/สีของการ์ดนี้ ไม่แตะรูปภาพ (ป้องกันภาพกระพริบบนมือถือ)
+  applyCardCheckedVisual(idx);
   const name = equipment[idx].name;
   showToast(wasChecked ? `\u21a9\ufe0f \u0e22\u0e01\u0e40\u0e25\u0e34\u0e01: ${name}` : `\u2705 \u0e15\u0e23\u0e27\u0e08\u0e2a\u0e2d\u0e1a\u0e41\u0e25\u0e49\u0e27: ${name}`, wasChecked?'#C9A05E':'#8FB89A');
 }
@@ -1134,11 +1148,10 @@ function makeCard(e) {
     <div class="eq-img" id="ei-${idx}">
       ${imgSrc
         ? `<img src="${imgSrc}" alt="${e.name}" loading="lazy"
-             onerror="document.getElementById('ei-${idx}').innerHTML='<span style=\\'font-size:36px\\'>${em}</span>'"
+             onerror="document.getElementById('ei-${idx}').querySelector('img,span')?.remove();document.getElementById('ei-${idx}').insertAdjacentHTML('afterbegin','<span style=\\'font-size:36px\\'>${em}</span>')"
              style="width:100%;height:110px;object-fit:contain;display:block;background:#f8f9fa">`
         : `<span style="font-size:36px">${em}</span>`
       }
-      ${isChecked?`<div style="position:absolute;top:4px;right:4px;background:rgba(255,255,255,.92);border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:13px;box-shadow:0 1px 4px rgba(0,0,0,.2)">✅</div>`:''}
     </div>
     <div class="eq-body">
       <div class="eq-name">${e.name}</div>
@@ -1550,14 +1563,7 @@ function toggleCheckedModal(idx) {
   else checkedItems.add(idx);
   updateEquipProgress();
   updateGroupCheckedCounts();
-  const oldCard = document.querySelector(`.eq-card[data-idx="${idx}"]`);
-  if(oldCard) {
-    const tmp = document.createElement('div');
-    tmp.innerHTML = makeCard({...equipment[idx], idx});
-    oldCard.replaceWith(tmp.firstElementChild);
-  } else {
-    renderEquip();
-  }
+  applyCardCheckedVisual(idx);
   renderModal(idx);
 }
 
