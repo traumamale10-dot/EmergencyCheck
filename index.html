@@ -418,11 +418,11 @@ body {
     box-shadow: 0 -2px 10px rgba(0,0,0,.08); z-index: 100;
   }
   .bnav-btn {
-    flex: 1; padding: 8px 4px 10px; display: flex; flex-direction: column; align-items: center; gap: 3px;
+    flex: 1; padding: 8px 2px 10px; display: flex; flex-direction: column; align-items: center; gap: 3px;
     cursor: pointer; border: none; background: none; font-family: 'Sarabun', sans-serif;
-    font-size: 10px; color: var(--gray-600); transition: color .2s;
+    font-size: 9px; color: var(--gray-600); transition: color .2s; white-space: nowrap;
   }
-  .bnav-btn .icon { font-size: 22px; }
+  .bnav-btn .icon { font-size: 20px; }
   .bnav-btn.active { color: var(--blue-md); }
   body { padding-bottom: 65px; }
 }
@@ -555,6 +555,8 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
     <button class="tab active" onclick="switchTab('equip',this)"><span class="tab-icon">📦</span>ตรวจสอบรถEmergency</button>
     <button class="tab" onclick="switchTab('hist',this)"><span class="tab-icon">📋</span>ประวัติ</button>
     <button class="tab" onclick="switchTab('manage',this)"><span class="tab-icon">🗂️</span>จัดการรายการอุปกรณ์</button>
+    <button class="tab" onclick="switchTab('info',this)"><span class="tab-icon">📖</span>เกี่ยวกับอุปกรณ์</button>
+    <button class="tab" onclick="switchTab('help',this)"><span class="tab-icon">❓</span>วิธีการใช้งาน</button>
   </div>
 </div>
 
@@ -705,6 +707,36 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
   <div id="manage-list"></div>
 </div>
 
+<!-- ════════════════════════════════════════════
+     PAGE 4: เกี่ยวกับอุปกรณ์ (ข้อมูลอ้างอิงทางคลินิก)
+════════════════════════════════════════════ -->
+<div id="page-info" class="page">
+  <div class="search-bar">
+    <input type="text" id="info-search" placeholder="ค้นหาอุปกรณ์ เช่น Laryngoscope, ET Tube, Guide Wire..." oninput="renderInfoPage()">
+  </div>
+  <div style="font-size:12px;color:var(--gray-600);font-family:'Sarabun',sans-serif;margin-bottom:10px">
+    ข้อมูลอ้างอิงทางคลินิก: อุปกรณ์คืออะไร ข้อบ่งชี้การใช้งาน และวิธีการตรวจสอบ/ใช้งานเบื้องต้น
+    (สำหรับการศึกษา — ใช้ร่วมกับแนวปฏิบัติของหน่วยงานและดุลยพินิจทางคลินิก)
+  </div>
+  <div id="info-list"></div>
+</div>
+
+<!-- Equipment Info Detail Modal -->
+<div class="modal-overlay" id="info-modal" onclick="closeInfoModal(event)">
+  <div class="modal-box">
+    <div class="modal-drag"></div>
+    <div class="modal-content" id="info-modal-content"></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     PAGE 5: วิธีการใช้งาน
+════════════════════════════════════════════ -->
+<div id="page-help" class="page">
+  <div id="help-content"></div>
+</div>
+
+
 <!-- Manage Equipment Item Modal (Add/Edit) -->
 <div class="modal-overlay" id="manage-item-modal" onclick="closeManageItemModal(event)">
   <div class="modal-box">
@@ -739,6 +771,8 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
   <button class="bnav-btn active" onclick="switchTab('equip',this)"><span class="icon">📦</span>ตรวจสอบรถEmergency</button>
   <button class="bnav-btn" onclick="switchTab('hist',this)"><span class="icon">📋</span>ประวัติ</button>
   <button class="bnav-btn" onclick="switchTab('manage',this)"><span class="icon">🗂️</span>จัดการรายการ</button>
+  <button class="bnav-btn" onclick="switchTab('info',this)"><span class="icon">📖</span>เกี่ยวกับอุปกรณ์</button>
+  <button class="bnav-btn" onclick="switchTab('help',this)"><span class="icon">❓</span>วิธีใช้งาน</button>
 </nav>
 
 <div class="toast" id="toast"></div>
@@ -970,12 +1004,13 @@ function switchTab(id, el) {
   // Activate both desktop tab and mobile nav
   const tabs = document.querySelectorAll('.tab');
   const bnavs = document.querySelectorAll('.bnav-btn');
-  const order = ['equip','hist','manage'];
+  const order = ['equip','hist','manage','info','help'];
   const idx = order.indexOf(id);
   if(tabs[idx]) tabs[idx].classList.add('active');
   if(bnavs[idx]) bnavs[idx].classList.add('active');
   if(id==='hist') renderHistory();
   if(id==='manage') renderManagePage();
+  if(id==='info') renderInfoPage();
   if(id!=='equip') { const b=document.getElementById('equip-float-badge'); if(b) b.style.display='none'; }
 }
 
@@ -2048,6 +2083,497 @@ function closeModal(e) {
   if(!e || e.target===document.getElementById('modal')) {
     document.getElementById('modal').classList.remove('open');
     closeExpCalendar();
+  }
+}
+
+// ─── EQUIPMENT INFO (เกี่ยวกับอุปกรณ์) ────────────────────
+// ข้อมูลอ้างอิงทางคลินิกสำหรับอุปกรณ์ใน Emergency Car
+const EQUIP_INFO = [
+  {
+    name: 'Laryngoscope',
+    icon: '🔦',
+    keywords: ['laryngoscope', 'laryn', 'ลาริงโกสโคป', 'ลาริงโก'],
+    what: 'Laryngoscope คืออะไร?',
+    whatDetail: `Laryngoscope เป็นอุปกรณ์ทางการแพทย์ที่ใช้สำหรับส่องดูกล่องเสียง (larynx) และสายเสียง (vocal cords) เพื่อช่วยในการใส่ท่อช่วยหายใจ (Endotracheal Intubation) ประกอบด้วย 2 ส่วนหลัก:
+<ul style="margin:6px 0 0 16px;padding:0;font-size:13px;color:var(--gray-800);line-height:1.8">
+  <li><b>ด้าม (Handle)</b> — จับถนัดมือ มักมีแบตเตอรี่อยู่ภายใน</li>
+  <li><b>ใบมีด/ใบพัด (Blade)</b> — ส่วนที่สอดเข้าปากผู้ป่วย มีไฟส่องสว่างที่ปลาย</li>
+</ul>
+<div style="margin-top:8px;font-size:13px;color:var(--gray-700)"><b>ชนิดของ Blade:</b>
+<ul style="margin:4px 0 0 16px;padding:0;line-height:1.8">
+  <li><b>Macintosh (Curved blade)</b> — ใบโค้ง ใช้บ่อยที่สุดในผู้ใหญ่ สอดปลายเข้า vallecula (ร่องระหว่าง epiglottis กับโคนลิ้น)</li>
+  <li><b>Miller (Straight blade)</b> — ใบตรง ใช้ในทารก/เด็กเล็ก หรือผู้ใหญ่ที่มีกล่องเสียงอยู่สูง สอดผ่านใต้ epiglottis โดยตรง</li>
+</ul></div>`,
+    indication: 'ข้อบ่งชี้การใช้งาน',
+    indicationDetail: `<ul style="margin:4px 0 0 16px;padding:0;font-size:13px;color:var(--gray-800);line-height:1.8">
+  <li>Endotracheal intubation ในผู้ป่วยหัวใจหยุดเต้น (Cardiac Arrest)</li>
+  <li>ผู้ป่วยหยุดหายใจหรือหายใจไม่เพียงพอ (Respiratory Failure / Arrest)</li>
+  <li>ผู้ป่วยระดับความรู้สึกตัวต่ำ (GCS ≤ 8) ที่ไม่สามารถป้องกัน airway ได้</li>
+  <li>Rapid Sequence Intubation (RSI) ก่อนผ่าตัดฉุกเฉิน</li>
+  <li>ดูดสิ่งแปลกปลอมหรือสิ่งกีดขวางทางเดินหายใจ</li>
+</ul>`,
+    howToCheck: 'วิธีการตรวจสอบ (Pre-use Check)',
+    howToCheckDetail: `<ol style="margin:4px 0 0 16px;padding:0;font-size:13px;color:var(--gray-800);line-height:2">
+  <li><b>ตรวจสอบไฟส่องสว่าง</b> — กดใบมีดลงจนได้ยินเสียง "คลิก" ล็อก แล้วตรวจดูว่าไฟติดสว่างพอ (ไฟต้องสว่างจ้า ไม่กระพริบ)</li>
+  <li><b>ตรวจแบตเตอรี่</b> — ถ้าไฟสว่างน้อยหรือไม่ติด ให้เปลี่ยนถ่านหรือแบตเตอรีทันที</li>
+  <li><b>ตรวจใบมีด (Blade)</b> — ดูว่าใบมีดล็อกแน่นกับด้าม ไม่หลวม ไม่มีรอยร้าว</li>
+  <li><b>ทำความสะอาด/ฆ่าเชื้อ</b> — ใบมีดต้องผ่านการ Sterilize หรือทำความสะอาดตามมาตรฐาน (High-level disinfection) ก่อนใช้ทุกครั้ง</li>
+  <li><b>จัดเก็บ</b> — ปิดใบมีดกลับ (พับกลับด้าม) ป้องกันไฟติดค้างและยืดอายุแบตเตอรี</li>
+</ol>
+<div style="margin-top:8px;padding:8px 10px;background:#FFF3CD;border-radius:8px;font-size:12px;color:#856404">
+  ⚠️ <b>หมายเหตุ:</b> ในระบบของหน่วยงานนี้ Laryngoscope อยู่บริเวณ "ด้านบน" ของรถ Emergency และมีบันทึกว่า "ไฟส่องสว่าง" — ให้ตรวจสอบไฟเป็นสิ่งแรกเสมอ
+</div>`,
+    howToUse: 'ขั้นตอนการใช้งาน (Technique)',
+    howToUseDetail: `<ol style="margin:4px 0 0 16px;padding:0;font-size:13px;color:var(--gray-800);line-height:2">
+  <li>จัดท่าผู้ป่วย Sniffing position (ศีรษะเงย คอยืด) เพื่อเปิด airway axis ให้ตรง</li>
+  <li>Pre-oxygenate ด้วย 100% O₂ อย่างน้อย 3 นาที (หรือ 8 deep breaths) ถ้าสถานการณ์อนุญาต</li>
+  <li>จับ Laryngoscope ด้วย <b>มือซ้าย</b> สอดใบมีดเข้ามุมขวาของปาก ค่อยๆ เลื่อนลิ้นไปทางซ้าย</li>
+  <li>เลื่อนใบมีดเข้า vallecula (Macintosh) หรือผ่าน epiglottis (Miller)</li>
+  <li><b>ยก</b> (lift) ด้ามขึ้นในแนว 45° — ห้ามงัด/撬 (lever) โดยใช้ฟันเป็นจุดรอง เพราะฟันจะหัก</li>
+  <li>มองหา glottic opening (สายเสียง V-shape สีขาว)</li>
+  <li>สอด ET Tube ผ่าน vocal cords ด้วยมือขวา จนเห็น cuff ผ่านพ้น vocal cords</li>
+  <li>Inflate cuff 5–10 mL, ฟัง breath sounds ทั้งสองข้าง และยืนยันด้วย Capnography / End-Tidal CO₂</li>
+  <li>Fix tube และบันทึกความลึกที่ริมฝีปาก</li>
+</ol>`,
+    tips: [
+      '🔦 ตรวจไฟ Laryngoscope ทุกเวร — ถ้าไฟไม่ติดในห้องฉุกเฉิน คือหายนะ',
+      '🔋 เตรียมถ่านสำรองไว้ในรถ Emergency เสมอ (มีใน "ถ่านไฟฉาย" ในรายการอุปกรณ์)',
+      '🩺 ต้องมี ET Tube หลายขนาด, Stylet, Syringe 10 mL สำหรับ inflate cuff พร้อมเสมอ',
+      '📊 End Tidal CO₂ (มีในรถ) คืออุปกรณ์ยืนยันการวาง ET Tube ที่ถูกต้องที่ดีที่สุด',
+      '🔄 ถ้า Laryngoscope ใช้แล้ว ต้องทำความสะอาดและ Sterilize ก่อนใส่กลับรถ Emergency',
+    ],
+    related: ['ET Tube', 'Intubation Set', 'End Tidal Co2', 'Guide Wire', 'Elastic gum bougie', 'Maggill forcep', 'Xylocaine jelly', 'Syring 20 ml', 'Syring 50 ml'],
+  },
+  {
+    name: 'ET Tube (Endotracheal Tube)',
+    icon: '🩺',
+    keywords: ['et tube', 'et', 'endotracheal', 'ท่อช่วยหายใจ'],
+    what: 'ET Tube คืออะไร?',
+    whatDetail: `Endotracheal Tube (ET Tube) คือท่อพลาสติกใสที่สอดผ่านปากหรือจมูกผ่าน vocal cords เข้าสู่ trachea เพื่อ:
+<ul style="margin:6px 0 0 16px;padding:0;font-size:13px;color:var(--gray-800);line-height:1.8">
+  <li>เปิดทางเดินหายใจและรักษาให้ airway patent</li>
+  <li>เชื่อมต่อกับเครื่องช่วยหายใจ (Ventilator)</li>
+  <li>ป้องกัน aspiration</li>
+  <li>ส่ง O₂ ความเข้มข้นสูง (100%) เข้าปอด</li>
+</ul>
+<div style="margin-top:8px;font-size:13px;color:var(--gray-700)"><b>ขนาดที่มีในรถ Emergency:</b> No.6, 6.5, 7, 7.5, 8</div>`,
+    indication: 'ข้อบ่งชี้และการเลือกขนาด',
+    indicationDetail: `<ul style="margin:4px 0 0 16px;padding:0;font-size:13px;color:var(--gray-800);line-height:1.8">
+  <li><b>No.6–6.5</b> — ผู้หญิงตัวเล็ก</li>
+  <li><b>No.7–7.5</b> — มาตรฐานสำหรับผู้ใหญ่ส่วนใหญ่</li>
+  <li><b>No.8</b> — ผู้ชายตัวใหญ่ หรือกรณีที่ต้องการ airway flow สูง</li>
+  <li>ความลึกมาตรฐาน: ผู้หญิง ~21 cm, ผู้ชาย ~23 cm ที่ริมฝีปาก</li>
+</ul>`,
+    howToCheck: 'วิธีการตรวจสอบ',
+    howToCheckDetail: `<ol style="margin:4px 0 0 16px;padding:0;font-size:13px;color:var(--gray-800);line-height:2">
+  <li>ตรวจดูวันหมดอายุ (Expiry Date) — ดูฉลากที่บรรจุภัณฑ์</li>
+  <li>ตรวจดูความสมบูรณ์ของบรรจุภัณฑ์ — ถ้าฉีกขาด ห้ามใช้</li>
+  <li>ทดสอบ Cuff Integrity — ดูดอากาศออก แล้วใช้ Syringe เป่าลมเข้า Cuff ดูว่า inflate/deflate ได้ปกติ ไม่รั่ว</li>
+  <li>ตรวจ Pilot balloon ที่ปลายสาย inflate</li>
+</ol>`,
+    howToUse: 'การตรวจสอบตำแหน่งหลังใส่',
+    howToUseDetail: `<ol style="margin:4px 0 0 16px;padding:0;font-size:13px;color:var(--gray-800);line-height:2">
+  <li>ฟัง breath sounds ทั้งสองข้างด้วย Stethoscope — เสียงต้องเท่ากัน</li>
+  <li>ดู chest rise ขณะ ventilate — หน้าอกต้องขยายทั้งสองข้าง</li>
+  <li>ใช้ End Tidal CO₂ (Capnography) — ยืนยันว่าท่ออยู่ใน trachea ไม่ใช่ esophagus</li>
+  <li>X-ray ทรวงอก — ยืนยันตำแหน่งท่ออยู่เหนือ Carina 2–4 cm</li>
+</ol>`,
+    tips: [
+      '⚠️ FIFO: ดูวันหมดอายุ — ใช้ตัวที่หมดอายุใกล้ที่สุดก่อนเสมอ',
+      '🔦 ต้องมี Laryngoscope พร้อมใช้งานก่อนเสมอก่อนเปิด ET Tube',
+      '💉 Inflate cuff ด้วย Syringe 10 mL — ปริมาณ 5–10 mL หรือจนได้ cuff pressure ~25 cmH₂O',
+      '📊 End Tidal CO₂ สำคัญมาก — ช่วยยืนยันตำแหน่ง tube ทันทีหลังใส่',
+    ],
+    related: ['Laryngoscope', 'Intubation Set', 'End Tidal Co2', 'Syring 20 ml', 'Stethoscope'],
+  },
+  {
+    name: 'Intubation Set',
+    icon: '🔧',
+    keywords: ['intubation set', 'intubation', 'ชุด intubation', 'ชุดใส่ท่อ'],
+    what: 'Intubation Set คืออะไร?',
+    whatDetail: `Intubation Set คือชุดอุปกรณ์ที่รวบรวมสิ่งที่จำเป็นสำหรับการ Endotracheal Intubation ไว้ในที่เดียว โดยทั่วไปประกอบด้วย:
+<ul style="margin:6px 0 0 16px;padding:0;font-size:13px;color:var(--gray-800);line-height:1.8">
+  <li>ET Tube 1 เส้น (ขนาดตามที่บรรจุ)</li>
+  <li>Stylet (ลวดนำ) — ช่วยให้ ET Tube มีความแข็งและโค้งได้</li>
+  <li>Syringe 10 mL — สำหรับ inflate cuff</li>
+  <li>Tape หรืออุปกรณ์ fix tube</li>
+  <li>บางชุดมี Bite block หรือ Oral airway</li>
+</ul>`,
+    indication: 'ข้อบ่งชี้',
+    indicationDetail: `<ul style="margin:4px 0 0 16px;padding:0;font-size:13px;color:var(--gray-800);line-height:1.8">
+  <li>ใช้ในสถานการณ์ฉุกเฉินที่ต้องการ Intubate ผู้ป่วย</li>
+  <li>ออกแบบให้เปิดใช้ได้รวดเร็ว ลดเวลาการเตรียมอุปกรณ์</li>
+</ul>`,
+    howToCheck: 'วิธีการตรวจสอบ',
+    howToCheckDetail: `<ol style="margin:4px 0 0 16px;padding:0;font-size:13px;color:var(--gray-800);line-height:2">
+  <li>ตรวจวันหมดอายุบนบรรจุภัณฑ์</li>
+  <li>ตรวจความสมบูรณ์ของซองบรรจุ — ต้องไม่ฉีกขาด ไม่แตก ไม่เปียกชื้น</li>
+  <li>ตรวจ FIFO — ใช้ชุดที่หมดอายุใกล้ที่สุดก่อน</li>
+  <li>ไม่ต้องเปิดบรรจุภัณฑ์ขณะตรวจสอบประจำเวร (เปิดเฉพาะเมื่อจะใช้จริง)</li>
+</ol>`,
+    howToUse: 'การใช้งาน',
+    howToUseDetail: `<ol style="margin:4px 0 0 16px;padding:0;font-size:13px;color:var(--gray-800);line-height:2">
+  <li>เปิดชุดบนพื้นที่สะอาด (Sterile field)</li>
+  <li>ตรวจสอบ cuff ของ ET Tube ก่อนใส่</li>
+  <li>ใส่ Stylet เข้า ET Tube และโค้งปลายเป็นรูป "hockey stick" ประมาณ 35°</li>
+  <li>ใช้ Laryngoscope เพื่อ visualize vocal cords แล้วสอด ET Tube</li>
+  <li>ดึง Stylet ออก และ inflate cuff ด้วย Syringe</li>
+</ol>`,
+    tips: [
+      '⚠️ FIFO: ชุดที่หมดอายุใกล้ที่สุดให้ใช้ก่อน',
+      '🔦 ต้องมี Laryngoscope ที่ไฟส่องสว่างปกติก่อนเสมอ',
+      '🔄 หลังใช้: ชุดนี้ใช้ครั้งเดียว (Single-use) — ห้ามนำมาใช้ซ้ำ',
+    ],
+    related: ['Laryngoscope', 'ET Tube', 'Guide Wire', 'Elastic gum bougie'],
+  },
+  {
+    name: 'Ambubag (BVM — Bag-Valve-Mask)',
+    icon: '🫁',
+    keywords: ['ambubag', 'ambu', 'bvm', 'bag valve mask', 'ถุงบีบ'],
+    what: 'Ambubag คืออะไร?',
+    whatDetail: `Ambubag หรือ BVM (Bag-Valve-Mask) คืออุปกรณ์ช่วยหายใจแบบ manual ที่ใช้บีบลมเข้าปอดผู้ป่วย ประกอบด้วย:
+<ul style="margin:6px 0 0 16px;padding:0;font-size:13px;color:var(--gray-800);line-height:1.8">
+  <li><b>Mask</b> — หน้ากากครอบปากและจมูก มีซีลยางรองรับ</li>
+  <li><b>Valve (one-way valve)</b> — ป้องกันการหายใจย้อนกลับ</li>
+  <li><b>Bag (Reservoir bag)</b> — ถุงบีบที่เก็บ O₂/อากาศ</li>
+  <li>ปลายต่อ O₂ — สามารถต่อ O₂ 15 L/min ได้ FiO₂ ≈ 100%</li>
+</ul>`,
+    indication: 'ข้อบ่งชี้',
+    indicationDetail: `<ul style="margin:4px 0 0 16px;padding:0;font-size:13px;color:var(--gray-800);line-height:1.8">
+  <li>ผู้ป่วยหยุดหายใจ (Respiratory Arrest) — ใช้ระหว่างรอ Intubation</li>
+  <li>ผู้ป่วยหัวใจหยุดเต้น — ใช้ระหว่าง CPR</li>
+  <li>Pre-oxygenation ก่อน Intubation</li>
+  <li>Transport ผู้ป่วยที่ใส่ท่อช่วยหายใจแต่ยังไม่ได้ต่อ Ventilator</li>
+</ul>`,
+    howToCheck: 'วิธีการตรวจสอบ',
+    howToCheckDetail: `<ol style="margin:4px 0 0 16px;padding:0;font-size:13px;color:var(--gray-800);line-height:2">
+  <li>ตรวจวันหมดอายุ</li>
+  <li>บีบถุง (Bag) — ต้องมีความยืดหยุ่น ไม่แข็ง ไม่แตก</li>
+  <li>ปิด outlet แล้วบีบ — ต้องมีแรงต้าน (Valve ทำงานปกติ)</li>
+  <li>ต่อ O₂ และตรวจดู Reservoir bag — ต้องพองได้ ไม่รั่ว</li>
+  <li>ตรวจ Mask — ซีลยางต้องไม่แข็ง ไม่แตก ไม่ฉีกขาด</li>
+</ol>`,
+    howToUse: 'เทคนิคการใช้งาน (E-C Clamp)',
+    howToUseDetail: `<ol style="margin:4px 0 0 16px;padding:0;font-size:13px;color:var(--gray-800);line-height:2">
+  <li>จัดท่าผู้ป่วย — head tilt/chin lift เพื่อเปิด airway</li>
+  <li><b>E-C Clamp:</b> ใช้นิ้วโป้งและนิ้วชี้จับขอบหน้ากาก (C-shape) นิ้วที่เหลือดึงขากรรไกรขึ้น (E-shape)</li>
+  <li>กด Mask แนบหน้าผู้ป่วยให้สนิท — ห้ามให้รั่ว</li>
+  <li>บีบถุงช้าๆ 1 วินาทีต่อครั้ง ดู chest rise</li>
+  <li>ความถี่: ผู้ใหญ่ 10–12 ครั้ง/นาที (ทุก 5–6 วินาที)</li>
+  <li>ระหว่าง CPR: บีบ 1 ครั้งทุก 6 วินาที (10 ครั้ง/นาที) ไม่ต้องหยุด chest compression</li>
+</ol>`,
+    tips: [
+      '⚠️ FIFO: ตรวจวันหมดอายุและใช้ตัวที่ใกล้หมดก่อน',
+      '👥 2-person technique ดีกว่า 1-person — คนหนึ่งจับ mask คนหนึ่งบีบถุง',
+      '🫁 Seal ที่ดีสำคัญมาก — ถ้า mask ไม่แนบ อากาศรั่ว ผู้ป่วยได้รับ O₂ ไม่เพียงพอ',
+    ],
+    related: ['Hold mask', 'สายออกซิเจน', 'Laryngoscope', 'ET Tube'],
+  },
+  {
+    name: 'Guide Wire',
+    icon: '🔗',
+    keywords: ['guide wire', 'guidewire', 'bougie', 'สายนำ'],
+    what: 'Guide Wire คืออะไร?',
+    whatDetail: `Guide Wire (หรือ Intubation Bougie) คือสายยืดหยุ่นที่ใช้เป็นตัวนำ (guide) สำหรับ Endotracheal Tube ในกรณีที่มองเห็น vocal cords ยาก (Difficult Airway) มีลักษณะเป็นสายยาว ปลายโค้งเล็กน้อย (Coude tip) ที่ช่วยให้สอดผ่านกล่องเสียงได้ง่ายขึ้น`,
+    indication: 'ข้อบ่งชี้',
+    indicationDetail: `<ul style="margin:4px 0 0 16px;padding:0;font-size:13px;color:var(--gray-800);line-height:1.8">
+  <li>Difficult intubation — มองเห็น glottis บางส่วน (Cormack-Lehane Grade 2b/3a)</li>
+  <li>ใช้เป็น Adjunct กับ Laryngoscope เมื่อ ET Tube ไม่สามารถผ่านได้โดยตรง</li>
+  <li>Tube exchange — เปลี่ยน ET Tube โดยไม่ต้อง Intubate ใหม่</li>
+</ul>`,
+    howToCheck: 'วิธีการตรวจสอบ',
+    howToCheckDetail: `<ol style="margin:4px 0 0 16px;padding:0;font-size:13px;color:var(--gray-800);line-height:2">
+  <li>ตรวจวันหมดอายุบนบรรจุภัณฑ์</li>
+  <li>ตรวจซองบรรจุ — ต้องไม่ฉีกขาด ไม่เปียก</li>
+  <li>ตรวจ FIFO — ใช้ตัวที่หมดอายุใกล้ที่สุดก่อน</li>
+  <li>ไม่ต้องเปิดบรรจุภัณฑ์ระหว่างตรวจสอบประจำเวร</li>
+</ol>`,
+    howToUse: 'การใช้งาน',
+    howToUseDetail: `<ol style="margin:4px 0 0 16px;padding:0;font-size:13px;color:var(--gray-800);line-height:2">
+  <li>ใช้ Laryngoscope visualize กล่องเสียง</li>
+  <li>สอด Bougie ปลายโค้ง (Coude tip) ผ่าน glottis เข้า trachea</li>
+  <li>ยืนยันตำแหน่งโดย "clicks" ที่รู้สึกได้จาก tracheal rings หรือ resistance เมื่อถึง carina</li>
+  <li>Thread ET Tube บน Bougie แล้วดัน tube เข้าตาม Bougie</li>
+  <li>ดึง Bougie ออก แล้ว inflate cuff และยืนยันตำแหน่ง</li>
+</ol>`,
+    tips: [
+      '⚠️ FIFO: ใช้ตัวที่หมดอายุใกล้ที่สุดก่อน',
+      '🔦 Guide Wire เป็นอุปกรณ์ช่วยเมื่อ Intubate ยาก — ควรคุ้นเคยการใช้งานก่อนเกิดเหตุ',
+      '🔄 ใช้ครั้งเดียวทิ้ง (Single-use) — ห้ามทำซ้ำ',
+    ],
+    related: ['Laryngoscope', 'ET Tube', 'Intubation Set', 'Elastic gum bougie'],
+  },
+  {
+    name: 'Elastic Gum Bougie',
+    icon: '🔩',
+    keywords: ['elastic gum bougie', 'bougie', 'elastic', 'gum elastic'],
+    what: 'Elastic Gum Bougie คืออะไร?',
+    whatDetail: `Elastic Gum Bougie (EGB) หรือที่รู้จักในชื่อ Intubating Stylet หรือ Bougie คือสายนำที่ทำจากวัสดุยืดหยุ่น ยาวประมาณ 60–70 cm ปลายโค้งเป็นมุม (Coude tip) 30–40° ใช้ร่วมกับ Laryngoscope เพื่อช่วยในการใส่ ET Tube ในผู้ป่วย Difficult Airway รุ่นที่มีในหน่วยงานนี้ <b>ผ่านการนึ่ง (Sterilize) มาแล้ว</b> ก่อนนำเข้ารถ Emergency`,
+    indication: 'ข้อบ่งชี้',
+    indicationDetail: `<ul style="margin:4px 0 0 16px;padding:0;font-size:13px;color:var(--gray-800);line-height:1.8">
+  <li>Difficult intubation — มองเห็น epiglottis แต่ไม่เห็น glottis (CL Grade 2b–3a)</li>
+  <li>เป็น standard of care ใน Difficult Airway Algorithm</li>
+</ul>`,
+    howToCheck: 'วิธีการตรวจสอบ',
+    howToCheckDetail: `<ol style="margin:4px 0 0 16px;padding:0;font-size:13px;color:var(--gray-800);line-height:2">
+  <li>ตรวจดูว่า <b>ผ่านการนึ่ง (Sterilize)</b> มาแล้วหรือยัง — ดูที่ indicator บนถุงนึ่ง</li>
+  <li>ตรวจซองบรรจุ — ต้องไม่ฉีก ไม่เปียก</li>
+  <li>ตรวจว่าสายไม่บิด ไม่หัก</li>
+  <li>หลังใช้: ต้องส่งทำความสะอาดและนึ่งใหม่ก่อนนำกลับเข้ารถ Emergency</li>
+</ol>`,
+    howToUse: 'การใช้งาน',
+    howToUseDetail: `<ul style="margin:4px 0 0 16px;padding:0;font-size:13px;color:var(--gray-800);line-height:1.8">
+  <li>หลักการเดียวกับ Guide Wire — สอดเข้า trachea แล้ว thread ET Tube ตาม</li>
+  <li>Elastic Gum Bougie ยืดหยุ่นมากกว่า Guide Wire ทั่วไป เหมาะกับ cervical spine injury</li>
+  <li>ดูที่บันทึกรถว่า "ส่งนึ่ง" — ถ้าไม่มีในรถแปลว่ากำลังอยู่ระหว่างนึ่ง ให้แจ้งหัวหน้าเวร</li>
+</ul>`,
+    tips: [
+      '🔄 หมายเหตุในรถ: "ส่งนึ่ง" — ตรวจสอบสถานะการนึ่งทุกเวร',
+      '⚠️ ถ้าไม่มีในรถ — ต้องแจ้งหัวหน้าเวรทันทีและเตรียม Guide Wire แทน',
+    ],
+    related: ['Guide Wire', 'Laryngoscope', 'ET Tube'],
+  },
+  {
+    name: 'End Tidal CO₂ (Capnography)',
+    icon: '📊',
+    keywords: ['end tidal', 'etco2', 'capnography', 'co2', 'co₂', 'end tidal co2'],
+    what: 'End Tidal CO₂ คืออะไร?',
+    whatDetail: `End Tidal CO₂ (EtCO₂) Detector หรือ Capnography คืออุปกรณ์ที่วัดปริมาณ CO₂ ที่ผู้ป่วยหายใจออกมาในแต่ละครั้ง ใช้เป็น <b>Gold Standard</b> ในการยืนยันตำแหน่ง ET Tube ว่าอยู่ใน trachea ไม่ใช่ esophagus
+<div style="margin-top:8px;padding:8px 10px;background:#ECF5EE;border-radius:8px;font-size:12px;color:#2e7d32">
+  ✅ ถ้า tube อยู่ใน <b>trachea</b>: จะตรวจพบ CO₂ (EtCO₂ > 20 mmHg หรือ capnogram สีเหลือง)
+</div>
+<div style="margin-top:6px;padding:8px 10px;background:#FBEAF0;border-radius:8px;font-size:12px;color:#c62828">
+  ❌ ถ้า tube อยู่ใน <b>esophagus</b>: จะไม่ตรวจพบ CO₂ หรือพบน้อยมาก
+</div>`,
+    indication: 'ข้อบ่งชี้',
+    indicationDetail: `<ul style="margin:4px 0 0 16px;padding:0;font-size:13px;color:var(--gray-800);line-height:1.8">
+  <li><b>ยืนยันตำแหน่ง ET Tube</b> ทันทีหลัง Intubate</li>
+  <li>Monitoring ต่อเนื่องระหว่าง Transport ผู้ป่วยใส่ท่อ</li>
+  <li>ติดตาม CPR — EtCO₂ ≥ 10 mmHg บ่งบอกว่า CPR มีคุณภาพเพียงพอ</li>
+  <li>EtCO₂ ≥ 40 mmHg ทันทีหลัง ROSC (Return of spontaneous circulation)</li>
+</ul>`,
+    howToCheck: 'วิธีการตรวจสอบ',
+    howToCheckDetail: `<ol style="margin:4px 0 0 16px;padding:0;font-size:13px;color:var(--gray-800);line-height:2">
+  <li>ตรวจว่าอุปกรณ์อยู่ที่ด้านบนรถ Emergency (ตำแหน่ง "ด้านบน")</li>
+  <li>ตรวจ Colorimetric CO₂ Detector (ชนิดสี): ดูว่า indicator ยังเป็นสีม่วง/น้ำเงิน (ปกติ) ไม่เปลี่ยนเป็นสีเหลือง (หมดอายุหรือถูก CO₂)</li>
+  <li>ตรวจแบตเตอรี่ (ถ้าเป็นชนิด Electronic)</li>
+  <li>ตรวจสายต่อและ connector — ต้องไม่หัก ไม่แตก</li>
+</ol>`,
+    howToUse: 'การใช้งาน',
+    howToUseDetail: `<ol style="margin:4px 0 0 16px;padding:0;font-size:13px;color:var(--gray-800);line-height:2">
+  <li>ต่อ Colorimetric Detector ระหว่าง ET Tube และ Ambubag/Ventilator</li>
+  <li>ให้ ventilate แล้วดูสีหรือค่าตัวเลข</li>
+  <li>ถ้าเห็น CO₂ waveform หรือสีเปลี่ยน = tube อยู่ใน trachea ✅</li>
+  <li>ถ้าไม่เห็น CO₂ = ต้อง Reintubate ทันที ❌</li>
+</ol>`,
+    tips: [
+      '📊 End Tidal CO₂ เป็น Standard ที่ดีที่สุดในการยืนยัน ET Tube — ใช้ทุกครั้ง',
+      '🫁 ระหว่าง CPR: EtCO₂ ช่วย monitor คุณภาพ chest compression ได้',
+      '⚡ EtCO₂ กระโดดขึ้นทันที = สัญญาณแรกของ ROSC',
+    ],
+    related: ['Laryngoscope', 'ET Tube', 'Ambubag', 'Stethoscope'],
+  },
+  {
+    name: 'Stethoscope (หูฟัง)',
+    icon: '🩺',
+    keywords: ['stethoscope', 'หูฟัง', 'auscultation'],
+    what: 'Stethoscope คืออะไร?',
+    whatDetail: `Stethoscope หรือหูฟังทางการแพทย์ คืออุปกรณ์ที่ใช้ฟังเสียงภายในร่างกาย เช่น เสียงปอด เสียงหัวใจ เสียงลำไส้ ในรถ Emergency ใช้เป็นหลักเพื่อ:
+<ul style="margin:6px 0 0 16px;padding:0;font-size:13px;color:var(--gray-800);line-height:1.8">
+  <li>ยืนยันตำแหน่ง ET Tube หลัง Intubate (ฟัง bilateral breath sounds)</li>
+  <li>ประเมินทางเดินหายใจ</li>
+  <li>ฟังเสียงหัวใจระหว่าง CPR / หลัง ROSC</li>
+</ul>`,
+    indication: 'การใช้ใน Emergency Setting',
+    indicationDetail: `<ul style="margin:4px 0 0 16px;padding:0;font-size:13px;color:var(--gray-800);line-height:1.8">
+  <li>ยืนยัน ET Tube placement — ฟัง bilateral lung sounds และ epigastrium (ถ้าได้ยิน gurgling = esophageal intubation!)</li>
+  <li>ประเมิน breath sounds ก่อน/หลัง Intubation</li>
+  <li>ประเมิน heart sounds และ pulse ในผู้ป่วย CPR</li>
+</ul>`,
+    howToCheck: 'วิธีการตรวจสอบ',
+    howToCheckDetail: `<ol style="margin:4px 0 0 16px;padding:0;font-size:13px;color:var(--gray-800);line-height:2">
+  <li>ตรวจว่าอยู่ที่ "ด้านนอก" ของรถ Emergency</li>
+  <li>ตรวจ earpiece — ต้องสะอาด ไม่แตก</li>
+  <li>ตรวจ diaphragm/bell — ต้องไม่แตก ไม่แข็งเกินไป</li>
+  <li>ตรวจ tubing — ต้องไม่แตก ไม่แข็งแบน</li>
+</ol>`,
+    howToUse: 'การใช้งาน',
+    howToUseDetail: `<ul style="margin:4px 0 0 16px;padding:0;font-size:13px;color:var(--gray-800);line-height:1.8">
+  <li><b>ฟัง bilateral lung sounds</b>: วาง diaphragm บนทรวงอกทั้งสองข้างเปรียบเทียบ</li>
+  <li><b>ฟัง epigastrium</b>: วางบนท้องส่วนบน — ถ้าได้ยิน air อาจเป็น esophageal intubation</li>
+  <li>ร่วมกับ End Tidal CO₂ เพื่อยืนยันตำแหน่ง</li>
+</ul>`,
+    tips: [
+      '🩺 Stethoscope ยืนยัน ET Tube ได้ แต่ End Tidal CO₂ แม่นยำกว่า — ใช้ร่วมกัน',
+      '🔊 ในห้องฉุกเฉินที่เสียงดัง ฟังเสียงปอดได้ยาก — ให้พึ่ง End Tidal CO₂ มากกว่า',
+    ],
+    related: ['End Tidal Co2', 'ET Tube', 'Laryngoscope', 'Ambubag'],
+  },
+  {
+    name: 'Maggill Forcep (Magill Forceps)',
+    icon: '🔩',
+    keywords: ['maggill', 'magill', 'forcep', 'คีม maggill'],
+    what: 'Magill Forceps คืออะไร?',
+    whatDetail: `Magill Forceps เป็นคีมโค้งพิเศษที่ออกแบบมาสำหรับใช้ใน oropharynx ร่วมกับ Laryngoscope มีลักษณะโค้งที่ตัวคีมซึ่งช่วยให้สามารถจับวัตถุในทางเดินหายใจส่วนบนได้โดยไม่บังสายตาผู้ใช้งาน รุ่นที่มีในหน่วยงานนี้ <b>ผ่านการนึ่ง (Sterilize) มาแล้ว</b>`,
+    indication: 'ข้อบ่งชี้',
+    indicationDetail: `<ul style="margin:4px 0 0 16px;padding:0;font-size:13px;color:var(--gray-800);line-height:1.8">
+  <li>นำสิ่งแปลกปลอมออกจากทางเดินหายใจส่วนบน (Foreign body removal)</li>
+  <li>ช่วยนำท่อ Nasotracheal Tube เข้า vocal cords ในการ Nasotracheal Intubation</li>
+  <li>จัดตำแหน่ง ET Tube ขณะ Intubate</li>
+</ul>`,
+    howToCheck: 'วิธีการตรวจสอบ',
+    howToCheckDetail: `<ol style="margin:4px 0 0 16px;padding:0;font-size:13px;color:var(--gray-800);line-height:2">
+  <li>ตรวจว่า <b>ผ่านการนึ่ง (Sterilize)</b> มาแล้ว — ดู indicator บนถุงนึ่ง</li>
+  <li>ตรวจบรรจุภัณฑ์ — ต้องไม่ฉีก ไม่เปียก</li>
+  <li>หลังใช้: ต้องส่ง <b>ทำความสะอาดและนึ่งใหม่</b> ก่อนนำกลับเข้ารถ Emergency</li>
+</ol>`,
+    howToUse: 'การใช้งาน',
+    howToUseDetail: `<ul style="margin:4px 0 0 16px;padding:0;font-size:13px;color:var(--gray-800);line-height:1.8">
+  <li>ใช้ Laryngoscope visualize oropharynx ก่อน</li>
+  <li>สอด Magill Forceps โค้งตาม curve ของทางเดินหายใจ</li>
+  <li>จับสิ่งแปลกปลอมหรือ tube แล้วดึงออก/นำเข้าตำแหน่งที่ต้องการ</li>
+</ul>`,
+    tips: [
+      '🔄 หมายเหตุในรถ: "ส่งนึ่ง" — ตรวจสอบสถานะการนึ่งทุกเวร',
+      '⚠️ ถ้าไม่มีในรถ — แจ้งหัวหน้าเวรทันที',
+    ],
+    related: ['Laryngoscope', 'ET Tube', 'Intubation Set'],
+  },
+  {
+    name: 'Defibrillator (เครื่องกระตุกหัวใจ)',
+    icon: '⚡',
+    keywords: ['defibrillator', 'aed', 'กระตุกหัวใจ', 'red dot'],
+    what: 'Defibrillator คืออะไร?',
+    whatDetail: `Defibrillator คือเครื่องที่ส่งกระแสไฟฟ้าผ่านหัวใจเพื่อหยุดภาวะหัวใจเต้นผิดจังหวะที่เป็นอันตราย ในบริบทของ Emergency Car จะมี:
+<ul style="margin:6px 0 0 16px;padding:0;font-size:13px;color:var(--gray-800);line-height:1.8">
+  <li><b>Manual Defibrillator</b> — แพทย์/พยาบาลเลือก energy และตัดสินใจช็อก</li>
+  <li><b>AED (Automated External Defibrillator)</b> — วิเคราะห์จังหวะหัวใจและแนะนำการช็อกอัตโนมัติ</li>
+</ul>
+<div style="margin-top:8px;font-size:13px;color:var(--gray-700)">ในหน่วยงานนี้ Defibrillator อยู่ในรายการตรวจสอบ Emergency box (Check Form)</div>`,
+    indication: 'ข้อบ่งชี้',
+    indicationDetail: `<ul style="margin:4px 0 0 16px;padding:0;font-size:13px;color:var(--gray-800);line-height:1.8">
+  <li><b>Ventricular Fibrillation (VF)</b> — ภาวะหัวใจสั่นพลิ้ว</li>
+  <li><b>Pulseless Ventricular Tachycardia (pVT)</b> — หัวใจเต้นเร็วโดยไม่มีชีพจร</li>
+  <li><b>Cardioversion</b> (synchronized) — ใน unstable SVT, Atrial Flutter</li>
+</ul>`,
+    howToCheck: 'วิธีการตรวจสอบ (ตาม Check Form)',
+    howToCheckDetail: `<ol style="margin:4px 0 0 16px;padding:0;font-size:13px;color:var(--gray-800);line-height:2">
+  <li>ตรวจสถานะ: พร้อมใช้ / ไม่พร้อมใช้</li>
+  <li>ตรวจ Battery: 3 ชม. / น้อยกว่า 3 ชม. / กำลังชาร์จไฟ</li>
+  <li>เปิดเครื่อง Self-test — ผ่านหรือไม่</li>
+  <li>ตรวจ Leads/Paddles — ต้องครบและสะอาด</li>
+  <li>ตรวจ Gel/Pads (ถ้ามี) — วันหมดอายุ</li>
+  <li>ถ้า Battery น้อยกว่า 3 ชม. — แจ้งหัวหน้าเวรทันที</li>
+</ol>`,
+    howToUse: 'ขั้นตอนการ Defibrillate (Shockable rhythm)',
+    howToUseDetail: `<ol style="margin:4px 0 0 16px;padding:0;font-size:13px;color:var(--gray-800);line-height:2">
+  <li>ระบุ Shockable rhythm (VF/pVT) จาก monitor</li>
+  <li>เตือน "ทุกคนออก!" (Clear!)</li>
+  <li>Charge เครื่อง (200 J biphasic หรือตามคำแนะนำผู้ผลิต)</li>
+  <li>วาง Paddles หรือ Pads: Sternum (Right anterior) + Apex (Left lateral)</li>
+  <li>กด Discharge/Shock</li>
+  <li>CPR ต่อทันทีหลังช็อก 2 นาที แล้วตรวจ rhythm ใหม่</li>
+</ol>`,
+    tips: [
+      '⚡ Check battery ทุกเวร — ถ้า battery น้อย แจ้งทันที',
+      '⚡ ช็อกเร็วที่สุดเท่าที่ทำได้ใน VF/pVT — ทุก 1 นาทีที่ช้า = survival ลดลง 10%',
+      '🔴 Red dot (ในรถ) = Electrode สำหรับ monitoring ร่วมกับ Defibrillator',
+    ],
+    related: ['Red dot', 'Ambubag', 'ET Tube'],
+  },
+];
+
+function renderInfoPage() {
+  const q = (document.getElementById('info-search')?.value || '').toLowerCase();
+  const list = document.getElementById('info-list');
+  if(!list) return;
+  const items = q
+    ? EQUIP_INFO.filter(e =>
+        e.name.toLowerCase().includes(q) ||
+        (e.keywords||[]).some(k => k.toLowerCase().includes(q)) ||
+        (e.whatDetail||'').toLowerCase().includes(q)
+      )
+    : EQUIP_INFO;
+  if(!items.length) {
+    list.innerHTML = `<div class="empty-state"><div class="es-icon">🔍</div><p>ไม่พบข้อมูลอุปกรณ์ที่ค้นหา</p></div>`;
+    return;
+  }
+  list.innerHTML = items.map((item, i) => `
+    <div onclick="openInfoModal(${EQUIP_INFO.indexOf(item)})"
+      style="background:var(--white);border-radius:var(--r);border:1px solid var(--gray-200);
+        padding:14px;margin-bottom:10px;box-shadow:var(--shadow-sm);cursor:pointer;
+        display:flex;align-items:flex-start;gap:12px;transition:all .2s"
+      onmouseover="this.style.borderColor='var(--blue-md)';this.style.boxShadow='0 4px 16px rgba(169,143,210,.2)'"
+      onmouseout="this.style.borderColor='var(--gray-200)';this.style.boxShadow='var(--shadow-sm)'">
+      <div style="font-size:32px;flex-shrink:0;line-height:1">${item.icon}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:14px;font-weight:700;color:var(--gray-900);margin-bottom:4px">${item.name}</div>
+        <div style="font-size:12px;color:var(--gray-600);line-height:1.5">${item.what}</div>
+        ${item.related?.length ? `
+          <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px">
+            ${item.related.slice(0,3).map(r=>`<span style="padding:2px 8px;border-radius:10px;background:var(--blue-lt);color:var(--blue-md);font-size:10px;font-weight:600">${r}</span>`).join('')}
+            ${item.related.length>3?`<span style="padding:2px 8px;border-radius:10px;background:var(--gray-100);color:var(--gray-600);font-size:10px">+${item.related.length-3}</span>`:''}
+          </div>` : ''}
+      </div>
+      <span style="color:var(--gray-400);font-size:18px;flex-shrink:0">›</span>
+    </div>
+  `).join('');
+}
+
+function openInfoModal(idx) {
+  const item = EQUIP_INFO[idx];
+  if(!item) return;
+  const sections = [
+    { title: item.what, content: item.whatDetail },
+    { title: item.indication, content: item.indicationDetail },
+    { title: item.howToCheck, content: item.howToCheckDetail },
+    { title: item.howToUse, content: item.howToUseDetail },
+  ].filter(s => s.title && s.content);
+
+  document.getElementById('info-modal-content').innerHTML = `
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--gray-200)">
+      <div style="font-size:40px">${item.icon}</div>
+      <div>
+        <div style="font-size:17px;font-weight:700;color:var(--gray-900)">${item.name}</div>
+        <div style="font-size:12px;color:var(--gray-600);margin-top:2px">ข้อมูลอ้างอิงทางคลินิก</div>
+      </div>
+    </div>
+    ${sections.map(s => `
+      <div style="margin-bottom:16px">
+        <div style="font-size:13px;font-weight:700;color:var(--blue-md);margin-bottom:6px;
+          display:flex;align-items:center;gap:6px;border-left:3px solid var(--blue-md);padding-left:8px">${s.title}</div>
+        <div style="font-size:13px;color:var(--gray-800);line-height:1.7">${s.content}</div>
+      </div>
+    `).join('')}
+    ${item.tips?.length ? `
+      <div style="margin-bottom:16px">
+        <div style="font-size:13px;font-weight:700;color:var(--amber);margin-bottom:6px;
+          display:flex;align-items:center;gap:6px;border-left:3px solid var(--amber);padding-left:8px">💡 เคล็ดลับสำหรับห้อง Emergency</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          ${item.tips.map(t=>`
+            <div style="background:var(--amber-lt);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--gray-800)">${t}</div>
+          `).join('')}
+        </div>
+      </div>
+    ` : ''}
+    ${item.related?.length ? `
+      <div style="padding-top:12px;border-top:1px solid var(--gray-200)">
+        <div style="font-size:12px;font-weight:600;color:var(--gray-600);margin-bottom:8px">🔗 อุปกรณ์ที่เกี่ยวข้อง</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          ${item.related.map(r=>`<span style="padding:4px 12px;border-radius:20px;background:var(--blue-lt);color:var(--blue-md);font-size:12px;font-weight:600">${r}</span>`).join('')}
+        </div>
+      </div>
+    ` : ''}
+    <div style="margin-top:16px;padding:10px;background:var(--gray-100);border-radius:8px;font-size:11px;color:var(--gray-600);text-align:center">
+      ⚠️ ข้อมูลนี้ใช้เพื่อการศึกษาและอ้างอิงทางคลินิกเท่านั้น<br>ควรใช้ร่วมกับแนวปฏิบัติของหน่วยงานและดุลยพินิจทางคลินิก
+    </div>
+  `;
+  document.getElementById('info-modal').classList.add('open');
+}
+
+function closeInfoModal(e) {
+  if(!e || e.target === document.getElementById('info-modal')) {
+    document.getElementById('info-modal').classList.remove('open');
   }
 }
 
