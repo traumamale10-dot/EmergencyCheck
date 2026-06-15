@@ -506,6 +506,24 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
   margin-top: 2px; font-size: 12px; color: var(--gray-600); background: none; border: none;
   cursor: pointer; font-family: 'Sarabun', sans-serif; text-decoration: underline;
 }
+
+/* ── COMBOBOX (dropdown + พิมพ์เองได้) ───────────────────── */
+.combo-wrap { position: relative; }
+.combo-list {
+  position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 50;
+  background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--r-sm);
+  box-shadow: var(--shadow-md); max-height: 180px; overflow-y: auto;
+  display: none;
+}
+.combo-list.open { display: block; }
+.combo-opt {
+  padding: 9px 12px; font-size: 13px; font-family: 'Sarabun', sans-serif; color: var(--gray-900);
+  cursor: pointer; border-bottom: 1px solid var(--gray-100);
+}
+.combo-opt:last-child { border-bottom: none; }
+.combo-opt:hover, .combo-opt.active { background: var(--blue-lt); }
+.combo-opt .combo-opt-sub { font-size: 11px; color: var(--gray-600); margin-top: 1px; }
+.combo-empty { padding: 9px 12px; font-size: 12px; color: var(--gray-600); font-style: italic; }
 </style>
 </head>
 <body>
@@ -1617,6 +1635,86 @@ function renderManagePage() {
   `).join('');
 }
 
+// ── COMBOBOX: dropdown + พิมพ์เองได้ สำหรับฟอร์มจัดการรายการอุปกรณ์ ──────────
+// แหล่งข้อมูล suggestion สำหรับแต่ละช่อง
+function getComboOptions(fieldId) {
+  if(fieldId === 'mi-name') {
+    const names = [...new Set(equipment.map(it => it.name).filter(Boolean))];
+    return names.map(n => ({value: n, label: n}));
+  }
+  if(fieldId === 'mi-floor') {
+    return ['ชั้นที่ 1','ชั้นที่ 2','ชั้นที่ 3','ด้านบน','ด้านนอก'].map(f => ({value: f, label: f}));
+  }
+  if(fieldId === 'mi-imgid') {
+    return equipment.filter(it => it.imgId).map(it => ({value: it.imgId, label: it.imgId, sub: it.name}));
+  }
+  return [];
+}
+
+// แสดงรายการ suggestion ตามข้อความที่พิมพ์ (กรองแบบ "มีคำนี้อยู่")
+function renderComboList(fieldId) {
+  const input = document.getElementById(fieldId);
+  const list  = document.getElementById(fieldId + '-list');
+  if(!input || !list) return;
+  const q = input.value.trim().toLowerCase();
+  const all = getComboOptions(fieldId);
+  const filtered = q ? all.filter(o => o.value.toLowerCase().includes(q) || (o.sub||'').toLowerCase().includes(q)) : all;
+
+  if(filtered.length === 0) {
+    list.innerHTML = `<div class="combo-empty">ไม่พบรายการ — พิมพ์เพื่อใส่ค่าใหม่ได้</div>`;
+  } else {
+    list.innerHTML = filtered.map(o => `
+      <div class="combo-opt" onmousedown="event.preventDefault();selectComboOpt('${fieldId}', '${o.value.replace(/'/g,"\\'")}')">
+        ${o.value}${o.sub ? `<div class="combo-opt-sub">${o.sub}</div>` : ''}
+      </div>
+    `).join('');
+  }
+  closeAllComboLists(fieldId);
+  list.classList.add('open');
+}
+
+// กดปุ่ม ▼ เพื่อเปิด/ปิดรายการทั้งหมด (ไม่กรองตามข้อความ)
+function toggleComboList(fieldId) {
+  const list = document.getElementById(fieldId + '-list');
+  if(list && list.classList.contains('open')) {
+    closeAllComboLists();
+    return;
+  }
+  const input = document.getElementById(fieldId);
+  if(input) input.focus();
+  renderComboList(fieldId);
+}
+
+function selectComboOpt(fieldId, value) {
+  const input = document.getElementById(fieldId);
+  if(input) input.value = value;
+  closeAllComboLists();
+
+  // ถ้าเลือก "ชื่ออุปกรณ์" ที่มีอยู่แล้ว → ดึง Image ID/ตำแหน่งของอุปกรณ์นั้นมาใส่ให้ (ถ้าช่องว่าง)
+  if(fieldId === 'mi-name') autofillFromName();
+}
+
+// เติม Image ID / ตำแหน่ง อัตโนมัติจากชื่ออุปกรณ์ที่มีอยู่แล้ว (เฉพาะช่องที่ยังว่าง)
+function autofillFromName() {
+  const nameInput = document.getElementById('mi-name');
+  const imgInput  = document.getElementById('mi-imgid');
+  const floorInput = document.getElementById('mi-floor');
+  if(!nameInput) return;
+  const match = equipment.find(it => it.name === nameInput.value.trim());
+  if(!match) return;
+  if(imgInput && !imgInput.value.trim() && match.imgId) imgInput.value = match.imgId;
+  if(floorInput && !floorInput.value.trim() && match.floor) floorInput.value = match.floor;
+}
+
+function closeAllComboLists(except) {
+  document.querySelectorAll('.combo-list.open').forEach(l => {
+    if(!except || l.id !== except + '-list') l.classList.remove('open');
+  });
+}
+document.addEventListener('click', (ev) => {
+  if(!ev.target.closest('.combo-wrap')) closeAllComboLists();
+});
+
 // เปิด modal เพิ่ม/แก้ไขรายการ — idx = undefined สำหรับเพิ่มใหม่, หรือ index ของ equipment สำหรับแก้ไข
 function openManageItemModal(idx) {
   const isEdit = (idx !== undefined && idx !== null && equipment[idx]);
@@ -1632,35 +1730,43 @@ function openManageItemModal(idx) {
     <div style="display:flex;flex-direction:column;gap:10px">
       <div>
         <label style="font-size:12px;font-weight:600;color:var(--gray-600);display:block;margin-bottom:4px">ชื่ออุปกรณ์</label>
-        <input type="text" id="mi-name" value="${(e.name||'').replace(/"/g,'&quot;')}" placeholder="เช่น Ambubag(1)" list="equip-name-list"
-          style="width:100%;padding:8px 10px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);font-size:13px;font-family:'Sarabun',sans-serif;background:var(--gray-50)">
+        <div class="combo-wrap">
+          <input type="text" id="mi-name" value="${(e.name||'').replace(/"/g,'&quot;')}" placeholder="เช่น Ambubag(1)"
+            autocomplete="off"
+            oninput="renderComboList('mi-name')" onfocus="renderComboList('mi-name')" onblur="autofillFromName()"
+            style="width:100%;padding:8px 32px 8px 10px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);font-size:13px;font-family:'Sarabun',sans-serif;background:var(--gray-50)">
+          <button type="button" onclick="toggleComboList('mi-name')" aria-label="แสดงรายการ"
+            style="position:absolute;right:4px;top:0;height:100%;width:28px;border:none;background:none;color:var(--gray-600);font-size:12px;cursor:pointer">▼</button>
+          <div class="combo-list" id="mi-name-list"></div>
+        </div>
       </div>
       <div>
         <label style="font-size:12px;font-weight:600;color:var(--gray-600);display:block;margin-bottom:4px">ตำแหน่ง/ชั้น</label>
-        <input type="text" id="mi-floor" value="${(e.floor||'').replace(/"/g,'&quot;')}" placeholder="เช่น ชั้นที่ 1" list="equip-floor-list"
-          style="width:100%;padding:8px 10px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);font-size:13px;font-family:'Sarabun',sans-serif;background:var(--gray-50)">
+        <div class="combo-wrap">
+          <input type="text" id="mi-floor" value="${(e.floor||'').replace(/"/g,'&quot;')}" placeholder="เช่น ชั้นที่ 1"
+            autocomplete="off"
+            oninput="renderComboList('mi-floor')" onfocus="renderComboList('mi-floor')"
+            style="width:100%;padding:8px 32px 8px 10px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);font-size:13px;font-family:'Sarabun',sans-serif;background:var(--gray-50)">
+          <button type="button" onclick="toggleComboList('mi-floor')" aria-label="แสดงรายการ"
+            style="position:absolute;right:4px;top:0;height:100%;width:28px;border:none;background:none;color:var(--gray-600);font-size:12px;cursor:pointer">▼</button>
+          <div class="combo-list" id="mi-floor-list"></div>
+        </div>
       </div>
       <div>
         <label style="font-size:12px;font-weight:600;color:var(--gray-600);display:block;margin-bottom:4px">Image ID (Google Drive)</label>
-        <input type="text" id="mi-imgid" value="${(e.imgId||'').replace(/"/g,'&quot;')}" placeholder="วาง Image ID จาก Google Drive" list="equip-imgid-list"
-          style="width:100%;padding:8px 10px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);font-size:12px;font-family:'IBM Plex Mono',monospace;background:var(--gray-50)">
+        <div class="combo-wrap">
+          <input type="text" id="mi-imgid" value="${(e.imgId||'').replace(/"/g,'&quot;')}" placeholder="วาง Image ID จาก Google Drive"
+            autocomplete="off"
+            oninput="renderComboList('mi-imgid')" onfocus="renderComboList('mi-imgid')"
+            style="width:100%;padding:8px 32px 8px 10px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);font-size:12px;font-family:'IBM Plex Mono',monospace;background:var(--gray-50)">
+          <button type="button" onclick="toggleComboList('mi-imgid')" aria-label="แสดงรายการ"
+            style="position:absolute;right:4px;top:0;height:100%;width:28px;border:none;background:none;color:var(--gray-600);font-size:12px;cursor:pointer">▼</button>
+          <div class="combo-list" id="mi-imgid-list"></div>
+        </div>
         <div style="font-size:11px;color:var(--gray-600);margin-top:4px">
           คัด ID จากลิงก์แชร์ Google Drive เช่น https://drive.google.com/file/d/<b>ID_อยู่ตรงนี้</b>/view — หรือเลือกจากรายการที่มีอยู่
         </div>
       </div>
-      <datalist id="equip-name-list">
-        ${equipment.map(it => `<option value="${(it.name||'').replace(/"/g,'&quot;')}">`).join('')}
-      </datalist>
-      <datalist id="equip-floor-list">
-        <option value="ชั้นที่ 1">
-        <option value="ชั้นที่ 2">
-        <option value="ชั้นที่ 3">
-        <option value="ด้านบน">
-        <option value="ด้านนอก">
-      </datalist>
-      <datalist id="equip-imgid-list">
-        ${equipment.filter(it => it.imgId).map(it => `<option value="${it.imgId}">${(it.name||'').replace(/"/g,'&quot;')}</option>`).join('')}
-      </datalist>
       <button onclick="saveManageItem(${isEdit ? idx : 'null'})"
         style="margin-top:6px;width:100%;padding:10px;border-radius:var(--r-sm);border:none;background:var(--blue-md);color:#fff;
           font-family:'Sarabun',sans-serif;font-size:14px;font-weight:700;cursor:pointer">
