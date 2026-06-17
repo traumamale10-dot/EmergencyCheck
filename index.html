@@ -3616,7 +3616,7 @@ async function pinKeyPress(k) {
     try {
       const resp = await fetch(config.scriptUrl, {
         method: 'POST',
-        headers: {'Content-Type':'application/json'},
+        headers: {'Content-Type':'text/plain'},
         body: JSON.stringify({type:'checkPin', pin: enteredPin})
       });
       const json = await resp.json();
