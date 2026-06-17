@@ -937,7 +937,7 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
 // ─── CONFIG ───────────────────────────────────────────────
 const DRIVE_FOLDER   = '1tfNKiu55ocZbXF3ovQaH7dz97tSOKsUM';
 const SPREADSHEET_ID = '1X4NBGK_8xokrgl3qf1F1XtCdUUhFeyKvXjQTaJMMkbI';
-const SCRIPT_URL     = 'https://script.google.com/macros/s/AKfycbwRBqSGJlnrdI2stT_0s_2XmVzJXV26R7nv0cQ0xeAyyXnpXE1weMbyp9fyQ4kCNhvq/exec';
+const SCRIPT_URL     = 'https://script.google.com/macros/s/AKfycbxu95_yWCVeDqo6IXi2pOXRLmZY9kXTqJ4MWDD6INwNDdib3PTF_iEsuH0G0ZIdjRCm/exec';
 
 // clear old scriptUrl from localStorage to always use hardcoded URL
 // force clear all old config from localStorage
@@ -2348,6 +2348,14 @@ const EQUIP_INFO = [
   <li>Inflate cuff 5–10 mL, ฟัง breath sounds ทั้งสองข้าง และยืนยันด้วย Capnography / End-Tidal CO₂</li>
   <li>Fix tube และบันทึกความลึกที่ริมฝีปาก</li>
 </ol>`,
+    care: '🧰 การดูแลรักษา',
+    careDetail: `<ul style="margin:4px 0 0 16px;padding:0;font-size:13px;color:var(--gray-800);line-height:1.8">
+  <li>หลังใช้งานทุกครั้ง ให้แยกใบมีดออกจากด้าม ล้างคราบสารคัดหลั่งด้วยน้ำสะอาดก่อนนำไปทำความสะอาดระดับสูง (High-level disinfection) ตามมาตรฐานหน่วยงาน</li>
+  <li>เช็ดด้ามให้แห้งและตรวจสอบแบตเตอรี่/ถ่านก่อนเก็บกลับเข้าชุด ห้ามเก็บขณะเปียก เพราะอาจกัดกร่อนหน้าสัมผัสแบตเตอรี่</li>
+  <li>ตรวจสอบไฟส่องสว่างทุกเวรแม้ไม่ได้ใช้งาน เพื่อให้พร้อมใช้ตลอดเวลา</li>
+  <li>เก็บในที่แห้ง ห่างความชื้น และพับใบมีดกลับเข้าตำแหน่งปิดเสมอเพื่อยืดอายุแบตเตอรี่และป้องกันใบมีดเสียหาย</li>
+  <li>ตรวจสอบวันนึ่ง/วันหมดอายุของการทำความสะอาดตามรอบที่หน่วยงานกำหนด</li>
+</ul>`,
     tips: [
       '🔦 ตรวจไฟ Laryngoscope ทุกเวร — ถ้าไฟไม่ติดในห้องฉุกเฉิน คือหายนะ',
       '🔋 เตรียมถ่านสำรองไว้ในรถ Emergency เสมอ (มีใน "ถ่านไฟฉาย" ในรายการอุปกรณ์)',
@@ -2391,6 +2399,14 @@ const EQUIP_INFO = [
   <li>ใช้ End Tidal CO₂ (Capnography) — ยืนยันว่าท่ออยู่ใน trachea ไม่ใช่ esophagus</li>
   <li>X-ray ทรวงอก — ยืนยันตำแหน่งท่ออยู่เหนือ Carina 2–4 cm</li>
 </ol>`,
+    care: '🧰 การดูแลรักษา',
+    careDetail: `<ul style="margin:4px 0 0 16px;padding:0;font-size:13px;color:var(--gray-800);line-height:1.8">
+  <li>ET Tube เป็นอุปกรณ์ปลอดเชื้อแบบใช้ครั้งเดียว (single-use, sterile) ห้ามนำกลับมาใช้ซ้ำหลังเปิดซองหรือใช้กับผู้ป่วยแล้ว</li>
+  <li>เก็บในซองปิดสนิทจนกว่าจะใช้งาน ตรวจสอบว่าซองไม่ฉีกขาดหรือมีรอยเปียกชื้นก่อนเปิดใช้</li>
+  <li>ตรวจสอบวันหมดอายุของแต่ละเบอร์ทุกเวร และนำเบอร์ที่ใกล้หมดอายุที่สุด (ป้าย "ใช้ก่อน") ไปใช้ก่อนตามหลัก FIFO</li>
+  <li>หลังเปิดใช้แล้วต้องเบิกของใหม่ทดแทนทันที เพื่อให้มีเบอร์ครบสำหรับใช้งานฉุกเฉินครั้งต่อไป</li>
+  <li>จัดเก็บในที่แห้ง ไม่ถูกแสงแดดหรือความร้อนโดยตรง เพื่อป้องกันพลาสติกเสื่อมสภาพก่อนวันหมดอายุ</li>
+</ul>`,
     tips: [
       '⚠️ FIFO: ดูวันหมดอายุ — ใช้ตัวที่หมดอายุใกล้ที่สุดก่อนเสมอ',
       '🔦 ต้องมี Laryngoscope พร้อมใช้งานก่อนเสมอก่อนเปิด ET Tube',
@@ -2432,6 +2448,13 @@ const EQUIP_INFO = [
   <li>ใช้ Laryngoscope เพื่อ visualize vocal cords แล้วสอด ET Tube</li>
   <li>ดึง Stylet ออก และ inflate cuff ด้วย Syringe</li>
 </ol>`,
+    care: '🧰 การดูแลรักษา',
+    careDetail: `<ul style="margin:4px 0 0 16px;padding:0;font-size:13px;color:var(--gray-800);line-height:1.8">
+  <li>ตรวจสอบความครบถ้วนของอุปกรณ์ในชุดทุกเวร และตรวจวันหมดอายุของอุปกรณ์ sterile ภายในชุด (ET Tube, Syringe ฯลฯ)</li>
+  <li>เก็บชุดในบรรจุภัณฑ์ปิดสนิท ไม่เปิดออกจนกว่าจะใช้งานจริง เพื่อคงความปลอดเชื้อ</li>
+  <li>เมื่อเปิดใช้ชุดแล้ว (ไม่ว่าจะใช้ครบหรือไม่) ต้องจัดเตรียมชุดใหม่ทดแทนทันที ห้ามนำชุดที่เปิดแล้วกลับเข้ารถ Emergency</li>
+  <li>จัดเก็บในที่แห้ง ห่างความร้อนและความชื้น เพื่อยืดอายุของอุปกรณ์ sterile ภายใน</li>
+</ul>`,
     tips: [
       '⚠️ FIFO: ชุดที่หมดอายุใกล้ที่สุดให้ใช้ก่อน',
       '🔦 ต้องมี Laryngoscope ที่ไฟส่องสว่างปกติก่อนเสมอ',
@@ -2475,6 +2498,13 @@ const EQUIP_INFO = [
   <li>ความถี่: ผู้ใหญ่ 10–12 ครั้ง/นาที (ทุก 5–6 วินาที)</li>
   <li>ระหว่าง CPR: บีบ 1 ครั้งทุก 6 วินาที (10 ครั้ง/นาที) ไม่ต้องหยุด chest compression</li>
 </ol>`,
+    care: '🧰 การดูแลรักษา',
+    careDetail: `<ul style="margin:4px 0 0 16px;padding:0;font-size:13px;color:var(--gray-800);line-height:1.8">
+  <li>หลังใช้งานทุกครั้ง ล้างถุงและหน้ากากด้วยน้ำสะอาดและน้ำยาทำความสะอาดตามมาตรฐาน แล้วผึ่งให้แห้งสนิทก่อนเก็บ เพื่อป้องกันเชื้อราและกลิ่นอับ</li>
+  <li>ตรวจสอบวาล์วกันการหายใจกลับ (valve) ว่าเปิด-ปิดได้ลื่นและไม่มีคราบสารคัดหลั่งติดค้าง</li>
+  <li>ตรวจสอบถุงไม่มีรอยรั่วหรือรอยฉีกก่อนเก็บกลับเข้ารถ Emergency ทุกครั้ง</li>
+  <li>เก็บในที่แห้ง ไม่บีบอัดถุงเป็นเวลานานเพื่อป้องกันเสียรูป</li>
+</ul>`,
     tips: [
       '⚠️ FIFO: ตรวจวันหมดอายุและใช้ตัวที่ใกล้หมดก่อน',
       '👥 2-person technique ดีกว่า 1-person — คนหนึ่งจับ mask คนหนึ่งบีบถุง',
@@ -2509,6 +2539,13 @@ const EQUIP_INFO = [
   <li>Thread ET Tube บน Bougie แล้วดัน tube เข้าตาม Bougie</li>
   <li>ดึง Bougie ออก แล้ว inflate cuff และยืนยันตำแหน่ง</li>
 </ol>`,
+    care: '🧰 การดูแลรักษา',
+    careDetail: `<ul style="margin:4px 0 0 16px;padding:0;font-size:13px;color:var(--gray-800);line-height:1.8">
+  <li>Guide Wire เป็นอุปกรณ์ปลอดเชื้อแบบใช้ครั้งเดียว เก็บในซองปิดสนิทจนกว่าจะใช้งาน ห้ามนำกลับมาใช้ซ้ำ</li>
+  <li>ตรวจสอบวันหมดอายุทุกเวร และใช้ตัวที่ใกล้หมดอายุที่สุดก่อนตามหลัก FIFO</li>
+  <li>ตรวจสอบซองบรรจุไม่มีรอยฉีกขาดหรือเปียกชื้นก่อนเปิดใช้</li>
+  <li>เก็บในที่แห้ง ห่างความร้อน เพื่อป้องกันพลาสติกเสื่อมสภาพก่อนวันหมดอายุ</li>
+</ul>`,
     tips: [
       '⚠️ FIFO: ใช้ตัวที่หมดอายุใกล้ที่สุดก่อน',
       '🔦 Guide Wire เป็นอุปกรณ์ช่วยเมื่อ Intubate ยาก — ควรคุ้นเคยการใช้งานก่อนเกิดเหตุ',
@@ -2539,6 +2576,13 @@ const EQUIP_INFO = [
   <li>หลักการเดียวกับ Guide Wire — สอดเข้า trachea แล้ว thread ET Tube ตาม</li>
   <li>Elastic Gum Bougie ยืดหยุ่นมากกว่า Guide Wire ทั่วไป เหมาะกับ cervical spine injury</li>
   <li>ดูที่บันทึกรถว่า "ส่งนึ่ง" — ถ้าไม่มีในรถแปลว่ากำลังอยู่ระหว่างนึ่ง ให้แจ้งหัวหน้าเวร</li>
+</ul>`,
+    care: '🧰 การดูแลรักษา',
+    careDetail: `<ul style="margin:4px 0 0 16px;padding:0;font-size:13px;color:var(--gray-800);line-height:1.8">
+  <li>เป็นอุปกรณ์ที่นำกลับมาใช้ซ้ำได้ ต้องทำความสะอาดและส่งนึ่ง (sterilize) ทุกครั้งหลังใช้งานตามมาตรฐานหน่วยงาน</li>
+  <li>ขณะรอนึ่ง ให้บันทึกสถานะ "ส่งนึ่ง" ในระบบและแจ้งหัวหน้าเวร เพื่อเตรียม Guide Wire ทดแทนในรถ Emergency</li>
+  <li>ตรวจสอบความยืดหยุ่นและปลายโค้งของ Bougie ว่าไม่เสียรูปหรือแตกหักก่อนนำกลับเข้าใช้งาน</li>
+  <li>เก็บในที่แห้งและสะอาดหลังนึ่งเสร็จ ก่อนนำกลับเข้ารถ Emergency</li>
 </ul>`,
     tips: [
       '🔄 หมายเหตุในรถ: "ส่งนึ่ง" — ตรวจสอบสถานะการนึ่งทุกเวร',
@@ -2579,6 +2623,12 @@ const EQUIP_INFO = [
   <li>ถ้าเห็น CO₂ waveform หรือสีเปลี่ยน = tube อยู่ใน trachea ✅</li>
   <li>ถ้าไม่เห็น CO₂ = ต้อง Reintubate ทันที ❌</li>
 </ol>`,
+    care: '🧰 การดูแลรักษา',
+    careDetail: `<ul style="margin:4px 0 0 16px;padding:0;font-size:13px;color:var(--gray-800);line-height:1.8">
+  <li>อุปกรณ์แบบ colorimetric เป็นชนิดใช้ครั้งเดียวและมีวันหมดอายุ ตรวจสอบวันหมดอายุทุกเวรและใช้ตัวที่ใกล้หมดก่อนตามหลัก FIFO</li>
+  <li>เก็บในซองปิดสนิทจนกว่าจะใช้งาน หลีกเลี่ยงความชื้นซึ่งอาจทำให้สารเคมีในตัวตรวจจับเสื่อมสภาพก่อนเวลา</li>
+  <li>หากเป็นชนิด waveform capnography ที่ใช้ซ้ำได้ ให้ทำความสะอาดหัวเซนเซอร์ตามคำแนะนำของผู้ผลิตหลังใช้งานทุกครั้ง</li>
+</ul>`,
     tips: [
       '📊 End Tidal CO₂ เป็น Standard ที่ดีที่สุดในการยืนยัน ET Tube — ใช้ทุกครั้ง',
       '🫁 ระหว่าง CPR: EtCO₂ ช่วย monitor คุณภาพ chest compression ได้',
@@ -2616,6 +2666,12 @@ const EQUIP_INFO = [
   <li><b>ฟัง epigastrium</b>: วางบนท้องส่วนบน — ถ้าได้ยิน air อาจเป็น esophageal intubation</li>
   <li>ร่วมกับ End Tidal CO₂ เพื่อยืนยันตำแหน่ง</li>
 </ul>`,
+    care: '🧰 การดูแลรักษา',
+    careDetail: `<ul style="margin:4px 0 0 16px;padding:0;font-size:13px;color:var(--gray-800);line-height:1.8">
+  <li>เช็ดทำความสะอาด diaphragm และหูฟังด้วยแอลกอฮอล์ก่อนและหลังใช้กับผู้ป่วยแต่ละรายเสมอ เพื่อป้องกันการแพร่เชื้อ</li>
+  <li>ตรวจสอบสายไม่แตกร้าวหรือแข็งแบนเป็นประจำ หากพบความเสียหายให้เปลี่ยนทดแทนทันที</li>
+  <li>เก็บโดยไม่ขดสายแน่นเกินไป เพื่อป้องกันสายเสื่อมสภาพและการนำเสียงลดลง</li>
+</ul>`,
     tips: [
       '🩺 Stethoscope ยืนยัน ET Tube ได้ แต่ End Tidal CO₂ แม่นยำกว่า — ใช้ร่วมกัน',
       '🔊 ในห้องฉุกเฉินที่เสียงดัง ฟังเสียงปอดได้ยาก — ให้พึ่ง End Tidal CO₂ มากกว่า',
@@ -2645,6 +2701,12 @@ const EQUIP_INFO = [
   <li>ใช้ Laryngoscope visualize oropharynx ก่อน</li>
   <li>สอด Magill Forceps โค้งตาม curve ของทางเดินหายใจ</li>
   <li>จับสิ่งแปลกปลอมหรือ tube แล้วดึงออก/นำเข้าตำแหน่งที่ต้องการ</li>
+</ul>`,
+    care: '🧰 การดูแลรักษา',
+    careDetail: `<ul style="margin:4px 0 0 16px;padding:0;font-size:13px;color:var(--gray-800);line-height:1.8">
+  <li>เป็นอุปกรณ์นำกลับมาใช้ซ้ำได้ ต้องทำความสะอาดและส่งนึ่ง (sterilize) ทุกครั้งหลังใช้งานตามมาตรฐานหน่วยงาน</li>
+  <li>ระหว่างรอนึ่ง ให้บันทึกสถานะ "ส่งนึ่ง" ในระบบและแจ้งหัวหน้าเวรทันทีหากไม่มีคีมสำรองในรถ Emergency</li>
+  <li>ตรวจสอบข้อต่อและปลายคีมว่าไม่หลวมหรือเป็นสนิมก่อนนำกลับเข้าใช้งาน</li>
 </ul>`,
     tips: [
       '🔄 หมายเหตุในรถ: "ส่งนึ่ง" — ตรวจสอบสถานะการนึ่งทุกเวร',
@@ -2688,6 +2750,14 @@ const EQUIP_INFO = [
   <li>กด Discharge/Shock</li>
   <li>CPR ต่อทันทีหลังช็อก 2 นาที แล้วตรวจ rhythm ใหม่</li>
 </ol>`,
+    care: '🧰 การดูแลรักษา',
+    careDetail: `<ul style="margin:4px 0 0 16px;padding:0;font-size:13px;color:var(--gray-800);line-height:1.8">
+  <li>เสียบสายชาร์จเครื่องไว้กับปลั๊กไฟตลอดเวลาที่ไม่ได้ใช้งาน เพื่อให้แบตเตอรี่พร้อมใช้เต็มที่เสมอ</li>
+  <li>ตรวจสอบระดับแบตเตอรี่และผล self-test ของเครื่องทุกเวร หากแบตเตอรี่ต่ำหรือเครื่องแจ้ง error ให้รายงานหัวหน้าเวรทันที</li>
+  <li>เช็ดทำความสะอาดตัวเครื่อง สาย Leads และ Paddles ด้วยผ้าชุบน้ำยาทำความสะอาดที่เหมาะสมหลังใช้งานทุกครั้ง ห้ามใช้สารที่กัดกร่อนพลาสติก</li>
+  <li>ตรวจสอบวันหมดอายุของ Pads/Gel และเปลี่ยนตามรอบที่ผู้ผลิตกำหนด</li>
+  <li>จัดเก็บในที่แห้ง ห่างความร้อนและสารเคมี และตรวจสอบสาย Leads ไม่พันกันหรือหักงอ</li>
+</ul>`,
     tips: [
       '⚡ Check battery ทุกเวร — ถ้า battery น้อย แจ้งทันที',
       '⚡ ช็อกเร็วที่สุดเท่าที่ทำได้ใน VF/pVT — ทุก 1 นาทีที่ช้า = survival ลดลง 10%',
@@ -2753,6 +2823,7 @@ function openInfoModal(idx) {
     { title: item.indication, content: fmt(item.indicationDetail) },
     { title: item.howToCheck, content: fmt(item.howToCheckDetail) },
     { title: item.howToUse, content: fmt(item.howToUseDetail) },
+    { title: item.care, content: fmt(item.careDetail) },
   ].filter(s => s.title && s.content);
 
   const imgUrl = getInfoImageUrl(item);
@@ -2825,7 +2896,7 @@ function openInfoEditModal(idx) {
   const isEdit = (idx !== undefined && idx !== null && EQUIP_INFO[idx]);
   const item = isEdit ? EQUIP_INFO[idx] : {
     name:'', icon:'📦', keywords:[], what:'', whatDetail:'', indication:'', indicationDetail:'',
-    howToCheck:'', howToCheckDetail:'', howToUse:'', howToUseDetail:'', tips:[], related:[]
+    howToCheck:'', howToCheckDetail:'', howToUse:'', howToUseDetail:'', care:'', careDetail:'', tips:[], related:[]
   };
   document.getElementById('info-modal').classList.remove('open'); // ปิด modal รายละเอียดถ้าเปิดอยู่
   const esc = s => (s||'').toString().replace(/"/g,'&quot;');
@@ -2890,6 +2961,14 @@ function openInfoEditModal(idx) {
       </div>
 
       <div style="border-top:1px solid var(--gray-200);padding-top:10px">
+        <label style="font-size:12px;font-weight:700;color:var(--blue-md);display:block;margin-bottom:4px">หัวข้อ "การดูแลรักษา"</label>
+        <input type="text" id="ie-care" value="${esc(item.care)}" placeholder="เช่น 🧰 การดูแลรักษา"
+          style="width:100%;padding:8px 10px;margin-bottom:6px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);font-size:13px;font-family:'Sarabun',sans-serif;background:var(--gray-50)">
+        <textarea id="ie-careDetail" rows="5" placeholder="พิมพ์วิธีดูแลรักษา/ทำความสะอาด/จัดเก็บ เป็นข้อความปกติ ขึ้นต้นบรรทัดด้วย - เพื่อทำเป็นข้อย่อย"
+          style="width:100%;padding:8px 10px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);font-size:13px;font-family:'Sarabun',sans-serif;background:var(--gray-50);resize:vertical">${htmlToPlainText(item.careDetail)}</textarea>
+      </div>
+
+      <div style="border-top:1px solid var(--gray-200);padding-top:10px">
         <label style="font-size:12px;font-weight:700;color:var(--amber);display:block;margin-bottom:4px">💡 เคล็ดลับ (1 บรรทัดต่อ 1 ข้อ)</label>
         <textarea id="ie-tips" rows="3" placeholder="เคล็ดลับข้อที่ 1&#10;เคล็ดลับข้อที่ 2"
           style="width:100%;padding:8px 10px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);font-size:12px;font-family:'Sarabun',sans-serif;background:var(--gray-50);resize:vertical">${(item.tips||[]).join('\n')}</textarea>
@@ -2935,6 +3014,8 @@ async function saveInfoEditModal(idx) {
     howToCheckDetail: document.getElementById('ie-howToCheckDetail').value.trim(),
     howToUse: document.getElementById('ie-howToUse').value.trim(),
     howToUseDetail: document.getElementById('ie-howToUseDetail').value.trim(),
+    care: document.getElementById('ie-care').value.trim(),
+    careDetail: document.getElementById('ie-careDetail').value.trim(),
     tips: document.getElementById('ie-tips').value.split('\n').map(x => x.trim()).filter(Boolean),
     related: splitList(document.getElementById('ie-related').value),
     _plainText: true
