@@ -915,6 +915,7 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
     <div class="pin-title" id="pin-title">กรุณากรอกรหัสยืนยัน</div>
     <div class="pin-sub" id="pin-sub">เพื่อบันทึกข้อมูลลง Google Sheets</div>
     <div class="pin-dots" id="pin-dots"></div>
+    <div id="pin-status" style="font-size:11px;color:var(--blue-md);min-height:14px;text-align:center"></div>
     <div class="pin-grid" id="pin-grid"></div>
     <button class="pin-cancel" onclick="closePinPad(false)">ยกเลิก</button>
   </div>
@@ -936,7 +937,7 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
 // ─── CONFIG ───────────────────────────────────────────────
 const DRIVE_FOLDER   = '1tfNKiu55ocZbXF3ovQaH7dz97tSOKsUM';
 const SPREADSHEET_ID = '1X4NBGK_8xokrgl3qf1F1XtCdUUhFeyKvXjQTaJMMkbI';
-const SCRIPT_URL     = 'https://script.google.com/macros/s/AKfycbxEV1ei2oO9cEf2FvbJ3HMW9UD8nu6sMMoOPtld2m2YxEdLhXdqTuZ1j9-PTVPkDPPh/exec';
+const SCRIPT_URL     = 'https://script.google.com/macros/s/AKfycbwRBqSGJlnrdI2stT_0s_2XmVzJXV26R7nv0cQ0xeAyyXnpXE1weMbyp9fyQ4kCNhvq/exec';
 
 // clear old scriptUrl from localStorage to always use hardcoded URL
 // force clear all old config from localStorage
@@ -3572,14 +3573,16 @@ function hideLoadOverlay() {
   document.getElementById('load-overlay').classList.remove('open');
 }
 
-// ── PIN PAD: ขอรหัสยืนยัน (952) ก่อนบันทึก/แก้ไขข้อมูลลง Google Sheets ───────
-const PIN_CODE = '952';
-let pinState = { value: '', resolve: null };
+// ── PIN PAD: ขอรหัสยืนยันก่อนบันทึก/แก้ไขข้อมูลลง Google Sheets ─────────────
+// รหัสจริงไม่ได้เก็บอยู่ในไฟล์นี้ — ส่งไปให้ Apps Script ตรวจสอบฝั่งเซิร์ฟเวอร์เท่านั้น
+// (ป้องกันคนเปิดดูซอร์สโค้ดของเว็บแล้วเห็นรหัสได้ทันที)
+const PIN_LENGTH = 3;
+let pinState = { value: '', resolve: null, checking: false };
 
 function renderPinDots() {
   const dotsEl = document.getElementById('pin-dots');
   dotsEl.innerHTML = '';
-  for(let i = 0; i < PIN_CODE.length; i++) {
+  for(let i = 0; i < PIN_LENGTH; i++) {
     const dot = document.createElement('span');
     dot.className = 'pin-dot' + (i < pinState.value.length ? ' filled' : '');
     dotsEl.appendChild(dot);
@@ -3596,38 +3599,53 @@ function renderPinGrid() {
   }).join('');
 }
 
-function pinKeyPress(k) {
+async function pinKeyPress(k) {
+  if(pinState.checking) return; // กำลังรอผลตรวจจากเซิร์ฟเวอร์ ไม่ให้กดซ้ำ
   if(k === 'back') {
     pinState.value = pinState.value.slice(0, -1);
     renderPinDots();
     return;
   }
-  if(pinState.value.length >= PIN_CODE.length) return;
+  if(pinState.value.length >= PIN_LENGTH) return;
   pinState.value += k;
   renderPinDots();
-  if(pinState.value.length === PIN_CODE.length) {
-    setTimeout(() => {
-      if(pinState.value === PIN_CODE) {
+  if(pinState.value.length === PIN_LENGTH) {
+    pinState.checking = true;
+    document.getElementById('pin-status').textContent = 'กำลังตรวจสอบ...';
+    const enteredPin = pinState.value;
+    try {
+      const resp = await fetch(config.scriptUrl, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({type:'checkPin', pin: enteredPin})
+      });
+      const json = await resp.json();
+      document.getElementById('pin-status').textContent = '';
+      if(json.valid) {
         closePinPad(true);
       } else {
-        // รหัสผิด: สั่นและล้างค่า
         document.querySelectorAll('#pin-dots .pin-dot').forEach(d => d.classList.add('error'));
         showToast('❌ รหัสไม่ถูกต้อง', '#C4708A');
-        setTimeout(() => {
-          pinState.value = '';
-          renderPinDots();
-        }, 400);
+        setTimeout(() => { pinState.value = ''; renderPinDots(); }, 400);
       }
-    }, 120);
+    } catch(err) {
+      document.getElementById('pin-status').textContent = '';
+      showToast('❌ ตรวจสอบรหัสไม่สำเร็จ: ' + err.message, '#C4708A');
+      pinState.value = '';
+      renderPinDots();
+    } finally {
+      pinState.checking = false;
+    }
   }
 }
 
 // เปิด PIN pad — คืนค่า Promise<boolean> (true = รหัสถูก, false = ยกเลิก)
 function askPin(title='กรุณากรอกรหัสยืนยัน', sub='เพื่อบันทึกข้อมูลลง Google Sheets') {
   return new Promise(resolve => {
-    pinState = { value: '', resolve };
+    pinState = { value: '', resolve, checking: false };
     document.getElementById('pin-title').textContent = title;
     document.getElementById('pin-sub').textContent = sub;
+    document.getElementById('pin-status').textContent = '';
     renderPinDots();
     renderPinGrid();
     document.getElementById('pin-overlay').classList.add('open');
@@ -3637,7 +3655,7 @@ function askPin(title='กรุณากรอกรหัสยืนยัน
 function closePinPad(success) {
   document.getElementById('pin-overlay').classList.remove('open');
   const resolve = pinState.resolve;
-  pinState = { value: '', resolve: null };
+  pinState = { value: '', resolve: null, checking: false };
   if(resolve) resolve(success);
 }
 
