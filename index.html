@@ -2159,6 +2159,10 @@ async function loadEquipList() {
         equipment = json.equipList.map(item => ({
           name: item.name, floor: item.floor||'', exp: '', fifo: '', note: '', imgId: item.imgId||''
         }));
+        // ล้าง equipStatus เดิม (key เป็น index) ทิ้งก่อน เพราะ index อ้างอิงกับลำดับของ array เดิม
+        // ถ้าลำดับ/จำนวนรายการเปลี่ยนไป index เดิมอาจไปตรงกับอุปกรณ์ชิ้นอื่นโดยไม่ตั้งใจ
+        // (จะถูกเติมกลับให้ถูกต้องตามชื่อใน loadEquipMeta() ด้านล่าง)
+        equipStatus = {};
       }
       if(json.equipInfoData && Array.isArray(json.equipInfoData)) {
         mergeEquipInfoFromSheets(json.equipInfoData);
@@ -2188,9 +2192,10 @@ async function loadEquipMeta() {
     const idx = equipment.findIndex(e => e.name === name);
     if(idx < 0) return;
     const row = meta[name];
-    if(row.exp)  equipment[idx].exp  = row.exp;
+    if(row.exp !== undefined) equipment[idx].exp = row.exp;
     if(row.note !== undefined) equipment[idx].note = row.note;
-    if(row.status && row.status !== 'ปกติ') equipStatus[idx] = row.status;
+    if(row.status) equipStatus[idx] = row.status;
+    else delete equipStatus[idx];
   });
   computeFifo();
   renderEquip();
@@ -2201,7 +2206,7 @@ async function loadEquipMeta() {
     const resp = await fetch(config.scriptUrl + '?t=' + Date.now());
     const json = await resp.json();
     if(json.equipMeta && Array.isArray(json.equipMeta)) {
-      const newMeta = JSON.parse(localStorage.getItem('equipMeta') || '{}');
+      const newMeta = {};
       json.equipMeta.forEach(row => {
         const idx = equipment.findIndex(e => e.name === row.name);
         if(idx < 0) return;
@@ -2210,9 +2215,12 @@ async function loadEquipMeta() {
           const d = parseExpDate(row.exp);
           if(d) row.exp = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
         }
-        if(row.exp)  equipment[idx].exp  = row.exp;
-        if(row.note !== undefined) equipment[idx].note = row.note;
+        // อัปเดตเสมอ (รวมถึงกรณีล้างค่า/กลับเป็นปกติ) ไม่ใช่แค่ตอนมีค่า
+        // เดิมเช็คแค่ "ถ้ามีค่า" ทำให้ข้อมูลเก่าติดค้างเวลามีการล้าง/แก้กลับในชีต
+        equipment[idx].exp  = row.exp || '';
+        equipment[idx].note = row.note !== undefined ? row.note : equipment[idx].note;
         if(row.status && row.status !== 'ปกติ') equipStatus[idx] = row.status;
+        else delete equipStatus[idx];
         newMeta[row.name] = { exp: row.exp||'', note: row.note||'', status: row.status||'ปกติ' };
       });
       localStorage.setItem('equipMeta', JSON.stringify(newMeta));
@@ -2303,7 +2311,7 @@ async function saveAllAndCheck() {
   showToast('📤 กำลังบันทึก...', '#185FA5');
   await saveEquipToSheets();   // save equip bulk
   await new Promise(r => setTimeout(r, 600));
-  submitCheck();               // save shift check
+  await submitCheck();         // save shift check
 }
 
 async function saveEquipToSheets() {
@@ -3250,13 +3258,15 @@ function getRadio(name) {
   return document.querySelector(`input[name="${name}"]:checked`)?.value || '—';
 }
 
-function submitCheck() {
+async function submitCheck() {
   const d = getFormData();
   if(!d.nurse || d.nurse==='—') { showToast('⚠️ กรุณาเลือกชื่อหัวหน้าเวรและผู้ตรวจสอบ', '#C4708A'); return; }
   records.unshift(d);
   localStorage.setItem('records', JSON.stringify(records));
   showToast('✅ บันทึกการตรวจสอบเรียบร้อย');
-  if(config.connected) pushToSheets(d);
+  // ต้องรอให้บันทึกขึ้น Sheets เสร็จก่อน ไม่เช่นนั้น renderHistory() ที่ตามมาจะ GET
+  // ข้อมูลเก่ากลับมาทับ records ในเครื่อง (ทำให้ดูเหมือนข้อมูลหาย ต้องรีเฟรสหลายรอบ)
+  if(config.connected) await pushToSheets(d);
   setTimeout(() => {
     // สลับไปแท็บประวัติโดยไม่ขอ PIN ซ้ำ (เพิ่งบันทึกเสร็จ)
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -3267,7 +3277,7 @@ function submitCheck() {
     if(tabs[1]) tabs[1].classList.add('active');
     if(bnavs[1]) bnavs[1].classList.add('active');
     renderHistory();
-  }, 900);
+  }, 300);
 }
 
 // ─── HISTORY ───────────────────────────────────────────────
@@ -3279,7 +3289,15 @@ async function renderHistory() {
     try {
       const resp = await fetch(config.scriptUrl + '?t=' + Date.now());
       const json = await resp.json();
-      if(json.checkRows) { records = json.checkRows; localStorage.setItem('records', JSON.stringify(records)); }
+      if(json.checkRows) {
+        // ป้องกันบัค: ถ้า Sheets ยังเขียนข้อมูลที่เพิ่งบันทึกไม่เสร็จ (ความหน่วงของ Apps Script)
+        // ค่าที่ได้จาก GET อาจยังไม่มีรายการล่าสุด ทำให้รายการที่เพิ่งบันทึกหายไปจากหน้าจอ
+        // จึงรวม (merge) รายการในเครื่องที่ยังใหม่ (timestamp ไม่ซ้ำกับของ Sheets) เข้าไปด้วยเสมอ
+        const fetchedTimestamps = new Set(json.checkRows.map(r => r.timestamp));
+        const localOnly = records.filter(r => r.timestamp && !fetchedTimestamps.has(r.timestamp));
+        records = [...localOnly, ...json.checkRows];
+        localStorage.setItem('records', JSON.stringify(records));
+      }
       if(json.equipRows) { equipHistory = json.equipRows; }
     } catch(e) {}
   }
