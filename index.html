@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>รถ Emergency — ตรวจสอบอุปกรณ์</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root {
   --red:      #C4708A;
@@ -37,7 +37,7 @@
 
 html { font-size: 18px; }
 body {
-  font-family: 'Sarabun', sans-serif;
+  font-family: 'IBM Plex Sans Thai', sans-serif;
   background-color: #FAF8FD;
   background-image:
     radial-gradient(circle at 8% 12%, rgba(169,143,210,.16) 0%, transparent 38%),
@@ -87,14 +87,19 @@ body {
 .tabs::-webkit-scrollbar { display: none; }
 .tab {
   flex: 1; min-width: 70px; padding: 12px 8px 10px;
-  font-family: 'Sarabun', sans-serif; font-size: 12px; font-weight: 500;
-  color: var(--gray-600); cursor: pointer; border: none; background: none;
+  font-family: 'IBM Plex Sans Thai', sans-serif; font-size: 12px; font-weight: 500;
+  color: var(--gray-500); cursor: pointer; border: none; background: none;
   border-bottom: 2px solid transparent; white-space: nowrap;
-  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
   transition: color .2s, border-color .2s;
 }
-.tab .tab-icon { font-size: 18px; }
-.tab.active { color: var(--blue-md); border-bottom-color: var(--blue-md); }
+.tab .tab-icon { font-size: 18px; line-height: 1; display: flex; align-items: center; justify-content: center; }
+.tab .tab-icon svg rect:first-child { transition: fill .2s; }
+.tab.active { color: #7B65B0; border-bottom-color: #7B65B0; }
+.tab.active .tab-icon svg rect:first-child { fill: #7B65B0; }
+.tab.active .tab-icon svg path,
+.tab.active .tab-icon svg circle,
+.tab.active .tab-icon svg rect:not(:first-child) { stroke: #fff; fill: #fff; opacity: .9; }
 
 /* ── PAGE ── */
 .page { display: none; padding: 14px 12px; animation: fadeIn .25s ease; }
@@ -122,7 +127,7 @@ body {
 .form-group label { font-size: 11px; font-weight: 600; color: var(--gray-600); text-transform: uppercase; letter-spacing: .4px; }
 .form-group input, .form-group select, .form-group textarea {
   padding: 8px 10px; border: 1.5px solid var(--gray-300); border-radius: var(--r-sm);
-  font-family: 'Sarabun', sans-serif; font-size: 13px; color: var(--gray-900);
+  font-family: 'IBM Plex Sans Thai', sans-serif; font-size: 13px; color: var(--gray-900);
   background: var(--gray-50); transition: border-color .2s, background .2s;
   -webkit-appearance: none; appearance: none;
 }
@@ -181,7 +186,7 @@ body {
 .chip {
   padding: 5px 12px; border-radius: 20px; font-size: 12px; cursor: pointer;
   border: 1.5px solid var(--gray-300); background: var(--white); color: var(--gray-600);
-  transition: all .15s; font-family: 'Sarabun', sans-serif;
+  transition: all .15s; font-family: 'IBM Plex Sans Thai', sans-serif;
 }
 .chip:hover { border-color: var(--blue-md); color: var(--blue-md); background: var(--blue-lt); }
 .chip.active { border-color: var(--blue-md); background: var(--blue-md); color: #fff; }
@@ -190,7 +195,7 @@ body {
 .btn-row { display: flex; gap: 8px; margin-top: 14px; }
 .btn {
   flex: 1; padding: 12px 16px; border-radius: var(--r-sm); border: none; cursor: pointer;
-  font-family: 'Sarabun', sans-serif; font-size: 14px; font-weight: 600;
+  font-family: 'IBM Plex Sans Thai', sans-serif; font-size: 14px; font-weight: 600;
   display: flex; align-items: center; justify-content: center; gap: 7px;
   transition: all .2s; -webkit-tap-highlight-color: transparent;
 }
@@ -282,6 +287,17 @@ body {
 
 /* ── HISTORY ── */
 .stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px; }
+
+/* ── HISTORY FILTER CHIPS ── */
+.hf-chip {
+  padding: 4px 11px; border-radius: 20px; border: 1.5px solid var(--gray-300);
+  background: var(--white); color: var(--gray-600); font-family: 'IBM Plex Sans Thai', sans-serif;
+  font-size: 12px; font-weight: 600; cursor: pointer; transition: all .15s;
+}
+.hf-chip:hover { border-color: var(--blue-md); color: var(--blue-md); background: var(--blue-lt); }
+.hf-chip.active { border-color: var(--blue-md); background: var(--blue-md); color: #fff; }
+.hf-chip.hf-ok.active  { border-color: var(--green); background: var(--green); color: #fff; }
+.hf-chip.hf-warn.active { border-color: var(--amber); background: var(--amber); color: #fff; }
 .stat-box { background: var(--white); border-radius: var(--r); padding: 10px 8px; text-align: center; box-shadow: var(--shadow-sm); border: 1px solid var(--gray-200); }
 .stat-num { font-size: 22px; font-weight: 700; color: var(--gray-900); font-family: 'IBM Plex Mono', monospace; }
 .stat-lbl { font-size: 10px; color: var(--gray-600); margin-top: 2px; }
@@ -366,59 +382,72 @@ body {
 .load-overlay {
   position: fixed; inset: 0; z-index: 600; display: none;
   align-items: center; justify-content: center;
-  background: rgba(90,77,120,.30); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
-  animation: loadFadeIn .15s ease;
+  background: rgba(60,50,90,.45); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
 }
-.load-overlay.open { display: flex; }
+.load-overlay.open { display: flex; animation: loadFadeIn .2s ease; }
 @keyframes loadFadeIn { from { opacity: 0; } to { opacity: 1; } }
 .load-card {
-  background: var(--white); border-radius: 20px; box-shadow: 0 12px 40px rgba(0,0,0,.18), 0 4px 12px rgba(0,0,0,.08);
-  padding: 32px 36px; display: flex; flex-direction: column; align-items: center; gap: 6px;
-  font-family: 'Sarabun', sans-serif; min-width: 260px; max-width: 320px;
-  animation: loadPop .25s cubic-bezier(.4,0,.2,1);
+  background: var(--white); border-radius: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.22), 0 4px 16px rgba(0,0,0,.10);
+  padding: 28px 28px 24px; display: flex; flex-direction: column; align-items: center; gap: 0;
+  font-family: 'IBM Plex Sans Thai', sans-serif; width: 300px; max-width: 92vw;
+  animation: loadPop .25s cubic-bezier(.34,1.56,.64,1);
 }
-@keyframes loadPop { from { transform: scale(.92); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-.load-icons-row {
-  display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+@keyframes loadPop { from { transform: scale(.88); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+/* ── Clock ring ── */
+.save-clock-wrap {
+  position: relative; width: 110px; height: 110px; margin-bottom: 16px; flex-shrink: 0;
 }
-.load-icon-ambulance {
-  font-size: 46px; line-height: 1;
-  display: inline-block;
-  animation: ambulanceRock 0.5s ease-in-out infinite alternate,
-             ambulanceSiren 0.4s linear infinite;
-  filter: drop-shadow(0 2px 6px rgba(196,112,138,.35));
+.save-clock-svg { width: 110px; height: 110px; transform: rotate(-90deg); }
+.save-clock-track { fill: none; stroke: #EDE8F5; stroke-width: 8; }
+.save-clock-arc {
+  fill: none; stroke: url(#clockGrad); stroke-width: 8;
+  stroke-linecap: round; stroke-dasharray: 302; stroke-dashoffset: 302;
+  transition: stroke-dashoffset .35s ease;
 }
-@keyframes ambulanceRock {
-  from { transform: translateX(-3px) rotate(-2deg); }
-  to   { transform: translateX(3px)  rotate(2deg);  }
+.save-clock-spin {
+  fill: none; stroke: #C4B5E8; stroke-width: 3; stroke-linecap: round;
+  stroke-dasharray: 40 262; stroke-dashoffset: 0;
+  animation: clockSpin 1.4s linear infinite;
 }
-@keyframes ambulanceSiren {
-  0%,100% { filter: drop-shadow(0 0 6px rgba(196,112,138,.6)); }
-  50%     { filter: drop-shadow(0 0 14px rgba(155,134,196,.9)); }
+@keyframes clockSpin { to { stroke-dashoffset: -302; } }
+.save-clock-center {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 1px;
 }
-.load-icon-pulse {
-  font-size: 26px; line-height: 1;
-  display: inline-block;
-  animation: iconPulse 1s ease-in-out infinite;
+.save-clock-pct {
+  font-size: 22px; font-weight: 800; color: var(--gray-900); line-height: 1; font-family: 'IBM Plex Mono', monospace;
 }
-.load-icon-pulse:nth-child(3) { animation-delay: .5s; }
-@keyframes iconPulse {
-  0%,100% { transform: scale(1);    opacity: 1; }
-  50%     { transform: scale(1.25); opacity: 0.7; }
+.save-clock-of {
+  font-size: 11px; color: var(--gray-500); font-weight: 600;
 }
-.load-text { font-size: 17px; font-weight: 700; color: var(--gray-900); text-align: center; margin-bottom: 4px; }
-.load-sub { font-size: 12.5px; color: var(--gray-600); text-align: center; line-height: 1.6; }
-.load-sub b { color: var(--blue-md); font-weight: 700; }
-.load-progress {
-  width: 100%; height: 6px; border-radius: 6px; background: var(--gray-100); overflow: hidden;
-  margin: 14px 0 4px;
+
+/* ── Texts ── */
+.load-text { font-size: 16px; font-weight: 700; color: var(--gray-900); text-align: center; margin-bottom: 4px; }
+.load-sub  { font-size: 12px; color: var(--gray-600); text-align: center; line-height: 1.6; margin-bottom: 0; }
+.load-sub b { color: #7B65B0; font-weight: 700; }
+.load-status { font-size: 12px; color: var(--gray-500); text-align: center; margin-top: 6px; min-height: 18px; }
+
+/* ── Item scroll list ── */
+.save-item-scroll {
+  width: 100%; margin-top: 14px; max-height: 160px; overflow-y: auto;
+  border: 1px solid var(--gray-100); border-radius: 10px; background: var(--gray-50);
 }
-.load-progress-fill {
-  height: 100%; width: 40%; border-radius: 6px;
-  background: linear-gradient(90deg, var(--blue-md), #5DADE2, var(--blue-md));
-  background-size: 200% 100%;
-  animation: loadBar 1.2s ease-in-out infinite, loadShimmer 1.6s linear infinite;
+.save-item-row {
+  display: flex; align-items: center; gap: 8px; padding: 7px 12px;
+  border-bottom: 1px solid var(--gray-100); font-size: 12px;
+  animation: rowSlide .2s ease;
 }
+@keyframes rowSlide { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:translateY(0); } }
+.save-item-row:last-child { border-bottom: none; }
+.save-item-row .sir-done { color: var(--green); font-size: 14px; }
+.save-item-row .sir-name { flex: 1; font-weight: 600; color: var(--gray-800); }
+.save-item-row .sir-floor { font-size: 10px; color: var(--gray-500); }
+
+/* ── Progress bar (keep for non-saving uses) ── */
+.load-progress { display: none; }
+.load-progress-fill { display: none; }
 @keyframes loadBar {
   0% { transform: translateX(-100%); width: 40%; }
   50% { width: 60%; }
@@ -437,11 +466,16 @@ body {
   }
   .bnav-btn {
     flex: 1; padding: 8px 2px 10px; display: flex; flex-direction: column; align-items: center; gap: 3px;
-    cursor: pointer; border: none; background: none; font-family: 'Sarabun', sans-serif;
-    font-size: 9px; color: var(--gray-600); transition: color .2s; white-space: nowrap;
+    cursor: pointer; border: none; background: none; font-family: 'IBM Plex Sans Thai', sans-serif;
+    font-size: 9px; color: var(--gray-500); transition: color .2s; white-space: nowrap;
   }
-  .bnav-btn .icon { font-size: 20px; }
-  .bnav-btn.active { color: var(--blue-md); }
+  .bnav-btn .icon { font-size: 20px; line-height: 1; display: flex; align-items: center; justify-content: center; }
+  .bnav-btn .icon svg rect:first-child { transition: fill .2s; }
+  .bnav-btn.active { color: #7B65B0; }
+  .bnav-btn.active .icon svg rect:first-child { fill: #7B65B0; }
+  .bnav-btn.active .icon svg path,
+  .bnav-btn.active .icon svg circle,
+  .bnav-btn.active .icon svg rect:not(:first-child) { stroke: #fff; fill: #fff; opacity: .9; }
   body { padding-bottom: 65px; }
 }
 @media (min-width: 641px) {
@@ -467,7 +501,7 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
 .cal-popup {
   position: fixed; z-index: 500; background: var(--white); border-radius: var(--r);
   box-shadow: var(--shadow-md); border: 1px solid var(--gray-200);
-  width: 280px; padding: 10px; font-family: 'Sarabun', sans-serif;
+  width: 280px; padding: 10px; font-family: 'IBM Plex Sans Thai', sans-serif;
 }
 .cal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; gap:4px; }
 .cal-header button { border:none; background:var(--gray-100); border-radius:var(--r-sm); width:28px; height:28px;
@@ -482,7 +516,7 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
 .cal-day.selected { background:var(--blue-md); color:#fff; font-weight:700; }
 .cal-day.today { border:1.5px solid var(--blue-md); }
 .cal-footer { display:flex; justify-content:space-between; margin-top:8px; padding-top:8px; border-top:1px solid var(--gray-100); }
-.cal-footer button { border:none; background:none; color:var(--blue-md); font-size:12px; font-weight:600; cursor:pointer; font-family:'Sarabun',sans-serif; }
+.cal-footer button { border:none; background:none; color:var(--blue-md); font-size:12px; font-weight:600; cursor:pointer; font-family:'IBM Plex Sans Thai',sans-serif; }
 .cal-overlay { position:fixed; inset:0; z-index:499; background:transparent; }
 
 /* ── PIN PAD (เข้ารหัสก่อนบันทึก/จัดการรายการ) ───────────── */
@@ -496,7 +530,7 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
 .pin-card {
   background: var(--white); border-radius: 20px; box-shadow: var(--shadow-md);
   padding: 28px 28px 24px; display: flex; flex-direction: column; align-items: center; gap: 16px;
-  font-family: 'Sarabun', sans-serif; width: 280px; max-width: 90vw;
+  font-family: 'IBM Plex Sans Thai', sans-serif; width: 280px; max-width: 90vw;
   animation: loadPop .25s cubic-bezier(.4,0,.2,1);
 }
 .pin-icon { font-size: 34px; }
@@ -524,7 +558,7 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
 .pin-key.pin-key-action { font-size: 16px; color: var(--gray-600); background: transparent; border: none; }
 .pin-cancel {
   margin-top: 2px; font-size: 12px; color: var(--gray-600); background: none; border: none;
-  cursor: pointer; font-family: 'Sarabun', sans-serif; text-decoration: underline;
+  cursor: pointer; font-family: 'IBM Plex Sans Thai', sans-serif; text-decoration: underline;
 }
 
 /* ── COMBOBOX (dropdown + พิมพ์เองได้) ───────────────────── */
@@ -537,7 +571,7 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
 }
 .combo-list.open { display: block; }
 .combo-opt {
-  padding: 9px 12px; font-size: 13px; font-family: 'Sarabun', sans-serif; color: var(--gray-900);
+  padding: 9px 12px; font-size: 13px; font-family: 'IBM Plex Sans Thai', sans-serif; color: var(--gray-900);
   cursor: pointer; border-bottom: 1px solid var(--gray-100);
 }
 .combo-opt:last-child { border-bottom: none; }
@@ -572,7 +606,7 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
 }
 .lightbox-hint {
   position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%);
-  color: rgba(255,255,255,.7); font-size: 11px; font-family: 'Sarabun', sans-serif;
+  color: rgba(255,255,255,.7); font-size: 11px; font-family: 'IBM Plex Sans Thai', sans-serif;
   background: rgba(255,255,255,.1); padding: 5px 14px; border-radius: 20px;
   pointer-events: none; white-space: nowrap;
 }
@@ -596,18 +630,58 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
   </div>
   <div class="hdr-info">
     <span id="hdr-date">กำลังโหลด...</span>
-    <span>🟢 <strong id="sheets-status-dot">ยังไม่เชื่อมต่อ Sheets</strong></span>
+    <span>🟢 <strong id="sheets-status-dot">กำลังเชื่อมต่อ...</strong></span>
   </div>
 </header>
 
 <!-- TABS (desktop) -->
 <div class="tabs-wrap">
   <div class="tabs">
-    <button class="tab active" onclick="switchTab('equip',this)"><span class="tab-icon">📦</span>ตรวจสอบรถEmergency</button>
-    <button class="tab" onclick="switchTab('hist',this)"><span class="tab-icon">📋</span>ประวัติ</button>
-    <button class="tab" onclick="switchTab('manage',this)"><span class="tab-icon">🗂️</span>จัดการรายการอุปกรณ์</button>
-    <button class="tab" onclick="switchTab('info',this)"><span class="tab-icon">📖</span>เกี่ยวกับอุปกรณ์</button>
-    <button class="tab" onclick="switchTab('help',this)"><span class="tab-icon">❓</span>วิธีการใช้งาน</button>
+    <button class="tab active" onclick="switchTab('equip',this)">
+      <span class="tab-icon">
+        <svg width="26" height="26" viewBox="0 0 26 26" fill="none"><rect width="26" height="26" rx="8" fill="#E8E0F5"/>
+        <path d="M7 13a6 6 0 1 1 12 0A6 6 0 0 1 7 13Z" stroke="#7B65B0" stroke-width="1.5" fill="none"/>
+        <path d="M13 10v3l2 2" stroke="#7B65B0" stroke-width="1.5" stroke-linecap="round"/>
+        <path d="M6 8h3M17 8h3M6 18h3M17 18h3" stroke="#C4B5E8" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </span>ตรวจสอบรถEmergency
+    </button>
+    <button class="tab" onclick="switchTab('hist',this)">
+      <span class="tab-icon">
+        <svg width="26" height="26" viewBox="0 0 26 26" fill="none"><rect width="26" height="26" rx="8" fill="#E8E0F5"/>
+        <rect x="7" y="8" width="12" height="2" rx="1" fill="#7B65B0"/>
+        <rect x="7" y="12" width="9" height="2" rx="1" fill="#A98FD2"/>
+        <rect x="7" y="16" width="6" height="2" rx="1" fill="#C4B5E8"/>
+        </svg>
+      </span>ประวัติ
+    </button>
+    <button class="tab" onclick="switchTab('manage',this)">
+      <span class="tab-icon">
+        <svg width="26" height="26" viewBox="0 0 26 26" fill="none"><rect width="26" height="26" rx="8" fill="#E8E0F5"/>
+        <rect x="7" y="7" width="5" height="5" rx="1.5" fill="#A98FD2"/>
+        <rect x="14" y="7" width="5" height="5" rx="1.5" fill="#C4B5E8"/>
+        <rect x="7" y="14" width="5" height="5" rx="1.5" fill="#C4B5E8"/>
+        <rect x="14" y="14" width="5" height="5" rx="1.5" fill="#A98FD2"/>
+        </svg>
+      </span>จัดการรายการอุปกรณ์
+    </button>
+    <button class="tab" onclick="switchTab('info',this)">
+      <span class="tab-icon">
+        <svg width="26" height="26" viewBox="0 0 26 26" fill="none"><rect width="26" height="26" rx="8" fill="#E8E0F5"/>
+        <path d="M13 8v1" stroke="#7B65B0" stroke-width="2" stroke-linecap="round"/>
+        <path d="M13 11v7" stroke="#7B65B0" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="13" cy="13" r="6" stroke="#A98FD2" stroke-width="1.5" fill="none"/>
+        </svg>
+      </span>เกี่ยวกับอุปกรณ์
+    </button>
+    <button class="tab" onclick="switchTab('help',this)">
+      <span class="tab-icon">
+        <svg width="26" height="26" viewBox="0 0 26 26" fill="none"><rect width="26" height="26" rx="8" fill="#E8E0F5"/>
+        <path d="M10.5 10.5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5c0 1.5-2.5 2.5-2.5 3.5" stroke="#7B65B0" stroke-width="1.5" stroke-linecap="round"/>
+        <circle cx="13" cy="17.5" r="1" fill="#A98FD2"/>
+        </svg>
+      </span>วิธีการใช้งาน
+    </button>
   </div>
 </div>
 
@@ -620,7 +694,7 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
   <div id="equip-float-badge"
     style="position:fixed;right:16px;bottom:92px;z-index:150;display:none;
       background:var(--white);border:1.5px solid var(--blue-md);border-radius:24px;
-      padding:8px 16px;box-shadow:var(--shadow-md);font-family:'Sarabun',sans-serif;
+      padding:8px 16px;box-shadow:var(--shadow-md);font-family:'IBM Plex Sans Thai',sans-serif;
       font-size:13px;font-weight:700;color:var(--blue-md);align-items:center;gap:6px">
     <span>✅</span><span id="equip-float-count">0/54</span>
   </div>
@@ -689,7 +763,7 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
         <label>เลือกหัวหน้าเวร / ผู้รับผิดชอบเวร</label>
         <select id="incharge-select" onchange="pickInchargeSelect(this.value)"
           style="padding:10px 12px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);
-            font-family:'Sarabun',sans-serif;font-size:14px;color:var(--gray-900);
+            font-family:'IBM Plex Sans Thai',sans-serif;font-size:14px;color:var(--gray-900);
             background:var(--gray-50);width:100%;-webkit-appearance:none;appearance:none;
             background-image:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%2380868B%22 stroke-width=%222%22><polyline points=%226 9 12 15 18 9%22/></svg>');
             background-repeat:no-repeat;background-position:right 10px center;background-size:18px;padding-right:36px">
@@ -714,7 +788,7 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
       <div id="equip-prog-fill" style="height:100%;background:linear-gradient(90deg,var(--blue-md),#27AE60);border-radius:4px;transition:width .4s cubic-bezier(.4,0,.2,1);width:0%"></div>
     </div>
     <button id="btn-save-equip" onclick="onSaveEquipClick()"
-      style="width:100%;padding:14px;border-radius:var(--r-sm);border:none;cursor:pointer;font-family:'Sarabun',sans-serif;font-size:15px;font-weight:700;
+      style="width:100%;padding:14px;border-radius:var(--r-sm);border:none;cursor:pointer;font-family:'IBM Plex Sans Thai',sans-serif;font-size:15px;font-weight:700;
         background:var(--gray-300);color:var(--gray-600);display:flex;align-items:center;justify-content:center;gap:8px;transition:all .3s">
       <span>💾</span> <span id="btn-save-equip-txt">ต้องตรวจสอบให้ครบก่อน (0/54)</span>
     </button>
@@ -729,13 +803,66 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
      PAGE 3: HISTORY
 ════════════════════════════════════════════ -->
 <div id="page-hist" class="page">
-  <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
-    <button onclick="renderHistory()" style="padding:5px 12px;border-radius:20px;border:1.5px solid var(--blue-md);background:var(--blue-lt);color:var(--blue-md);font-family:'Sarabun',sans-serif;font-size:12px;font-weight:600;cursor:pointer">
+
+  <!-- ── TOP BAR ── -->
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:8px;flex-wrap:wrap">
+    <span style="font-size:14px;font-weight:700;color:var(--gray-900)">📋 ประวัติการตรวจสอบ</span>
+    <button onclick="renderHistory()" style="padding:5px 14px;border-radius:20px;border:1.5px solid var(--blue-md);background:var(--blue-lt);color:var(--blue-md);font-family:'IBM Plex Sans Thai',sans-serif;font-size:12px;font-weight:600;cursor:pointer">
       🔄 โหลดใหม่
     </button>
   </div>
 
-  <div class="stat-row" id="stat-row"></div>
+  <!-- ── สถานะอุปกรณ์ปัจจุบัน (ขึ้นก่อน) ── -->
+  <div id="hist-current-status" style="margin-bottom:14px"></div>
+
+  <!-- ── DASHBOARD ── -->
+  <div id="hist-dashboard" style="margin-bottom:14px"></div>
+
+  <!-- ── SEARCH & FILTER BAR ── -->
+  <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:var(--r);padding:12px;box-shadow:var(--shadow-sm);margin-bottom:12px">
+    <!-- search row -->
+    <div style="position:relative;margin-bottom:10px">
+      <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--gray-400);font-size:15px">🔍</span>
+      <input id="hist-search" type="text" placeholder="ค้นหาชื่อ, เวร, วันที่..." oninput="applyHistFilter()"
+        style="width:100%;padding:8px 10px 8px 32px;border:1.5px solid var(--gray-200);border-radius:var(--r-sm);
+               font-family:'IBM Plex Sans Thai',sans-serif;font-size:13px;background:var(--gray-50);box-sizing:border-box">
+    </div>
+    <!-- filter chips row 1: เวร + สถานะ -->
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">
+      <span style="font-size:11px;font-weight:600;color:var(--gray-600);align-self:center">เวร:</span>
+      <button class="hf-chip active" onclick="setHistChip(this,'shift','all')">ทั้งหมด</button>
+      <button class="hf-chip" onclick="setHistChip(this,'shift','เวรดึก')">🌙 ดึก</button>
+      <button class="hf-chip" onclick="setHistChip(this,'shift','เวรเช้า')">🌅 เช้า</button>
+      <button class="hf-chip" onclick="setHistChip(this,'shift','เวรบ่าย')">🌤 บ่าย</button>
+      <span style="font-size:11px;font-weight:600;color:var(--gray-600);align-self:center;margin-left:4px">สถานะ:</span>
+      <button class="hf-chip active" onclick="setHistChip(this,'status','all')">ทั้งหมด</button>
+      <button class="hf-chip hf-ok"   onclick="setHistChip(this,'status','ok')">✅ ปกติ</button>
+      <button class="hf-chip hf-warn" onclick="setHistChip(this,'status','warn')">⚠ ต้องติดตาม</button>
+    </div>
+    <!-- filter chips row 2: แจ้งเตือนพิเศษ -->
+    <div style="display:flex;flex-wrap:wrap;gap:6px">
+      <span style="font-size:11px;font-weight:600;color:var(--gray-600);align-self:center">แจ้งเตือน:</span>
+      <button class="hf-chip" onclick="setHistChip(this,'alert','expired')">⏰ ใกล้/หมดอายุ</button>
+      <button class="hf-chip" onclick="setHistChip(this,'alert','missing')">❌ ของขาด/ไม่พร้อม</button>
+      <button class="hf-chip" onclick="setHistChip(this,'alert','none')">ล้างตัวกรอง</button>
+    </div>
+    <!-- date range -->
+    <div style="display:flex;gap:8px;margin-top:10px;align-items:center;flex-wrap:wrap">
+      <span style="font-size:11px;font-weight:600;color:var(--gray-600)">วันที่:</span>
+      <input id="hist-date-from" type="date" oninput="applyHistFilter()"
+        style="padding:5px 8px;border:1.5px solid var(--gray-200);border-radius:var(--r-sm);font-family:'IBM Plex Sans Thai',sans-serif;font-size:12px;background:var(--gray-50)">
+      <span style="font-size:11px;color:var(--gray-400)">ถึง</span>
+      <input id="hist-date-to" type="date" oninput="applyHistFilter()"
+        style="padding:5px 8px;border:1.5px solid var(--gray-200);border-radius:var(--r-sm);font-family:'IBM Plex Sans Thai',sans-serif;font-size:12px;background:var(--gray-50)">
+      <span id="hist-result-count" style="font-size:11px;color:var(--gray-400);margin-left:auto"></span>
+    </div>
+  </div>
+
+  <!-- ── หัวข้อประวัติการตรวจสอบ ── -->
+  <div style="font-size:13px;font-weight:700;color:var(--gray-700);margin-bottom:8px;padding-left:2px">
+    📋 ประวัติการตรวจสอบทั้งหมด
+  </div>
+
   <div id="hist-list"></div>
 </div>
 
@@ -744,14 +871,14 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
 ════════════════════════════════════════════ -->
 <div id="page-manage" class="page">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:8px;flex-wrap:wrap">
-    <span style="font-family:'Sarabun',sans-serif;font-size:13px;color:var(--gray-600)">
+    <span style="font-family:'IBM Plex Sans Thai',sans-serif;font-size:13px;color:var(--gray-600)">
       เพิ่ม/ลบ/แก้ไขรายการอุปกรณ์หลัก (ชื่อ, ตำแหน่ง/ชั้น, Image ID) — บันทึกลงชีต "รายการอุปกรณ์"
     </span>
     <div style="display:flex;gap:8px">
-      <button onclick="openManageItemModal()" style="padding:6px 14px;border-radius:20px;border:none;background:var(--blue-md);color:#fff;font-family:'Sarabun',sans-serif;font-size:12px;font-weight:600;cursor:pointer">
+      <button onclick="openManageItemModal()" style="padding:6px 14px;border-radius:20px;border:none;background:var(--blue-md);color:#fff;font-family:'IBM Plex Sans Thai',sans-serif;font-size:12px;font-weight:600;cursor:pointer">
         ➕ เพิ่มอุปกรณ์
       </button>
-      <button onclick="reloadManagePage()" style="padding:6px 14px;border-radius:20px;border:1.5px solid var(--blue-md);background:var(--blue-lt);color:var(--blue-md);font-family:'Sarabun',sans-serif;font-size:12px;font-weight:600;cursor:pointer">
+      <button onclick="reloadManagePage()" style="padding:6px 14px;border-radius:20px;border:1.5px solid var(--blue-md);background:var(--blue-lt);color:var(--blue-md);font-family:'IBM Plex Sans Thai',sans-serif;font-size:12px;font-weight:600;cursor:pointer">
         🔄 โหลดใหม่
       </button>
     </div>
@@ -767,11 +894,11 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
     <input type="text" id="info-search" placeholder="ค้นหาอุปกรณ์ เช่น Laryngoscope, ET Tube, Guide Wire..." oninput="renderInfoPage()">
   </div>
   <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px">
-    <div style="font-size:12px;color:var(--gray-600);font-family:'Sarabun',sans-serif;flex:1;min-width:200px">
+    <div style="font-size:12px;color:var(--gray-600);font-family:'IBM Plex Sans Thai',sans-serif;flex:1;min-width:200px">
       ข้อมูลอ้างอิงทางคลินิก: อุปกรณ์คืออะไร ข้อบ่งชี้การใช้งาน และวิธีการตรวจสอบ/ใช้งานเบื้องต้น
       (สำหรับการศึกษา — ใช้ร่วมกับแนวปฏิบัติของหน่วยงานและดุลยพินิจทางคลินิก)
     </div>
-    <button onclick="openInfoEditModal()" style="padding:6px 14px;border-radius:20px;border:none;background:var(--blue-md);color:#fff;font-family:'Sarabun',sans-serif;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0">
+    <button onclick="openInfoEditModal()" style="padding:6px 14px;border-radius:20px;border:none;background:var(--blue-md);color:#fff;font-family:'IBM Plex Sans Thai',sans-serif;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0">
       ➕ เพิ่มข้อมูลอุปกรณ์
     </button>
   </div>
@@ -792,7 +919,7 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
 <div id="page-help" class="page">
   <div id="help-content" style="display:flex;flex-direction:column;gap:14px">
 
-    <div style="background:var(--blue-lt);border-radius:var(--r);padding:14px;font-family:'Sarabun',sans-serif">
+    <div style="background:var(--blue-lt);border-radius:var(--r);padding:14px;font-family:'IBM Plex Sans Thai',sans-serif">
       <div style="font-size:14px;font-weight:700;color:var(--blue-md);margin-bottom:4px">📱 ภาพรวมแอปพลิเคชัน</div>
       <div style="font-size:12.5px;color:var(--gray-800);line-height:1.7">
         แอปนี้ใช้สำหรับตรวจสอบความพร้อมของอุปกรณ์ฉุกเฉินในรถ Emergency ประจำเวร บันทึกผลลง Google Sheets
@@ -845,7 +972,7 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
       </ol>
     </div>
 
-    <div style="background:var(--amber-lt);border-radius:var(--r);padding:14px;font-family:'Sarabun',sans-serif">
+    <div style="background:var(--amber-lt);border-radius:var(--r);padding:14px;font-family:'IBM Plex Sans Thai',sans-serif">
       <div style="font-size:14px;font-weight:700;color:var(--amber);margin-bottom:6px">🔒 เกี่ยวกับรหัสยืนยัน</div>
       <div style="font-size:12.5px;color:var(--gray-800);line-height:1.7">
         ระบบจะขอรหัสยืนยัน 3 หลักก่อนบันทึกหรือแก้ไขข้อมูลทุกครั้ง (เช่น บันทึกผลตรวจสอบ, เพิ่ม/แก้ไข/ลบรายการอุปกรณ์)
@@ -853,7 +980,7 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
       </div>
     </div>
 
-    <div style="background:var(--green-lt);border-radius:var(--r);padding:14px;font-family:'Sarabun',sans-serif">
+    <div style="background:var(--green-lt);border-radius:var(--r);padding:14px;font-family:'IBM Plex Sans Thai',sans-serif">
       <div style="font-size:14px;font-weight:700;color:var(--green);margin-bottom:6px">💡 เคล็ดลับการใช้งาน</div>
       <ul style="margin:0 0 0 18px;padding:0;font-size:12.5px;color:var(--gray-800);line-height:1.9">
         <li>ใช้ปุ่มกรอง <b>"✅ ตรวจแล้ว"</b> หรือ <b>"⚠ ใช้ก่อน"</b> ด้านบนเพื่อดูเฉพาะรายการที่ต้องการ</li>
@@ -905,28 +1032,78 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
 
 <!-- BOTTOM NAV (mobile) -->
 <nav class="bottom-nav">
-  <button class="bnav-btn active" onclick="switchTab('equip',this)"><span class="icon">📦</span>ตรวจสอบรถEmergency</button>
-  <button class="bnav-btn" onclick="switchTab('hist',this)"><span class="icon">📋</span>ประวัติ</button>
-  <button class="bnav-btn" onclick="switchTab('manage',this)"><span class="icon">🗂️</span>จัดการรายการ</button>
-  <button class="bnav-btn" onclick="switchTab('info',this)"><span class="icon">📖</span>เกี่ยวกับอุปกรณ์</button>
-  <button class="bnav-btn" onclick="switchTab('help',this)"><span class="icon">❓</span>วิธีใช้งาน</button>
+  <button class="bnav-btn active" onclick="switchTab('equip',this)">
+    <span class="icon"><svg width="26" height="26" viewBox="0 0 26 26" fill="none"><rect width="26" height="26" rx="8" fill="#E8E0F5"/>
+      <path d="M7 13a6 6 0 1 1 12 0A6 6 0 0 1 7 13Z" stroke="#7B65B0" stroke-width="1.5" fill="none"/>
+      <path d="M13 10v3l2 2" stroke="#7B65B0" stroke-width="1.5" stroke-linecap="round"/>
+      <path d="M6 8h3M17 8h3M6 18h3M17 18h3" stroke="#C4B5E8" stroke-width="1.5" stroke-linecap="round"/>
+    </svg></span>ตรวจสอบรถ
+  </button>
+  <button class="bnav-btn" onclick="switchTab('hist',this)">
+    <span class="icon"><svg width="26" height="26" viewBox="0 0 26 26" fill="none"><rect width="26" height="26" rx="8" fill="#E8E0F5"/>
+      <rect x="7" y="8" width="12" height="2" rx="1" fill="#7B65B0"/>
+      <rect x="7" y="12" width="9" height="2" rx="1" fill="#A98FD2"/>
+      <rect x="7" y="16" width="6" height="2" rx="1" fill="#C4B5E8"/>
+    </svg></span>ประวัติ
+  </button>
+  <button class="bnav-btn" onclick="switchTab('manage',this)">
+    <span class="icon"><svg width="26" height="26" viewBox="0 0 26 26" fill="none"><rect width="26" height="26" rx="8" fill="#E8E0F5"/>
+      <rect x="7" y="7" width="5" height="5" rx="1.5" fill="#A98FD2"/>
+      <rect x="14" y="7" width="5" height="5" rx="1.5" fill="#C4B5E8"/>
+      <rect x="7" y="14" width="5" height="5" rx="1.5" fill="#C4B5E8"/>
+      <rect x="14" y="14" width="5" height="5" rx="1.5" fill="#A98FD2"/>
+    </svg></span>จัดการรายการ
+  </button>
+  <button class="bnav-btn" onclick="switchTab('info',this)">
+    <span class="icon"><svg width="26" height="26" viewBox="0 0 26 26" fill="none"><rect width="26" height="26" rx="8" fill="#E8E0F5"/>
+      <path d="M13 8v1" stroke="#7B65B0" stroke-width="2" stroke-linecap="round"/>
+      <path d="M13 11v7" stroke="#7B65B0" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="13" cy="13" r="6" stroke="#A98FD2" stroke-width="1.5" fill="none"/>
+    </svg></span>เกี่ยวกับอุปกรณ์
+  </button>
+  <button class="bnav-btn" onclick="switchTab('help',this)">
+    <span class="icon"><svg width="26" height="26" viewBox="0 0 26 26" fill="none"><rect width="26" height="26" rx="8" fill="#E8E0F5"/>
+      <path d="M10.5 10.5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5c0 1.5-2.5 2.5-2.5 3.5" stroke="#7B65B0" stroke-width="1.5" stroke-linecap="round"/>
+      <circle cx="13" cy="17.5" r="1" fill="#A98FD2"/>
+    </svg></span>วิธีใช้งาน
+  </button>
 </nav>
 
 <div class="toast" id="toast"></div>
 <div class="load-overlay" id="load-overlay">
   <div class="load-card">
-    <div class="load-icons-row">
-      <span class="load-icon-pulse" id="li-cross">🏥</span>
-      <span class="load-icon-ambulance">🚑</span>
-      <span class="load-icon-pulse" id="li-heart">❤️</span>
+    <!-- SVG clock ring -->
+    <div class="save-clock-wrap" id="save-clock-wrap">
+      <svg class="save-clock-svg" viewBox="0 0 110 110">
+        <defs>
+          <linearGradient id="clockGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%"   stop-color="#A98FD2"/>
+            <stop offset="50%"  stop-color="#7B65B0"/>
+            <stop offset="100%" stop-color="#C4B5E8"/>
+          </linearGradient>
+        </defs>
+        <!-- track -->
+        <circle class="save-clock-track" cx="55" cy="55" r="48"/>
+        <!-- spinning shimmer -->
+        <circle class="save-clock-spin"  cx="55" cy="55" r="48"/>
+        <!-- fill arc -->
+        <circle class="save-clock-arc"   cx="55" cy="55" r="48" id="save-clock-arc"/>
+      </svg>
+      <div class="save-clock-center">
+        <div class="save-clock-pct" id="save-clock-pct">0</div>
+        <div class="save-clock-of"  id="save-clock-of">/ 0</div>
+      </div>
     </div>
-    <div class="load-text" id="load-text">เตรียมความพร้อม...</div>
-    <div class="load-sub" id="load-sub">
-      กำลังดึงข้อมูลอุปกรณ์จาก <b>Google Sheets</b><br>
-      <span style="color:#C4708A">รถ Emergency พร้อมออกปฏิบัติการ</span>
-    </div>
+
+    <div class="load-text"   id="load-text">📤 กำลังบันทึก...</div>
+    <div class="load-sub"    id="load-sub">กำลังส่งข้อมูลลง <b>Google Sheets</b></div>
+    <div class="load-status" id="load-status">กำลังเตรียมข้อมูล...</div>
+
+    <!-- item scroll list (saving mode) -->
+    <div class="save-item-scroll" id="save-item-scroll" style="display:none"></div>
+
+    <!-- progress bar slot (loading mode) -->
     <div class="load-progress"><div class="load-progress-fill"></div></div>
-    <div class="load-status" id="load-status">กำลังโหลด...</div>
   </div>
 </div>
 
@@ -976,6 +1153,9 @@ let savedCount = parseInt(localStorage.getItem('savedCount') || '0');
 let records = JSON.parse(localStorage.getItem('records') || '[]');
 let selectedIncharge = null;
 let curFilter = 'all';
+
+// อัปเดตสถานะทันทีเมื่อ DOM พร้อม
+document.addEventListener('DOMContentLoaded', () => updateSheetsStatus());
 
 // ─── EQUIPMENT DATA ────────────────────────────────────────
 // imgId = Google Drive File ID → URL: https://lh3.googleusercontent.com/d/{imgId}
@@ -1196,7 +1376,7 @@ function init() {
   document.getElementById('f-shift').value = shift;
   if(document.getElementById('cfg-url')) document.getElementById('cfg-url').value = config.scriptUrl;
   if(document.getElementById('cfg-sheet')) document.getElementById('cfg-sheet').value = config.sheetName;
-  setTimeout(updateSheetsStatus, 100);
+  setTimeout(updateSheetsStatus, 300);
   computeFifo();
   renderCheckGrid();
   renderIncharge();
@@ -1458,9 +1638,10 @@ function makeCard(e) {
   else if(isChecked)     borderStyle = 'border-color:var(--green);';
   else if(isFifo)        borderStyle = 'border-color:#E74C3C;';
 
-  const statusBadge = status
+  const statusBadge = status && status !== 'ปกติ'
     ? `<span class="badge" style="background:${status==='ขาด'?'#FBEAF0':status==='ส่งนึ่ง'?'#FAF1E3':'#F1EBFB'};color:${status==='ขาด'?'#C4708A':status==='ส่งนึ่ง'?'#C9A05E':'#A98FD2'};font-size:10px">
-        ${status==='ขาด'?'❌':status==='ส่งนึ่ง'?'🔄':'⏳'} ${status}</span>` : '';
+        ${status==='ขาด'?'❌':status==='ส่งนึ่ง'?'🔄':'⏳'} ${status}</span>`
+    : `<span class="badge badge-ok" style="font-size:10px">✅ ปกติ</span>`;
 
   return `<div class="eq-card${isChecked?' checked':isFifo?' fifo':''}" data-idx="${idx}" style="${borderStyle}" onclick="toggleChecked(${idx},event)" title="${daysTitle}">
     ${isFifo?'<div style="background:#C4708A;color:#fff;font-size:10px;font-weight:700;text-align:center;padding:3px 0;letter-spacing:.5px">⚠️ ใช้ก่อน</div>':''}
@@ -1482,7 +1663,7 @@ function makeCard(e) {
       </div>
       <button onclick="openEditModal(${idx},event)"
         style="width:100%;padding:4px 0;border-radius:5px;border:1.5px solid var(--gray-300);background:var(--white);
-          font-family:'Sarabun',sans-serif;font-size:11px;font-weight:600;color:var(--gray-600);cursor:pointer;
+          font-family:'IBM Plex Sans Thai',sans-serif;font-size:11px;font-weight:600;color:var(--gray-600);cursor:pointer;
           display:flex;align-items:center;justify-content:center;gap:4px;transition:all .15s">
         ✏️ แก้ไข
       </button>
@@ -1571,7 +1752,7 @@ function renderModal(idx) {
     const active = curStatus === s.val;
     return `<button onclick="setEquipStatus(${idx},'${s.val}')"
       style="flex:1;padding:8px 4px;border-radius:var(--r-sm);border:2px solid ${active?s.bg:s.bg+'44'};
-        cursor:pointer;font-family:'Sarabun',sans-serif;font-size:12px;font-weight:600;
+        cursor:pointer;font-family:'IBM Plex Sans Thai',sans-serif;font-size:12px;font-weight:600;
         background:${active?s.bg:s.lt};color:${active?'#fff':s.bg};transition:all .15s;text-align:center">
       ${s.icon}<br>${s.label}
     </button>`;
@@ -1622,11 +1803,11 @@ function renderModal(idx) {
         <button type="button" onclick="toggleExpYearMode(${idx})" id="modal-exp-yearmode"
           title="สลับการแสดงผล พ.ศ. / ค.ศ."
           style="padding:4px 10px;border:1.5px solid var(--blue-md);border-radius:var(--r-sm);background:var(--blue-lt);color:var(--blue-md);
-            font-size:11px;font-family:'Sarabun',sans-serif;font-weight:700;cursor:pointer;white-space:nowrap">${expYearMode==='be'?'พ.ศ.':'ค.ศ.'}</button>
+            font-size:11px;font-family:'IBM Plex Sans Thai',sans-serif;font-weight:700;cursor:pointer;white-space:nowrap">${expYearMode==='be'?'พ.ศ.':'ค.ศ.'}</button>
         <span id="modal-exp-picker-wrap">${renderExpPickerInput(idx, e.exp)}</span>
         <button onclick="onExpDateChange(${idx},'')" title="ล้างวันหมดอายุ (กรณีของขาด/รอเบิก)"
           style="padding:4px 8px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);background:var(--white);color:var(--gray-600);
-            font-size:12px;font-family:'Sarabun',sans-serif;cursor:pointer;white-space:nowrap">✕ ล้าง</button>
+            font-size:12px;font-family:'IBM Plex Sans Thai',sans-serif;cursor:pointer;white-space:nowrap">✕ ล้าง</button>
       </div>
     </div>
     ${days!==null?`<div class="detail-row"><span class="dl">เหลืออีก</span><span class="dr" id="days-left" style="color:${dayColor};font-family:'IBM Plex Mono',monospace">${days} วัน</span></div>`:''}
@@ -1635,14 +1816,14 @@ function renderModal(idx) {
       <span class="dl">หมายเหตุ</span>
       <input type="text" id="modal-note-${idx}" value="${e.note||''}" placeholder="ใส่หมายเหตุ..."
         onchange="updateNote(${idx},this.value)"
-        style="text-align:right;padding:4px 8px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);font-size:12px;font-family:'Sarabun',sans-serif;background:var(--gray-50);color:var(--gray-900);width:60%">
+        style="text-align:right;padding:4px 8px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);font-size:12px;font-family:'IBM Plex Sans Thai',sans-serif;background:var(--gray-50);color:var(--gray-900);width:60%">
     </div>
     <div style="margin-top:14px;margin-bottom:10px">
       <div style="font-size:11px;font-weight:700;color:var(--gray-600);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">สถานะ</div>
       <div style="display:flex;gap:6px">${statusBtns}</div>
     </div>
     <button onclick="toggleCheckedModal(${idx})"
-      style="width:100%;padding:11px;border-radius:var(--r-sm);border:none;cursor:pointer;font-family:'Sarabun',sans-serif;font-size:14px;font-weight:600;
+      style="width:100%;padding:11px;border-radius:var(--r-sm);border:none;cursor:pointer;font-family:'IBM Plex Sans Thai',sans-serif;font-size:14px;font-weight:600;
         background:${isChecked?'#8FB89A':'#A98FD2'};color:#fff;display:flex;align-items:center;justify-content:center;gap:8px">
       ${isChecked?'✅ ตรวจสอบแล้ว — คลิกเพื่อยกเลิก':'🔲 คลิกเพื่อยืนยันว่าตรวจสอบแล้ว'}
     </button>
@@ -1930,8 +2111,8 @@ function renderManagePage() {
         style="width:40px;height:40px;object-fit:cover;border-radius:var(--r-sm);background:var(--gray-100);flex-shrink:0"
         onerror="this.style.display='none'">
       <div style="flex:1;min-width:0">
-        <div style="font-family:'Sarabun',sans-serif;font-size:13px;font-weight:600;color:var(--gray-900);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${e.name}</div>
-        <div style="font-family:'Sarabun',sans-serif;font-size:11px;color:var(--gray-600)">${e.floor||'-'}</div>
+        <div style="font-family:'IBM Plex Sans Thai',sans-serif;font-size:13px;font-weight:600;color:var(--gray-900);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${e.name}</div>
+        <div style="font-family:'IBM Plex Sans Thai',sans-serif;font-size:11px;color:var(--gray-600)">${e.floor||'-'}</div>
       </div>
       <button onclick="openManageItemModal(${idx})" title="แก้ไข"
         style="width:32px;height:32px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);background:var(--white);font-size:14px;cursor:pointer;flex-shrink:0">✏️</button>
@@ -2040,7 +2221,7 @@ function openManageItemModal(idx) {
           <input type="text" id="mi-name" value="${(e.name||'').replace(/"/g,'&quot;')}" placeholder="เช่น Ambubag(1)"
             autocomplete="off"
             oninput="renderComboList('mi-name')" onfocus="renderComboList('mi-name')" onblur="autofillFromName()"
-            style="width:100%;padding:8px 32px 8px 10px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);font-size:13px;font-family:'Sarabun',sans-serif;background:var(--gray-50)">
+            style="width:100%;padding:8px 32px 8px 10px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);font-size:13px;font-family:'IBM Plex Sans Thai',sans-serif;background:var(--gray-50)">
           <button type="button" onclick="toggleComboList('mi-name')" aria-label="แสดงรายการ"
             style="position:absolute;right:4px;top:0;height:100%;width:28px;border:none;background:none;color:var(--gray-600);font-size:12px;cursor:pointer">▼</button>
           <div class="combo-list" id="mi-name-list"></div>
@@ -2052,7 +2233,7 @@ function openManageItemModal(idx) {
           <input type="text" id="mi-floor" value="${(e.floor||'').replace(/"/g,'&quot;')}" placeholder="เช่น ชั้นที่ 1"
             autocomplete="off"
             oninput="renderComboList('mi-floor')" onfocus="renderComboList('mi-floor')"
-            style="width:100%;padding:8px 32px 8px 10px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);font-size:13px;font-family:'Sarabun',sans-serif;background:var(--gray-50)">
+            style="width:100%;padding:8px 32px 8px 10px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);font-size:13px;font-family:'IBM Plex Sans Thai',sans-serif;background:var(--gray-50)">
           <button type="button" onclick="toggleComboList('mi-floor')" aria-label="แสดงรายการ"
             style="position:absolute;right:4px;top:0;height:100%;width:28px;border:none;background:none;color:var(--gray-600);font-size:12px;cursor:pointer">▼</button>
           <div class="combo-list" id="mi-floor-list"></div>
@@ -2075,7 +2256,7 @@ function openManageItemModal(idx) {
       </div>
       <button onclick="saveManageItem(${isEdit ? idx : 'null'})"
         style="margin-top:6px;width:100%;padding:10px;border-radius:var(--r-sm);border:none;background:var(--blue-md);color:#fff;
-          font-family:'Sarabun',sans-serif;font-size:14px;font-weight:700;cursor:pointer">
+          font-family:'IBM Plex Sans Thai',sans-serif;font-size:14px;font-weight:700;cursor:pointer">
         ${isEdit ? '💾 บันทึกการแก้ไข' : '➕ เพิ่มอุปกรณ์'}
       </button>
     </div>
@@ -2156,9 +2337,18 @@ async function loadEquipList() {
       const resp = await fetch(config.scriptUrl + '?t=' + Date.now());
       const json = await resp.json();
       if(json.equipList && Array.isArray(json.equipList) && json.equipList.length > 0) {
-        equipment = json.equipList.map(item => ({
-          name: item.name, floor: item.floor||'', exp: '', fifo: '', note: '', imgId: item.imgId||''
-        }));
+        equipment = json.equipList.map(item => {
+          // คง note จาก EQUIPMENT_FALLBACK ถ้า Sheets ไม่ได้ส่ง note มาด้วย
+          const fallback = EQUIPMENT_FALLBACK.find(f => f.name === item.name);
+          return {
+            name:   item.name,
+            floor:  item.floor  || '',
+            exp:    item.exp    || '',
+            fifo:   item.fifo   || '',
+            note:   item.note   || fallback?.note || '',
+            imgId:  item.imgId  || fallback?.imgId || '',
+          };
+        });
         // ล้าง equipStatus เดิม (key เป็น index) ทิ้งก่อน เพราะ index อ้างอิงกับลำดับของ array เดิม
         // ถ้าลำดับ/จำนวนรายการเปลี่ยนไป index เดิมอาจไปตรงกับอุปกรณ์ชิ้นอื่นโดยไม่ตั้งใจ
         // (จะถูกเติมกลับให้ถูกต้องตามชื่อใน loadEquipMeta() ด้านล่าง)
@@ -2330,13 +2520,75 @@ async function saveEquipToSheets() {
   const nurse = selectedIncharge || '';
   const ts    = new Date().toLocaleString('th-TH');
 
-  showToast(`📤 กำลังบันทึก ${total} รายการ...`, '#185FA5');
+  // ── เปิด popup + reset UI ──
+  const ov        = document.getElementById('load-overlay');
+  const textEl    = document.getElementById('load-text');
+  const subEl     = document.getElementById('load-sub');
+  const statusEl  = document.getElementById('load-status');
+  const arcEl     = document.getElementById('save-clock-arc');
+  const pctEl     = document.getElementById('save-clock-pct');
+  const ofEl      = document.getElementById('save-clock-of');
+  const scrollEl  = document.getElementById('save-item-scroll');
+  const CIRCUM    = 302; // 2π × 48
 
-  // ส่งทั้งหมดในครั้งเดียว
+  const resetClock = () => {
+    if(arcEl)    { arcEl.style.transition='none'; arcEl.style.strokeDashoffset = CIRCUM; }
+    if(pctEl)    { pctEl.style.fontSize='22px'; pctEl.textContent = '0%'; }
+    if(ofEl)     ofEl.textContent  = `0 / ${total}`;
+    if(scrollEl) { scrollEl.innerHTML=''; scrollEl.style.display='block'; }
+    // ลบปุ่มรับทราบเก่า (ถ้ามี)
+    document.getElementById('save-ack-btn')?.remove();
+    document.getElementById('save-issue-list')?.remove();
+  };
+
+  const setClock = (done) => {
+    const pct = Math.round(done / total * 100);
+    const offset = CIRCUM * (1 - done / total);
+    if(arcEl) { arcEl.style.transition='stroke-dashoffset .3s ease'; arcEl.style.strokeDashoffset = offset; }
+    if(pctEl) { pctEl.style.fontSize='20px'; pctEl.textContent = pct + '%'; }
+    if(ofEl)  ofEl.textContent = `${done} / ${total}`;
+  };
+
+  const addItemRow = (name, floor, status) => {
+    if(!scrollEl) return;
+    const icon = status && status!=='ปกติ'
+      ? (status==='ขาด'?'❌':status==='รอเบิก'?'⏳':'🔄')
+      : '✅';
+    const row = document.createElement('div');
+    row.className = 'save-item-row';
+    row.innerHTML = `<span class="sir-done">${icon}</span>
+      <div style="flex:1;min-width:0">
+        <div class="sir-name">${name}</div>
+        <div class="sir-floor">${floor}</div>
+      </div>
+      ${status&&status!=='ปกติ' ? `<span style="font-size:10px;font-weight:700;color:#C4708A">${status}</span>` : ''}`;
+    scrollEl.appendChild(row);
+    // auto-scroll to bottom
+    scrollEl.scrollTop = scrollEl.scrollHeight;
+  };
+
+  textEl.textContent   = '📤 กำลังบันทึกข้อมูล...';
+  subEl.innerHTML      = `<span style="color:var(--gray-600)">${date} · ${shift} · ${nurse||'—'}</span>`;
+  statusEl.textContent = 'กำลังเตรียมข้อมูล...';
+  resetClock();
+  ov.classList.add('open');
+
+  // ── animate items ทีละชิ้นพร้อมแสดง % realtime ──
+  for(let i = 0; i < equipment.length; i++) {
+    const e = equipment[i];
+    const st = equipStatus[i] || 'ปกติ';
+    const pct = Math.round((i + 1) / total * 100);
+    statusEl.textContent = `[${pct}%] ${e.name}`;
+    addItemRow(e.name, e.floor, st);
+    setClock(i + 1);
+    await new Promise(r => setTimeout(r, 18)); // ~18ms × 54 ≈ 1 วินาที
+  }
+
+  statusEl.textContent = `📡 กำลังส่งข้อมูล ${total} รายการไป Sheets...`;
+
   const payload = {
-    type:      'equipCheckBulk',
-    date, shift, nurse,
-    timestamp: ts,
+    type: 'equipCheckBulk',
+    date, shift, nurse, timestamp: ts,
     items: equipment.map((e, idx) => ({
       name:    e.name,
       floor:   e.floor,
@@ -2348,25 +2600,46 @@ async function saveEquipToSheets() {
 
   try {
     await fetch(config.scriptUrl, {
-      method: 'POST',
-      mode:   'no-cors',
+      method: 'POST', mode: 'no-cors',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
-    showToast(`✅ บันทึก ${total} รายการลง Sheets เรียบร้อย`, '#8FB89A');
 
-    // เพิ่มลงประวัติด้วย
-    records.unshift({ date, shift, nurse, incharge: selectedIncharge||'-',
-      timestamp: ts, type: 'equipCheck', checkedCount: checkedItems.size });
-    localStorage.setItem('records', JSON.stringify(records));
-    renderHistory();
-    // เด้งไปหน้าตรวจเช็คและเติมชื่อหัวหน้าเวรอัตโนมัติ
+    // ── สรุปผล ──
+    const issueItems = equipment.map((e,idx) => ({
+      name: e.name, floor: e.floor, status: equipStatus[idx]||''
+    })).filter(e => e.status && e.status !== 'ปกติ');
+
+    textEl.textContent = '✅ บันทึกเรียบร้อย';
+
+    if(issueItems.length) {
+      subEl.innerHTML = `<span style="color:#C4708A;font-weight:700">⚠️ พบอุปกรณ์ต้องติดตาม ${issueItems.length} รายการ</span>`;
+      statusEl.innerHTML = issueItems.map(e => {
+        const ic = e.status==='ขาด'?'❌':e.status==='รอเบิก'?'⏳':'🔄';
+        return `<b>${ic} ${e.name}</b> — ${e.status}`;
+      }).join('<br>');
+
+      // ปุ่มรับทราบ
+      const card = ov.querySelector('.load-card');
+      const ackBtn = document.createElement('button');
+      ackBtn.id = 'save-ack-btn';
+      ackBtn.textContent = '✅ รับทราบและดำเนินการต่อ';
+      ackBtn.style.cssText = 'margin-top:14px;width:100%;padding:11px;border-radius:var(--r-sm);border:none;cursor:pointer;font-family:"IBM Plex Sans Thai",sans-serif;font-size:14px;font-weight:700;background:#A98FD2;color:#fff';
+      ackBtn.onclick = () => { ov.classList.remove('open'); ackBtn.remove(); };
+      card.appendChild(ackBtn);
+    } else {
+      subEl.innerHTML = `<span style="color:var(--green);font-weight:600">อุปกรณ์ทุก ${total} ชิ้นพร้อมใช้งาน 🎉</span>`;
+      statusEl.textContent = `บันทึกสำเร็จ 100% (${total}/${total} รายการ)`;
+      await new Promise(r => setTimeout(r, 1400));
+      ov.classList.remove('open');
+    }
+
     if(selectedIncharge) {
       const sel = document.getElementById('incharge-select');
       if(sel) sel.value = selectedIncharge;
     }
-    // flow continues in saveAllAndCheck
   } catch(err) {
+    ov.classList.remove('open');
     showToast('❌ บันทึกไม่สำเร็จ กรุณาลองใหม่', '#C4708A');
   }
 }
@@ -2997,71 +3270,71 @@ function openInfoEditModal(idx) {
         <div style="flex:1">
           <label style="font-size:12px;font-weight:600;color:var(--gray-600);display:block;margin-bottom:4px">ชื่ออุปกรณ์ (name)</label>
           <input type="text" id="ie-name" value="${esc(item.name)}" placeholder="เช่น Laryngoscope"
-            style="width:100%;padding:8px 10px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);font-size:13px;font-family:'Sarabun',sans-serif;background:var(--gray-50)">
+            style="width:100%;padding:8px 10px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);font-size:13px;font-family:'IBM Plex Sans Thai',sans-serif;background:var(--gray-50)">
         </div>
       </div>
       <div>
         <label style="font-size:12px;font-weight:600;color:var(--gray-600);display:block;margin-bottom:4px">คำค้นหา (keywords, คั่นด้วยจุลภาค)</label>
         <input type="text" id="ie-keywords" value="${esc((item.keywords||[]).join(', '))}" placeholder="laryngoscope, laryn, ลาริงโกสโคป"
-          style="width:100%;padding:8px 10px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);font-size:12px;font-family:'Sarabun',sans-serif;background:var(--gray-50)">
+          style="width:100%;padding:8px 10px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);font-size:12px;font-family:'IBM Plex Sans Thai',sans-serif;background:var(--gray-50)">
       </div>
 
       <div style="border-top:1px solid var(--gray-200);padding-top:10px">
         <label style="font-size:12px;font-weight:700;color:var(--blue-md);display:block;margin-bottom:4px">หัวข้อ "คืออะไร"</label>
         <input type="text" id="ie-what" value="${esc(item.what)}" placeholder="เช่น Laryngoscope คืออะไร?"
-          style="width:100%;padding:8px 10px;margin-bottom:6px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);font-size:13px;font-family:'Sarabun',sans-serif;background:var(--gray-50)">
+          style="width:100%;padding:8px 10px;margin-bottom:6px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);font-size:13px;font-family:'IBM Plex Sans Thai',sans-serif;background:var(--gray-50)">
         <textarea id="ie-whatDetail" rows="5" placeholder="พิมพ์รายละเอียดเป็นข้อความปกติ ขึ้นบรรทัดใหม่สำหรับแต่ละย่อหน้า&#10;ขึ้นต้นบรรทัดด้วย - เพื่อทำเป็นข้อย่อย เช่น&#10;- ข้อที่ 1&#10;- ข้อที่ 2"
-          style="width:100%;padding:8px 10px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);font-size:13px;font-family:'Sarabun',sans-serif;background:var(--gray-50);resize:vertical">${htmlToPlainText(item.whatDetail)}</textarea>
+          style="width:100%;padding:8px 10px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);font-size:13px;font-family:'IBM Plex Sans Thai',sans-serif;background:var(--gray-50);resize:vertical">${htmlToPlainText(item.whatDetail)}</textarea>
         <div style="font-size:11px;color:var(--gray-600);margin-top:4px">พิมพ์ข้อความปกติได้เลย ไม่ต้องใส่โค้ด — ขึ้นบรรทัดใหม่ด้วย - หน้าข้อความเพื่อทำเป็น bullet</div>
       </div>
 
       <div style="border-top:1px solid var(--gray-200);padding-top:10px">
         <label style="font-size:12px;font-weight:700;color:var(--blue-md);display:block;margin-bottom:4px">หัวข้อ "ข้อบ่งชี้การใช้งาน"</label>
         <input type="text" id="ie-indication" value="${esc(item.indication)}" placeholder="เช่น ข้อบ่งชี้การใช้งาน"
-          style="width:100%;padding:8px 10px;margin-bottom:6px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);font-size:13px;font-family:'Sarabun',sans-serif;background:var(--gray-50)">
+          style="width:100%;padding:8px 10px;margin-bottom:6px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);font-size:13px;font-family:'IBM Plex Sans Thai',sans-serif;background:var(--gray-50)">
         <textarea id="ie-indicationDetail" rows="5" placeholder="พิมพ์รายละเอียดเป็นข้อความปกติ ขึ้นต้นบรรทัดด้วย - เพื่อทำเป็นข้อย่อย"
-          style="width:100%;padding:8px 10px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);font-size:13px;font-family:'Sarabun',sans-serif;background:var(--gray-50);resize:vertical">${htmlToPlainText(item.indicationDetail)}</textarea>
+          style="width:100%;padding:8px 10px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);font-size:13px;font-family:'IBM Plex Sans Thai',sans-serif;background:var(--gray-50);resize:vertical">${htmlToPlainText(item.indicationDetail)}</textarea>
       </div>
 
       <div style="border-top:1px solid var(--gray-200);padding-top:10px">
         <label style="font-size:12px;font-weight:700;color:var(--blue-md);display:block;margin-bottom:4px">หัวข้อ "วิธีการตรวจสอบ"</label>
         <input type="text" id="ie-howToCheck" value="${esc(item.howToCheck)}" placeholder="เช่น วิธีการตรวจสอบ (Pre-use Check)"
-          style="width:100%;padding:8px 10px;margin-bottom:6px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);font-size:13px;font-family:'Sarabun',sans-serif;background:var(--gray-50)">
+          style="width:100%;padding:8px 10px;margin-bottom:6px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);font-size:13px;font-family:'IBM Plex Sans Thai',sans-serif;background:var(--gray-50)">
         <textarea id="ie-howToCheckDetail" rows="5" placeholder="พิมพ์รายละเอียดเป็นข้อความปกติ ขึ้นต้นบรรทัดด้วย - เพื่อทำเป็นข้อย่อย"
-          style="width:100%;padding:8px 10px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);font-size:13px;font-family:'Sarabun',sans-serif;background:var(--gray-50);resize:vertical">${htmlToPlainText(item.howToCheckDetail)}</textarea>
+          style="width:100%;padding:8px 10px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);font-size:13px;font-family:'IBM Plex Sans Thai',sans-serif;background:var(--gray-50);resize:vertical">${htmlToPlainText(item.howToCheckDetail)}</textarea>
       </div>
 
       <div style="border-top:1px solid var(--gray-200);padding-top:10px">
         <label style="font-size:12px;font-weight:700;color:var(--blue-md);display:block;margin-bottom:4px">หัวข้อ "วิธีการใช้งาน"</label>
         <input type="text" id="ie-howToUse" value="${esc(item.howToUse)}" placeholder="เช่น ขั้นตอนการใช้งาน (Technique)"
-          style="width:100%;padding:8px 10px;margin-bottom:6px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);font-size:13px;font-family:'Sarabun',sans-serif;background:var(--gray-50)">
+          style="width:100%;padding:8px 10px;margin-bottom:6px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);font-size:13px;font-family:'IBM Plex Sans Thai',sans-serif;background:var(--gray-50)">
         <textarea id="ie-howToUseDetail" rows="5" placeholder="พิมพ์รายละเอียดเป็นข้อความปกติ ขึ้นต้นบรรทัดด้วย - เพื่อทำเป็นข้อย่อย"
-          style="width:100%;padding:8px 10px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);font-size:13px;font-family:'Sarabun',sans-serif;background:var(--gray-50);resize:vertical">${htmlToPlainText(item.howToUseDetail)}</textarea>
+          style="width:100%;padding:8px 10px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);font-size:13px;font-family:'IBM Plex Sans Thai',sans-serif;background:var(--gray-50);resize:vertical">${htmlToPlainText(item.howToUseDetail)}</textarea>
       </div>
 
       <div style="border-top:1px solid var(--gray-200);padding-top:10px">
         <label style="font-size:12px;font-weight:700;color:var(--blue-md);display:block;margin-bottom:4px">หัวข้อ "การดูแลรักษา"</label>
         <input type="text" id="ie-care" value="${esc(item.care)}" placeholder="เช่น 🧰 การดูแลรักษา"
-          style="width:100%;padding:8px 10px;margin-bottom:6px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);font-size:13px;font-family:'Sarabun',sans-serif;background:var(--gray-50)">
+          style="width:100%;padding:8px 10px;margin-bottom:6px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);font-size:13px;font-family:'IBM Plex Sans Thai',sans-serif;background:var(--gray-50)">
         <textarea id="ie-careDetail" rows="5" placeholder="พิมพ์วิธีดูแลรักษา/ทำความสะอาด/จัดเก็บ เป็นข้อความปกติ ขึ้นต้นบรรทัดด้วย - เพื่อทำเป็นข้อย่อย"
-          style="width:100%;padding:8px 10px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);font-size:13px;font-family:'Sarabun',sans-serif;background:var(--gray-50);resize:vertical">${htmlToPlainText(item.careDetail)}</textarea>
+          style="width:100%;padding:8px 10px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);font-size:13px;font-family:'IBM Plex Sans Thai',sans-serif;background:var(--gray-50);resize:vertical">${htmlToPlainText(item.careDetail)}</textarea>
       </div>
 
       <div style="border-top:1px solid var(--gray-200);padding-top:10px">
         <label style="font-size:12px;font-weight:700;color:var(--amber);display:block;margin-bottom:4px">💡 เคล็ดลับ (1 บรรทัดต่อ 1 ข้อ)</label>
         <textarea id="ie-tips" rows="3" placeholder="เคล็ดลับข้อที่ 1&#10;เคล็ดลับข้อที่ 2"
-          style="width:100%;padding:8px 10px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);font-size:12px;font-family:'Sarabun',sans-serif;background:var(--gray-50);resize:vertical">${(item.tips||[]).join('\n')}</textarea>
+          style="width:100%;padding:8px 10px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);font-size:12px;font-family:'IBM Plex Sans Thai',sans-serif;background:var(--gray-50);resize:vertical">${(item.tips||[]).join('\n')}</textarea>
       </div>
 
       <div>
         <label style="font-size:12px;font-weight:600;color:var(--gray-600);display:block;margin-bottom:4px">🔗 อุปกรณ์ที่เกี่ยวข้อง (คั่นด้วยจุลภาค)</label>
         <input type="text" id="ie-related" value="${esc((item.related||[]).join(', '))}" placeholder="ET Tube, Guide Wire"
-          style="width:100%;padding:8px 10px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);font-size:12px;font-family:'Sarabun',sans-serif;background:var(--gray-50)">
+          style="width:100%;padding:8px 10px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);font-size:12px;font-family:'IBM Plex Sans Thai',sans-serif;background:var(--gray-50)">
       </div>
 
       <button onclick="saveInfoEditModal(${isEdit ? idx : 'null'})"
         style="margin-top:6px;width:100%;padding:10px;border-radius:var(--r-sm);border:none;background:var(--blue-md);color:#fff;
-          font-family:'Sarabun',sans-serif;font-size:14px;font-weight:700;cursor:pointer">
+          font-family:'IBM Plex Sans Thai',sans-serif;font-size:14px;font-weight:700;cursor:pointer">
         ${isEdit ? '💾 บันทึกการแก้ไข' : '➕ เพิ่มข้อมูลอุปกรณ์'}
       </button>
     </div>
@@ -3290,12 +3563,38 @@ async function renderHistory() {
       const resp = await fetch(config.scriptUrl + '?t=' + Date.now());
       const json = await resp.json();
       if(json.checkRows) {
-        // ป้องกันบัค: ถ้า Sheets ยังเขียนข้อมูลที่เพิ่งบันทึกไม่เสร็จ (ความหน่วงของ Apps Script)
-        // ค่าที่ได้จาก GET อาจยังไม่มีรายการล่าสุด ทำให้รายการที่เพิ่งบันทึกหายไปจากหน้าจอ
-        // จึงรวม (merge) รายการในเครื่องที่ยังใหม่ (timestamp ไม่ซ้ำกับของ Sheets) เข้าไปด้วยเสมอ
-        const fetchedTimestamps = new Set(json.checkRows.map(r => r.timestamp));
-        const localOnly = records.filter(r => r.timestamp && !fetchedTimestamps.has(r.timestamp));
-        records = [...localOnly, ...json.checkRows];
+        // normalize: แปลง field ภาษาไทย (จาก Sheets header) → field ภาษาอังกฤษ
+        const normalize = row => ({
+          date:        row.date        || row['วันที่']           || '',
+          shift:       row.shift       || row['เวร']               || '',
+          nurse:       row.nurse       || row['ผู้ตรวจสอบ']       || row['หัวหน้าเวร']    || '',
+          incharge:    row.incharge    || row['ผู้ตรวจสอบ']       || row['หัวหน้าเวร']    || '',
+          ward_head:   row.ward_head   || row['หัวหน้าหอ']        || row['หัวหน้าพยาบาล'] || '',
+          lary1:       row.lary1       || row['Laryngoscope(1)']   || row['ลาริงโกไสโค้1'] || '',
+          lary1_light: row.lary1_light || row['ไฟ Lary1']          || '',
+          lary2:       row.lary2       || row['Laryngoscope(2)']   || row['ลาริงโกไสโค้2'] || '',
+          lary2_light: row.lary2_light || row['ไฟ Lary2']          || '',
+          box1:        row.box1        || row['Emergency box(1)']  || row['Emergency box'] || '',
+          box1_med:    row.box1_med    || row['ยา box1']           || '',
+          box2:        row.box2        || row['Emergency box(2)']  || '',
+          box2_med:    row.box2_med    || row['ยา box2']           || '',
+          defib:       row.defib       || row['Defibrillator']     || '',
+          battery:     row.battery     || row['Battery']           || '',
+          reddot:      row.reddot      || row['Red dot']           || '',
+          note:        row.note        || row['หมายเหตุ']          || '',
+          timestamp:   row.timestamp   || row['เวลาบันทึก']       || '',
+          _row:        row._row,
+        });
+        const normalized = json.checkRows.map(normalize);
+        // merge: ใช้ date|shift|nurse เป็น key (timestamp format ต่างกันระหว่าง local และ Sheets)
+        const fetchedKeys = new Set(normalized.map(r =>
+          (r.date||'').slice(0,10) + '|' + (r.shift||'') + '|' + (r.nurse||'')
+        ));
+        const localOnly = records.filter(r => {
+          const k = (r.date||'').slice(0,10) + '|' + (r.shift||'') + '|' + (r.nurse||r.incharge||'');
+          return r.timestamp && !fetchedKeys.has(k);
+        });
+        records = [...localOnly, ...normalized];
         localStorage.setItem('records', JSON.stringify(records));
       }
       if(json.equipRows) { equipHistory = json.equipRows; }
@@ -3380,27 +3679,34 @@ function openEquipHistDetail(key) {
       ${itemsHtml}
     </div>
     <div style="font-size:10px;color:var(--gray-400);text-align:right;margin-top:8px;font-family:'IBM Plex Mono',monospace">${s.ts||''}</div>
-    <button onclick="closeEditHistModal()" style="width:100%;padding:11px;margin-top:14px;border-radius:var(--r-sm);border:1.5px solid var(--gray-300);cursor:pointer;font-family:'Sarabun',sans-serif;font-size:14px;font-weight:600;background:var(--white);color:var(--gray-600)">ปิด</button>
+    <button onclick="closeEditHistModal()" style="width:100%;padding:11px;margin-top:14px;border-radius:var(--r-sm);border:1.5px solid var(--gray-300);cursor:pointer;font-family:'IBM Plex Sans Thai',sans-serif;font-size:14px;font-weight:600;background:var(--white);color:var(--gray-600)">ปิด</button>
   `;
   document.getElementById('edit-hist-modal').classList.add('open');
 }
-function renderCheckHistory() {
-  const statEl = document.getElementById('stat-row');
-  const list   = document.getElementById('hist-list');
-  const total  = records.length;
-  const ok     = records.filter(r => r.lary1==='พร้อมใช้' && r.box1==='พร้อมใช้').length;
-  if(statEl) statEl.innerHTML = `
-    <div class="stat-box"><div class="stat-num">${total}</div><div class="stat-lbl">ทั้งหมด</div></div>
-    <div class="stat-box"><div class="stat-num" style="color:var(--green)">${ok}</div><div class="stat-lbl">ผ่านปกติ</div></div>
-    <div class="stat-box"><div class="stat-num">${records.filter(r=>r.shift==='เวรดึก').length}</div><div class="stat-lbl">เวรดึก</div></div>
-    <div class="stat-box"><div class="stat-num">${records.filter(r=>r.shift==='เวรเช้า').length}</div><div class="stat-lbl">เวรเช้า</div></div>
-  `;
-  if(!records.length) {
-    list.innerHTML = '<div class="empty-state"><div class="es-icon">📋</div><p>ยังไม่มีประวัติ</p></div>';
-    return;
-  }
-  // ── เช็คว่าในชุดตรวจอุปกรณ์ (equipHistory) วันที่/เวรเดียวกัน
-  //    มีการตรวจ Laryngoscope(1)/(2) แล้วหรือไม่ → ใช้ override สถานะ Lary1/Lary2
+// ── HISTORY FILTER STATE ────────────────────────────────────
+let histFilter = { shift:'all', status:'all', alert:'none' };
+
+function setHistChip(el, type, val) {
+  // deactivate siblings in same group
+  const groups = { shift:['all','เวรดึก','เวรเช้า','เวรบ่าย'], status:['all','ok','warn'], alert:['expired','missing','none'] };
+  document.querySelectorAll('.hf-chip').forEach(c => {
+    if(groups[type] && Array.from(c.parentNode.children).includes(c)) {
+      // only deactivate chips in same row context by checking onclick attribute
+      const onclick = c.getAttribute('onclick') || '';
+      if(onclick.includes(`'${type}'`)) c.classList.remove('active');
+    }
+  });
+  el.classList.add('active');
+  histFilter[type] = val;
+  applyHistFilter();
+}
+
+function applyHistFilter() {
+  const search   = (document.getElementById('hist-search')?.value || '').toLowerCase();
+  const dateFrom = document.getElementById('hist-date-from')?.value || '';
+  const dateTo   = document.getElementById('hist-date-to')?.value   || '';
+
+  // build laryStatus for override
   const laryStatusBySession = {};
   equipHistory.forEach(r => {
     const date  = r['วันที่'] || '';
@@ -3413,28 +3719,331 @@ function renderCheckHistory() {
     if(name === 'Laryngoscope(2)') laryStatusBySession[key].l2 = done;
   });
 
-  list.innerHTML = records.map((r,i) => {
+  // today for expiry check
+  const today = new Date(); today.setHours(0,0,0,0);
+  const in30  = new Date(today); in30.setDate(in30.getDate()+30);
+
+  const filtered = records.filter(r => {
+    const dateVal = (r.date||'').slice(0,10);
+    // date range
+    if(dateFrom && dateVal < dateFrom) return false;
+    if(dateTo   && dateVal > dateTo)   return false;
+    // shift
+    if(histFilter.shift !== 'all' && r.shift !== histFilter.shift) return false;
+    // search text
+    if(search) {
+      const hay = [r.date,r.shift,r.nurse,r.incharge,r.note].join(' ').toLowerCase();
+      if(!hay.includes(search)) return false;
+    }
+    // status / alert
+    const laryKey = dateVal + '|' + (r.shift||'');
+    const ls = laryStatusBySession[laryKey];
+    let l1 = r.lary1||''; let l2 = r.lary2||'';
+    if(ls) { if(ls.l1===true) l1='พร้อมใช้'; if(ls.l2===true) l2='พร้อมใช้'; }
+    const allOk = l1==='พร้อมใช้' && l2==='พร้อมใช้' &&
+      ['box1','box2','defib'].every(k => r[k]==='พร้อมใช้');
+
+    if(histFilter.status==='ok'   && !allOk) return false;
+    if(histFilter.status==='warn' && allOk)  return false;
+
+    if(histFilter.alert==='missing') {
+      // มีอุปกรณ์ไม่พร้อมหรือสถานะ ขาด/ส่งนึ่ง/รอเบิก
+      const sess = equipHistSessions[laryKey];
+      const hasIssue = !allOk || (sess && sess.items.some(it => ['ขาด','ส่งนึ่ง','รอเบิก'].includes(it['สถานะ']||'')));
+      if(!hasIssue) return false;
+    }
+    if(histFilter.alert==='expired') {
+      // มีอุปกรณ์ในชุดที่ใกล้/หมดอายุ (ภายใน 30 วัน)
+      const sess = equipHistSessions[laryKey];
+      const hasExpiry = sess && sess.items.some(it => {
+        const exp = it['วันหมดอายุ']||it['exp']||'';
+        if(!exp || exp==='-') return false;
+        const d = new Date(exp); d.setHours(0,0,0,0);
+        return d <= in30;
+      });
+      if(!hasExpiry) return false;
+    }
+    return true;
+  });
+
+  const countEl = document.getElementById('hist-result-count');
+  if(countEl) countEl.textContent = `แสดง ${filtered.length} / ${records.length} รายการ`;
+  renderHistCards(filtered, laryStatusBySession);
+}
+
+function renderCheckHistory() {
+  renderCurrentStatus();   // สถานะปัจจุบัน — ขึ้นก่อน
+  renderHistDashboard();   // dashboard สรุป
+  applyHistFilter();       // รายการประวัติ
+}
+
+function renderHistDashboard() {
+  const dashEl = document.getElementById('hist-dashboard');
+  if(!dashEl) return;
+
+  const total = records.length;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const in30  = new Date(today); in30.setDate(in30.getDate()+30);
+
+  // build laryStatus
+  const laryStatusBySession = {};
+  equipHistory.forEach(r => {
+    const date=r['วันที่']||'', shift=r['เวร']||'', name=r['ชื่ออุปกรณ์']||'';
+    const done=String(r['ผลตรวจ']||'').includes('ตรวจแล้ว'), key=date+'|'+shift;
+    if(!laryStatusBySession[key]) laryStatusBySession[key]={};
+    if(name==='Laryngoscope(1)') laryStatusBySession[key].l1=done;
+    if(name==='Laryngoscope(2)') laryStatusBySession[key].l2=done;
+  });
+
+  let okCount=0, warnCount=0, expiredCount=0, missingCount=0;
+  const shiftCount={'เวรดึก':0,'เวรเช้า':0,'เวรบ่าย':0};
+
+  records.forEach(r => {
+    if(shiftCount[r.shift]!==undefined) shiftCount[r.shift]++;
+    const laryKey=(r.date||'').slice(0,10)+'|'+(r.shift||'');
+    const ls=laryStatusBySession[laryKey];
+    let l1=r.lary1||'', l2=r.lary2||'';
+    if(ls){if(ls.l1===true)l1='พร้อมใช้';if(ls.l2===true)l2='พร้อมใช้';}
+    const allOk=l1==='พร้อมใช้'&&l2==='พร้อมใช้'&&['box1','box2','defib'].every(k=>r[k]==='พร้อมใช้');
+    if(allOk) okCount++; else warnCount++;
+
+    const sess=equipHistSessions[laryKey];
+    if(sess){
+      if(sess.items.some(it=>['ขาด','ส่งนึ่ง','รอเบิก'].includes(it['สถานะ']||''))) missingCount++;
+      if(sess.items.some(it=>{
+        const exp=it['วันหมดอายุ']||it['exp']||'';
+        if(!exp||exp==='-') return false;
+        const d=new Date(exp);d.setHours(0,0,0,0); return d<=in30;
+      })) expiredCount++;
+    }
+  });
+
+  // last check date
+  const lastDate = records.length ? (records[0].date||'').slice(0,10) : '—';
+  const lastShift = records.length ? (records[0].shift||'') : '';
+
+  dashEl.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:8px">
+      <!-- total -->
+      <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:var(--r);padding:14px 12px;box-shadow:var(--shadow-sm);display:flex;align-items:center;gap:10px">
+        <div style="width:40px;height:40px;border-radius:10px;background:var(--blue-lt);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">📋</div>
+        <div>
+          <div style="font-size:22px;font-weight:800;color:var(--gray-900);line-height:1">${total}</div>
+          <div style="font-size:11px;color:var(--gray-600);margin-top:2px">รายการทั้งหมด</div>
+        </div>
+      </div>
+      <!-- last check -->
+      <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:var(--r);padding:14px 12px;box-shadow:var(--shadow-sm);display:flex;align-items:center;gap:10px">
+        <div style="width:40px;height:40px;border-radius:10px;background:var(--blue-lt);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🕐</div>
+        <div style="min-width:0">
+          <div style="font-size:14px;font-weight:800;color:var(--gray-900);line-height:1.2">${lastDate}</div>
+          <div style="font-size:11px;color:var(--gray-600);margin-top:2px">${lastShift} · ตรวจล่าสุด</div>
+        </div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:8px">
+      <!-- ok -->
+      <div onclick="setHistChipByVal('status','ok')" style="background:var(--green-lt);border:1.5px solid var(--green);border-radius:var(--r);padding:12px;box-shadow:var(--shadow-sm);cursor:pointer;display:flex;align-items:center;gap:10px;transition:opacity .15s" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+        <div style="width:36px;height:36px;border-radius:9px;background:#d4efdc;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">✅</div>
+        <div>
+          <div style="font-size:22px;font-weight:800;color:var(--green);line-height:1">${okCount}</div>
+          <div style="font-size:11px;color:var(--green);margin-top:2px;font-weight:600">ผ่านปกติ</div>
+        </div>
+      </div>
+      <!-- warn -->
+      <div onclick="setHistChipByVal('status','warn')" style="background:var(--amber-lt);border:1.5px solid var(--amber);border-radius:var(--r);padding:12px;box-shadow:var(--shadow-sm);cursor:pointer;display:flex;align-items:center;gap:10px;transition:opacity .15s" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+        <div style="width:36px;height:36px;border-radius:9px;background:#fde9c0;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">⚠️</div>
+        <div>
+          <div style="font-size:22px;font-weight:800;color:var(--amber);line-height:1">${warnCount}</div>
+          <div style="font-size:11px;color:var(--amber);margin-top:2px;font-weight:600">ต้องติดตาม</div>
+        </div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:8px">
+      <!-- expiring -->
+      <div onclick="setHistChipByVal('alert','expired')" style="background:var(--red-lt);border:1.5px solid var(--red);border-radius:var(--r);padding:12px;box-shadow:var(--shadow-sm);cursor:pointer;display:flex;align-items:center;gap:10px;transition:opacity .15s" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+        <div style="width:36px;height:36px;border-radius:9px;background:#f5d0db;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">⏰</div>
+        <div>
+          <div style="font-size:22px;font-weight:800;color:var(--red);line-height:1">${expiredCount}</div>
+          <div style="font-size:11px;color:var(--red);margin-top:2px;font-weight:600">ใกล้/หมดอายุ</div>
+        </div>
+      </div>
+      <!-- missing -->
+      <div onclick="setHistChipByVal('alert','missing')" style="background:#F8EDFF;border:1.5px solid #9B86C4;border-radius:var(--r);padding:12px;box-shadow:var(--shadow-sm);cursor:pointer;display:flex;align-items:center;gap:10px;transition:opacity .15s" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+        <div style="width:36px;height:36px;border-radius:9px;background:#e8d9f8;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">❌</div>
+        <div>
+          <div style="font-size:22px;font-weight:800;color:#7B65B0;line-height:1">${missingCount}</div>
+          <div style="font-size:11px;color:#7B65B0;margin-top:2px;font-weight:600">ขาด/ไม่พร้อม</div>
+        </div>
+      </div>
+    </div>
+    <!-- shift breakdown -->
+    <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:var(--r);padding:12px;box-shadow:var(--shadow-sm)">
+      <div style="font-size:11px;font-weight:700;color:var(--gray-600);margin-bottom:8px">จำนวนตรวจแยกตามเวร</div>
+      <div style="display:flex;gap:6px">
+        <div onclick="setHistChipByVal('shift','เวรดึก')" style="flex:1;text-align:center;padding:8px 4px;border-radius:8px;background:var(--blue-lt);cursor:pointer;transition:opacity .15s" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">
+          <div style="font-size:18px;font-weight:800;color:var(--blue-md)">${shiftCount['เวรดึก']}</div>
+          <div style="font-size:10px;color:var(--blue-md);font-weight:600">🌙 ดึก</div>
+        </div>
+        <div onclick="setHistChipByVal('shift','เวรเช้า')" style="flex:1;text-align:center;padding:8px 4px;border-radius:8px;background:var(--amber-lt);cursor:pointer;transition:opacity .15s" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">
+          <div style="font-size:18px;font-weight:800;color:var(--amber)">${shiftCount['เวรเช้า']}</div>
+          <div style="font-size:10px;color:var(--amber);font-weight:600">🌅 เช้า</div>
+        </div>
+        <div onclick="setHistChipByVal('shift','เวรบ่าย')" style="flex:1;text-align:center;padding:8px 4px;border-radius:8px;background:var(--green-lt);cursor:pointer;transition:opacity .15s" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">
+          <div style="font-size:18px;font-weight:800;color:var(--green)">${shiftCount['เวรบ่าย']}</div>
+          <div style="font-size:10px;color:var(--green);font-weight:600">🌤 บ่าย</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ── render สถานะปัจจุบันลง div แยก (ขึ้นก่อน dashboard) ────
+function renderCurrentStatus() {
+  const el = document.getElementById('hist-current-status');
+  if(!el) return;
+  el.innerHTML = renderCurrentStatusPanel();
+}
+
+// ── สถานะปัจจุบัน: ดึงจาก session ล่าสุดใน equipHistSessions ────
+function renderCurrentStatusPanel() {
+  // หา session ล่าสุด (เรียงตาม date|shift)
+  const keys = Object.keys(equipHistSessions);
+  if(!keys.length) return '';
+
+  // เรียง key ตามวันที่+timestamp ของ session
+  keys.sort((a,b) => {
+    const ta = equipHistSessions[a].ts || '';
+    const tb = equipHistSessions[b].ts || '';
+    return tb.localeCompare(ta);
+  });
+  const latestKey = keys[0];
+  const sess = equipHistSessions[latestKey];
+  if(!sess || !sess.items.length) return '';
+
+  const statusMeta = {
+    'ขาด':     { icon:'❌', bg:'#FBEAF0', color:'#C4708A', label:'ของขาด' },
+    'ส่งนึ่ง': { icon:'🔄', bg:'#FAF1E3', color:'#C9A05E', label:'ส่งนึ่ง' },
+    'รอเบิก':  { icon:'⏳', bg:'#F1EBFB', color:'#A98FD2', label:'รอเบิก' },
+  };
+  const today = new Date(); today.setHours(0,0,0,0);
+  const in30  = new Date(today); in30.setDate(in30.getDate()+30);
+
+  // รายการที่มีปัญหา: ขาด/รอเบิก/ส่งนึ่ง หรือ ใกล้/หมดอายุ
+  const issueItems = sess.items.filter(it => {
+    const st  = it['สถานะ'] || '';
+    const exp = it['วันหมดอายุ'] || it['exp'] || '';
+    if(statusMeta[st]) return true;
+    if(exp && exp !== '-') {
+      const d = new Date(exp); d.setHours(0,0,0,0);
+      if(d <= in30) return true;
+    }
+    return false;
+  });
+
+  const noIssueHtml = `
+    <div style="display:flex;align-items:center;gap:10px;padding:12px 4px">
+      <div style="width:36px;height:36px;border-radius:9px;background:var(--green-lt);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">✅</div>
+      <div style="font-size:13px;font-weight:600;color:var(--green)">อุปกรณ์ทุกชิ้นพร้อมใช้งาน</div>
+    </div>`;
+
+  const itemsHtml = issueItems.length ? issueItems.map(it => {
+    const name  = it['ชื่ออุปกรณ์'] || '';
+    const floor = it['ตำแหน่ง']     || '';
+    const st    = it['สถานะ']        || '';
+    const exp   = it['วันหมดอายุ']  || it['exp'] || '';
+    const sm    = statusMeta[st];
+    const em    = emoji(name);
+
+    // expiry badge
+    let expBadge = '';
+    if(exp && exp !== '-') {
+      const d = new Date(exp); d.setHours(0,0,0,0);
+      if(d < today) {
+        expBadge = `<span style="font-size:10px;padding:2px 7px;border-radius:10px;background:#FBEAF0;color:#C4708A;font-weight:700">❌ หมดอายุ ${exp}</span>`;
+      } else if(d <= in30) {
+        const days = Math.ceil((d-today)/(1000*60*60*24));
+        expBadge = `<span style="font-size:10px;padding:2px 7px;border-radius:10px;background:var(--amber-lt);color:var(--amber);font-weight:700">⏰ หมดใน ${days} วัน (${exp})</span>`;
+      }
+    }
+
+    return `<div style="display:flex;align-items:center;gap:10px;padding:9px 4px;border-bottom:1px solid var(--gray-100)">
+      <div style="width:34px;height:34px;border-radius:8px;background:${sm?'#FBEAF0':'var(--amber-lt)'};
+        display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">${em}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:700;color:var(--gray-900)">${name}</div>
+        <div style="font-size:11px;color:var(--gray-500);margin-top:1px">${floor}</div>
+        ${expBadge ? `<div style="margin-top:4px">${expBadge}</div>` : ''}
+      </div>
+      ${sm ? `<span style="font-size:11px;padding:3px 9px;border-radius:12px;background:${sm.bg};color:${sm.color};font-weight:700;white-space:nowrap;flex-shrink:0">${sm.icon} ${sm.label}</span>` : ''}
+    </div>`;
+  }).join('') : noIssueHtml;
+
+  return `
+    <div style="background:var(--white);border:1.5px solid ${issueItems.length?'#C4708A':'var(--green)'};border-radius:var(--r);padding:12px;box-shadow:var(--shadow-sm);margin-top:8px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--gray-900)">🏥 สถานะอุปกรณ์ปัจจุบัน</div>
+          <div style="font-size:11px;color:var(--gray-500);margin-top:2px">อ้างอิง: ${sess.date} ${sess.shift} · ผู้ตรวจ: ${sess.nurse||'—'}</div>
+        </div>
+        ${issueItems.length
+          ? `<span style="font-size:12px;padding:3px 10px;border-radius:12px;background:#FBEAF0;color:#C4708A;font-weight:700">${issueItems.length} รายการ</span>`
+          : `<span style="font-size:12px;padding:3px 10px;border-radius:12px;background:var(--green-lt);color:var(--green);font-weight:700">✅ ปกติ</span>`
+        }
+      </div>
+      <div style="max-height:260px;overflow-y:auto;border-top:1px solid var(--gray-100)">
+        ${itemsHtml}
+      </div>
+      ${issueItems.length ? `
+      <button onclick="openEquipHistDetail('${latestKey.replace(/'/g,"\\'")}')"
+        style="width:100%;margin-top:10px;padding:8px;border-radius:var(--r-sm);border:1.5px solid var(--blue-md);
+          background:var(--blue-lt);color:var(--blue-md);font-family:'IBM Plex Sans Thai',sans-serif;font-size:12px;font-weight:600;cursor:pointer">
+        📦 ดูรายละเอียดทั้งหมด (${sess.items.filter(i=>String(i['ผลตรวจ']||'').includes('ตรวจแล้ว')).length}/${sess.items.length})
+      </button>` : ''}
+    </div>`;
+}
+
+function setHistChipByVal(type, val) {
+  // find matching chip button and trigger it
+  document.querySelectorAll('.hf-chip').forEach(c => {
+    const oc = c.getAttribute('onclick')||'';
+    if(oc.includes(`'${type}'`) && oc.includes(`'${val}'`)) {
+      setHistChip(c, type, val);
+    }
+  });
+}
+
+function renderHistCards(filteredRecords, laryStatusBySession) {
+  const list = document.getElementById('hist-list');
+  if(!list) return;
+  if(!filteredRecords.length) {
+    list.innerHTML = '<div class="empty-state"><div class="es-icon">🔍</div><p>ไม่พบรายการที่ตรงกัน</p></div>';
+    return;
+  }
+  const today = new Date(); today.setHours(0,0,0,0);
+  const in30  = new Date(today); in30.setDate(in30.getDate()+30);
+
+  list.innerHTML = filteredRecords.map((r,i) => {
+    const realIdx = records.indexOf(r);
     let l1 = r.lary1||r['ลาริงโกไสโค้1']||'';
     let l2 = r.lary2||r['ลาริงโกไสโค้2']||'';
-    // override ด้วยผลตรวจ Laryngoscope จากชุดตรวจอุปกรณ์ (วันที่/เวรเดียวกัน) ถ้ามี
-    const laryKey = (r.date||'') + '|' + (r.shift||'');
+    const laryKey = (r.date||'').slice(0,10) + '|' + (r.shift||'');
     const laryStatus = laryStatusBySession[laryKey];
     if(laryStatus) {
       if(laryStatus.l1 === true) l1 = 'พร้อมใช้';
       if(laryStatus.l2 === true) l2 = 'พร้อมใช้';
     }
-    const allOk = (l1==='พร้อมใช้' && l2==='พร้อมใช้' &&
-        ['box1','box2','defib'].every(k => r[k]==='พร้อมใช้')) ||
-      (l1==='พร้อมใช้' && l2==='พร้อมใช้' &&
-        ['บอก1','บอก2','เดฟิบ'].every(k => r[k]==='พร้อมใช้'));
+    const allOk = l1==='พร้อมใช้' && l2==='พร้อมใช้' &&
+      ['box1','box2','defib'].every(k => r[k]==='พร้อมใช้');
     const bClass = allOk ? 'badge-ok' : 'badge-warn';
     const bText  = allOk ? '✅ ปกติ' : '⚠ ต้องติดตาม';
     const b1 = r.box1||''; const b1m = r.box1_med||'';
     const b2 = r.box2||''; const b2m = r.box2_med||'';
     const df = r.defib||''; const bt = r.battery||'';
     const rd = r.reddot||'';
-    const dateValRaw = r.date||''; const shiftVal = r.shift||''; const nurseVal = r.nurse||''; const inchVal = r.incharge||''; const ts = r.timestamp||''; const noteVal = r.note||'';
-    // date จาก backend เป็น YYYY-MM-DD อยู่แล้ว (fmtDate ฝั่ง Apps Script) แต่เผื่อข้อมูลเก่าที่ยังเป็น ISO string
+    const dateValRaw = r.date||''; const shiftVal = r.shift||'';
+    const nurseVal = r.nurse||''; const inchVal = r.incharge||r.nurse||'';
+    const ts = r.timestamp||''; const noteVal = r.note||'';
     let dateVal = dateValRaw;
     const isoMatch = String(dateValRaw).match(/^\d{4}-\d{2}-\d{2}T/);
     if(isoMatch) {
@@ -3446,41 +4055,64 @@ function renderCheckHistory() {
     let equipSession = equipHistSessions[sessionKey];
     let matchedKey = sessionKey;
     if(!equipSession) {
-      // fallback: หา key ที่ตรงกันแบบ trim ช่องว่าง หรือวันที่ตรงกันอย่างเดียว
       const foundKey = Object.keys(equipHistSessions).find(k => {
         const [kd, ks] = k.split('|');
         return kd.trim() === dateVal.trim() && (ks.trim() === shiftVal.trim() || !ks.trim() || !shiftVal.trim());
       }) || Object.keys(equipHistSessions).find(k => k.split('|')[0].trim() === dateVal.trim());
       if(foundKey) { equipSession = equipHistSessions[foundKey]; matchedKey = foundKey; }
     }
+
+    // expiry alert tag
+    let expiryTag = '';
+    if(equipSession) {
+      const expItems = equipSession.items.filter(it => {
+        const exp = it['วันหมดอายุ']||it['exp']||'';
+        if(!exp||exp==='-') return false;
+        const d = new Date(exp); d.setHours(0,0,0,0);
+        return d <= in30;
+      });
+      if(expItems.length) {
+        const expired = expItems.filter(it => {
+          const d=new Date(it['วันหมดอายุ']||it['exp']||''); d.setHours(0,0,0,0); return d<today;
+        }).length;
+        expiryTag = `<span class="badge" style="background:var(--red-lt);color:var(--red);font-size:10px">⏰ ${expired?expired+'ชิ้น หมดแล้ว':expItems.length+'ชิ้น ใกล้หมด'}</span>`;
+      }
+      // missing/status tag
+      const missItems = equipSession.items.filter(it => ['ขาด','ส่งนึ่ง','รอเบิก'].includes(it['สถานะ']||''));
+      if(missItems.length) {
+        expiryTag += ` <span class="badge" style="background:#F8EDFF;color:#7B65B0;font-size:10px">❌ ${missItems.length}ชิ้น</span>`;
+      }
+    }
+
     let equipBtn = '';
     if(equipSession) {
       const eTotal   = equipSession.items.length;
       const eChecked = equipSession.items.filter(it => String(it['ผลตรวจ']||'').includes('ตรวจแล้ว')).length;
       equipBtn = `<button onclick="openEquipHistDetail('${matchedKey.replace(/'/g,"\\'")}')"
         style="margin-top:8px;width:100%;padding:8px;border-radius:var(--r-sm);border:1.5px solid var(--blue-md);background:var(--blue-lt);
-          color:var(--blue-md);font-family:'Sarabun',sans-serif;font-size:12px;font-weight:600;cursor:pointer">
+          color:var(--blue-md);font-family:'IBM Plex Sans Thai',sans-serif;font-size:12px;font-weight:600;cursor:pointer">
         📦 ดูรายการอุปกรณ์ที่เช็ค (${eChecked}/${eTotal})
       </button>`;
     }
     return `<div class="hist-card">
       <div class="hist-top">
         <span class="hist-date">${dateVal}<span class="hist-shift"> ${shiftVal}</span></span>
-        <div style="display:flex;gap:6px;align-items:center">
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
           <span class="badge ${bClass}">${bText}</span>
-          <button onclick="openEditCheck(${i})" style="padding:3px 10px;border-radius:20px;border:1.5px solid var(--blue-md);background:var(--blue-lt);color:var(--blue-md);font-family:'Sarabun',sans-serif;font-size:11px;font-weight:600;cursor:pointer">✏️ แก้ไข</button>
+          ${expiryTag}
+          <button onclick="openEditCheck(${realIdx})" style="padding:3px 10px;border-radius:20px;border:1.5px solid var(--blue-md);background:var(--blue-lt);color:var(--blue-md);font-family:'IBM Plex Sans Thai',sans-serif;font-size:11px;font-weight:600;cursor:pointer">✏️ แก้ไข</button>
         </div>
       </div>
       <div class="hist-checks">
-        <span class="badge ${l1==='พร้อมใช้'?'badge-ok':'badge-danger'}">🔦 Lary1 ${l1}</span>
-        <span class="badge ${l2==='พร้อมใช้'?'badge-ok':'badge-danger'}">🔦 Lary2 ${l2}</span>
-        <span class="badge ${b1==='พร้อมใช้'?'badge-ok':'badge-danger'}">📦 Box1 ${b1m}</span>
-        <span class="badge ${b2==='พร้อมใช้'?'badge-ok':'badge-danger'}">📦 Box2 ${b2m}</span>
-        <span class="badge ${df==='พร้อมใช้'?'badge-ok':'badge-danger'}">⚡ ${bt}</span>
-        <span class="badge badge-blue">🔴 ${rd}</span>
+        <span class="badge ${l1==='พร้อมใช้'?'badge-ok':'badge-danger'}">🔦 Lary1 ${l1||'—'}</span>
+        <span class="badge ${l2==='พร้อมใช้'?'badge-ok':'badge-danger'}">🔦 Lary2 ${l2||'—'}</span>
+        <span class="badge ${b1==='พร้อมใช้'?'badge-ok':'badge-danger'}">📦 Box1 ${b1m||b1||'—'}</span>
+        <span class="badge ${b2==='พร้อมใช้'?'badge-ok':'badge-danger'}">📦 Box2 ${b2m||b2||'—'}</span>
+        <span class="badge ${df==='พร้อมใช้'?'badge-ok':'badge-danger'}">⚡ ${bt||df||'—'}</span>
+        <span class="badge badge-blue">🔴 ${rd||'—'}</span>
       </div>
       <div class="hist-foot">
-        <span class="hist-who">👩‍⚕️ ${nurseVal} · ${inchVal}</span>
+        <span class="hist-who">👩‍⚕️ ${nurseVal}${inchVal&&inchVal!==nurseVal?' · '+inchVal:''}</span>
         <span class="hist-time">${ts}</span>
       </div>
       ${noteVal?`<div style="font-size:11px;color:var(--gray-600);margin-top:4px;padding-top:4px;border-top:1px dashed var(--gray-200)">📝 ${noteVal}</div>`:''}
@@ -3505,8 +4137,8 @@ function openEditCheck(i) {
     <div class="form-group"><label>Red dot</label><input type="number" id="eh-rd" value="${r.reddot||10}" min="0" max="99"></div></div>
     <div class="form-row full"><div class="form-group"><label>หมายเหตุ</label><input type="text" id="eh-note" value="${r.note||''}"></div></div>
     <div style="display:flex;gap:8px;margin-top:14px">
-      <button onclick="saveEditCheck(${i})" style="flex:1;padding:11px;border-radius:var(--r-sm);border:none;cursor:pointer;font-family:'Sarabun',sans-serif;font-size:14px;font-weight:600;background:var(--blue-md);color:#fff">💾 บันทึก</button>
-      <button onclick="closeEditHistModal()" style="padding:11px 16px;border-radius:var(--r-sm);border:1.5px solid var(--gray-300);cursor:pointer;font-family:'Sarabun',sans-serif;font-size:14px;background:var(--white);color:var(--gray-600)">ยกเลิก</button>
+      <button onclick="saveEditCheck(${i})" style="flex:1;padding:11px;border-radius:var(--r-sm);border:none;cursor:pointer;font-family:'IBM Plex Sans Thai',sans-serif;font-size:14px;font-weight:600;background:var(--blue-md);color:#fff">💾 บันทึก</button>
+      <button onclick="closeEditHistModal()" style="padding:11px 16px;border-radius:var(--r-sm);border:1.5px solid var(--gray-300);cursor:pointer;font-family:'IBM Plex Sans Thai',sans-serif;font-size:14px;background:var(--white);color:var(--gray-600)">ยกเลิก</button>
     </div>`;
   document.getElementById('edit-hist-modal').classList.add('open');
 }
@@ -3745,8 +4377,24 @@ document.addEventListener('keydown', ev => {
 
 function showLoadOverlay(text='กำลังโหลดข้อมูล', status='กำลังประมวลผล...') {
   const ov = document.getElementById('load-overlay');
-  document.getElementById('load-text').textContent = text;
-  document.getElementById('load-status').textContent = status;
+  if(!ov) return;
+  const textEl   = document.getElementById('load-text');
+  const statusEl = document.getElementById('load-status');
+  const subEl    = document.getElementById('load-sub');
+  if(textEl)   textEl.textContent   = text;
+  if(statusEl) statusEl.textContent = status;
+  if(subEl)    subEl.innerHTML = 'กำลังดึงข้อมูลอุปกรณ์จาก <b>Google Sheets</b>';
+  // reset arc — โหมด loading ไม่แสดง arc fill
+  const arcEl = document.getElementById('save-clock-arc');
+  if(arcEl) { arcEl.style.transition='none'; arcEl.style.strokeDashoffset='302'; }
+  const pctEl = document.getElementById('save-clock-pct');
+  if(pctEl) { pctEl.style.fontSize='28px'; pctEl.textContent = '🚑'; }
+  const ofEl = document.getElementById('save-clock-of');
+  if(ofEl) ofEl.textContent = '';
+  // ซ่อน item list
+  const scrollEl = document.getElementById('save-item-scroll');
+  if(scrollEl) { scrollEl.style.display='none'; scrollEl.innerHTML=''; }
+  document.getElementById('save-ack-btn')?.remove();
   ov.classList.add('open');
 }
 function hideLoadOverlay() {
