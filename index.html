@@ -653,7 +653,8 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
       <div class="form-row">
         <div class="form-group">
           <label>วันที่</label>
-          <input type="date" id="f-date">
+          <input type="date" id="f-date" onchange="updateFDateDisplay()">
+          <div id="f-date-display" style="font-size:12px;color:var(--gray-600);margin-top:4px"></div>
         </div>
         <div class="form-group">
           <label>เวร</label>
@@ -1170,16 +1171,28 @@ const inchargeList = [
   'สุพรรณี','ชนาภา','กนกพร','วริศรา'
 ];
 
+// แสดงวันที่ของช่อง f-date ทั้ง ค.ศ. และ พ.ศ.
+function updateFDateDisplay(){
+  const el = document.getElementById('f-date');
+  const disp = document.getElementById('f-date-display');
+  if(!el || !disp || !el.value) { if(disp) disp.textContent=''; return; }
+  const [y,m,d] = el.value.split('-').map(Number);
+  const dt = new Date(y, m-1, d);
+  const be = dt.toLocaleDateString('th-TH',{weekday:'short',year:'numeric',month:'long',day:'numeric'});
+  disp.textContent = be + '  |  ค.ศ. ' + y + '-' + String(m).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+}
+
 // ─── INIT ──────────────────────────────────────────────────
 function init() {
   const now = new Date();
-  document.getElementById('hdr-date').textContent =
-    now.toLocaleDateString('th-TH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  const dateBE = now.toLocaleDateString('th-TH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  document.getElementById('hdr-date').textContent = dateBE + ' (ค.ศ. ' + now.getFullYear() + ')';
   const h = now.getHours();
   const shift = h<8?'เวรดึก':h<16?'เวรเช้า':'เวรบ่าย';
   document.getElementById('hdr-shift').textContent = shift;
   const localDate = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
   document.getElementById('f-date').value = localDate;
+  updateFDateDisplay();
   document.getElementById('f-shift').value = shift;
   if(document.getElementById('cfg-url')) document.getElementById('cfg-url').value = config.scriptUrl;
   if(document.getElementById('cfg-sheet')) document.getElementById('cfg-sheet').value = config.sheetName;
@@ -1269,12 +1282,14 @@ function getExpBadge(exp) {
   const todayLocal = new Date(now.getFullYear(), now.getMonth(), now.getDate()); // local midnight
   const days = Math.round((expLocal - todayLocal) / 86400000);
   const dateStr = expLocal.toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'2-digit'});
+  const ceYear2 = String(expLocal.getFullYear()).slice(-2);
+  const dateStrFull = `${dateStr} (ค.ศ.${ceYear2})`;
   const dayLabel = days === 0 ? 'วันนี้!' : `${days} วัน`;
-  if(days < 0)   return `<span class="badge badge-danger">หมดอายุ ${dateStr}</span>`;
+  if(days < 0)   return `<span class="badge badge-danger">หมดอายุ ${dateStrFull}</span>`;
   if(days <= 3)  return `<span class="badge badge-danger" style="animation:pulse 1s infinite">🚨 ใกล้หมด! ${dayLabel}</span>`;
-  if(days < 60)  return `<span class="badge badge-danger">⚠ ${dateStr} <span style="opacity:.8;font-size:9px">(${dayLabel})</span></span>`;
-  if(days < 180) return `<span class="badge badge-warn">${dateStr} <span style="opacity:.8;font-size:9px">(${dayLabel})</span></span>`;
-  return `<span class="badge badge-ok">${dateStr} <span style="opacity:.7;font-size:9px">(${dayLabel})</span></span>`;
+  if(days < 60)  return `<span class="badge badge-danger">⚠ ${dateStrFull} <span style="opacity:.8;font-size:9px">(${dayLabel})</span></span>`;
+  if(days < 180) return `<span class="badge badge-warn">${dateStrFull} <span style="opacity:.8;font-size:9px">(${dayLabel})</span></span>`;
+  return `<span class="badge badge-ok">${dateStrFull} <span style="opacity:.7;font-size:9px">(${dayLabel})</span></span>`;
 }
 
 
