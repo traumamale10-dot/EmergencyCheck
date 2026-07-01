@@ -748,6 +748,15 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
     <div class="card-body">
       <div class="check-grid" id="check-grid"></div>
     </div>
+    <div class="card-body" style="padding-top:0">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span style="font-size:12px;font-weight:600;color:var(--gray-800)">ความคืบหน้าการตรวจสอบ</span>
+        <span style="font-size:12px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:var(--blue-md)" id="prog-pct">0%</span>
+      </div>
+      <div style="height:8px;background:var(--gray-200);border-radius:4px;overflow:hidden">
+        <div id="prog-fill" style="height:100%;background:linear-gradient(90deg,var(--blue-md),#27AE60);border-radius:4px;transition:width .4s cubic-bezier(.4,0,.2,1);width:0%"></div>
+      </div>
+    </div>
   </div>
 
   <div class="card">
@@ -3487,8 +3496,10 @@ function updateProgress() {
     return !!document.querySelector(`input[name="ci-${item.id}"]:checked`);
   }).length;
   const pct = Math.round(done/checkDefs.length*100);
-  document.getElementById('prog-fill').style.width = pct+'%';
-  document.getElementById('prog-pct').textContent = pct+'%';
+  const progFillEl = document.getElementById('prog-fill');
+  const progPctEl  = document.getElementById('prog-pct');
+  if(progFillEl) progFillEl.style.width = pct+'%';
+  if(progPctEl)  progPctEl.textContent  = pct+'%';
 }
 
 function renderIncharge() {
@@ -4230,8 +4241,11 @@ function saveToSheets() {
 }
 
 function saveConfig() {
-  const url = document.getElementById('cfg-url').value.trim();
-  const sheet = document.getElementById('cfg-sheet').value.trim() || 'EmergencyCheck';
+  const urlInput = document.getElementById('cfg-url');
+  const sheetInput = document.getElementById('cfg-sheet');
+  if(!urlInput || !sheetInput) { showToast('⚠️ ไม่พบฟอร์มตั้งค่า', '#C4708A'); return; }
+  const url = urlInput.value.trim();
+  const sheet = sheetInput.value.trim() || 'EmergencyCheck';
   if(!url) { showToast('⚠️ กรุณาใส่ Apps Script URL', '#C4708A'); return; }
   config.scriptUrl = url;
   config.sheetName = sheet;
@@ -4243,7 +4257,9 @@ function saveConfig() {
 }
 
 async function testSheets() {
-  const url = document.getElementById('cfg-url').value.trim();
+  const urlInput = document.getElementById('cfg-url');
+  if(!urlInput) { showToast('⚠️ ไม่พบฟอร์มตั้งค่า', '#C4708A'); return; }
+  const url = urlInput.value.trim();
   if(!url) { showToast('⚠️ กรุณาใส่ URL ก่อน', '#C4708A'); return; }
   showToast('🧪 กำลังทดสอบการเชื่อมต่อ...');
   try {
