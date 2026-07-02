@@ -2343,13 +2343,17 @@ async function confirmDeleteManageItem(idx) {
 
 
 // ถ้าสำเร็จ: สร้าง equipment array ใหม่จากข้อมูลใน Sheets (ชื่อ/ชั้น/รูป)
-// ถ้าไม่สำเร็จ/ไม่มีข้อมูล: ใช้ EQUIPMENT_FALLBACK (hardcode) ต่อไป
+// ถ้าไม่สำเร็จ: fallback ไปใช้ localStorage (ครั้งล่าสุดที่เคยซิงก์สำเร็จ) พร้อมติดแบนเนอร์เตือนค้างไว้
 // ยิง fetch ครั้งเดียว (type=equip) ได้ทั้ง equipList + equipInfoData + equipMeta ในรอบเดียว
 // (เดิม: fetch ทุกชีตทั้งหมด 2 ครั้งเรียงกัน ทำให้โหลดช้า)
+// หมายเหตุ: ข้อมูลนี้เป็นวันหมดอายุอุปกรณ์ช่วยชีวิต ความถูกต้องสำคัญกว่าความเร็วที่รู้สึกได้
+// จึงไม่โชว์ค่าจาก localStorage ล่วงหน้าระหว่างรอเน็ตอีกต่อไป — รอข้อมูลจริงจาก Sheets เสมอ
 async function loadEquipList() {
-  // แสดงค่าที่แคชไว้ใน localStorage ก่อนทันที ระหว่างรอเน็ต (ไม่ต้องรอ round-trip)
-  applyLocalEquipMeta();
-  if(!config.scriptUrl) return;
+  if(!config.scriptUrl) {
+    // ไม่ได้ตั้งค่า Sheets เลย — ไม่มีทางเลือกอื่น ใช้ข้อมูลที่แคชไว้เป็นฐาน
+    applyLocalEquipMeta();
+    return;
+  }
 
   showLoadOverlay('เตรียมความพร้อม...', 'กำลังดึงข้อมูลอุปกรณ์จาก Sheets...');
   try {
@@ -2371,20 +2375,51 @@ async function loadEquipList() {
       // ล้าง equipStatus เดิม (key เป็น index) ทิ้งก่อน เพราะ index อ้างอิงกับลำดับของ array เดิม
       // ถ้าลำดับ/จำนวนรายการเปลี่ยนไป index เดิมอาจไปตรงกับอุปกรณ์ชิ้นอื่นโดยไม่ตั้งใจ
       equipStatus = {};
-      applyLocalEquipMeta(); // ต้อง apply local ใหม่ เพราะ index/array เพิ่งถูกสร้างใหม่
     }
     if(json.equipInfoData && Array.isArray(json.equipInfoData)) {
       mergeEquipInfoFromSheets(json.equipInfoData);
     }
     if(json.equipMeta && Array.isArray(json.equipMeta)) {
       applySheetsEquipMeta(json.equipMeta);
+    } else {
+      renderEquip();
     }
+    hideStaleDataBanner();
   } catch(err) {
     console.error("loadEquipList:", err);
-    showToast("❌ ดึงข้อมูลไม่สำเร็จ: " + err.message, "#C4708A");
+    // ดึงข้อมูลจริงไม่สำเร็จ (เช่นเน็ตหลุด) — fallback เป็นข้อมูลที่แคชไว้ในเครื่องนี้ครั้งล่าสุด
+    // พร้อมติดแบนเนอร์เตือนค้างไว้บนจอ จนกว่าจะซิงก์กับ Sheets สำเร็จ เพื่อไม่ให้เข้าใจผิดว่าเป็นข้อมูลปัจจุบัน
+    applyLocalEquipMeta();
+    showStaleDataBanner();
+    showToast("❌ ดึงข้อมูลล่าสุดไม่สำเร็จ: " + err.message, "#C4708A");
   } finally {
     hideLoadOverlay();
   }
+}
+
+// ── แบนเนอร์เตือน "ข้อมูลอาจไม่ใช่ปัจจุบัน" — ค้างอยู่บนจอ (ไม่ใช่ toast ที่หายเอง) ──
+// แสดงเฉพาะตอนดึงข้อมูลจริงจาก Sheets ไม่สำเร็จ และซ่อนเองทันทีที่ซิงก์กลับมาสำเร็จ
+function showStaleDataBanner() {
+  let banner = document.getElementById('stale-data-banner');
+  if(!banner) {
+    banner = document.createElement('div');
+    banner.id = 'stale-data-banner';
+    banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;'
+      + 'background:#C9A05E;color:#fff;text-align:center;padding:10px 14px;'
+      + 'font-family:"IBM Plex Sans Thai",sans-serif;font-size:13px;font-weight:600;'
+      + 'box-shadow:0 2px 10px rgba(0,0,0,.18);display:flex;align-items:center;'
+      + 'justify-content:center;gap:10px;flex-wrap:wrap';
+    banner.innerHTML = '<span>⚠️ ไม่สามารถซิงก์ข้อมูลล่าสุดจาก Sheets ได้ — ข้อมูลที่เห็นอาจไม่ใช่ปัจจุบัน</span>'
+      + '<button id="stale-data-retry" style="padding:3px 12px;border-radius:14px;border:1.5px solid #fff;'
+      + 'background:transparent;color:#fff;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">ลองใหม่</button>';
+    document.body.prepend(banner);
+    document.getElementById('stale-data-retry').addEventListener('click', () => loadEquipList());
+  }
+  banner.style.display = 'flex';
+}
+function hideStaleDataBanner() {
+  const banner = document.getElementById('stale-data-banner');
+  if(banner) banner.style.display = 'none';
 }
 
 // รวมเนื้อหา "เกี่ยวกับอุปกรณ์" ที่ผู้ใช้แก้ไข/เพิ่มเองจาก Google Sheets เข้ากับ EQUIP_INFO (เริ่มต้น)
@@ -2399,7 +2434,9 @@ function mergeEquipInfoFromSheets(rows) {
   });
 }
 
-// แสดงค่าที่แคชไว้ใน localStorage ทันที (sync, ไม่ต้องรอเน็ต) — เรียกก่อนยิง fetch เพื่อให้ผู้ใช้เห็นข้อมูลไวขึ้น
+// แสดงค่าที่แคชไว้ใน localStorage (sync) — ใช้เป็น fallback เท่านั้น เมื่อไม่มี config.scriptUrl
+// หรือเมื่อดึงข้อมูลจริงจาก Sheets ไม่สำเร็จ (ดู loadEquipList) ไม่เรียกล่วงหน้าก่อน fetch อีกต่อไป
+// เพื่อไม่ให้ผู้ใช้เห็นข้อมูลเก่าที่อาจไม่ตรงกับปัจจุบันแม้เพียงชั่วครู่
 function applyLocalEquipMeta() {
   const meta = JSON.parse(localStorage.getItem('equipMeta') || '{}');
   Object.keys(meta).forEach(name => {
