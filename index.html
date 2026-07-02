@@ -2344,38 +2344,47 @@ async function confirmDeleteManageItem(idx) {
 
 // ถ้าสำเร็จ: สร้าง equipment array ใหม่จากข้อมูลใน Sheets (ชื่อ/ชั้น/รูป)
 // ถ้าไม่สำเร็จ/ไม่มีข้อมูล: ใช้ EQUIPMENT_FALLBACK (hardcode) ต่อไป
-// จากนั้นเรียก loadEquipMeta() เพื่อ merge exp/note/status ตามเดิม
+// ยิง fetch ครั้งเดียว (type=equip) ได้ทั้ง equipList + equipInfoData + equipMeta ในรอบเดียว
+// (เดิม: fetch ทุกชีตทั้งหมด 2 ครั้งเรียงกัน ทำให้โหลดช้า)
 async function loadEquipList() {
-  if(config.scriptUrl) {
-    showLoadOverlay('เตรียมความพร้อม...', 'กำลังดึงข้อมูลอุปกรณ์จาก Sheets...');
-    try {
-      const resp = await fetch(config.scriptUrl + '?t=' + Date.now());
-      const json = await resp.json();
-      if(json.equipList && Array.isArray(json.equipList) && json.equipList.length > 0) {
-        equipment = json.equipList.map(item => {
-          // คง note จาก EQUIPMENT_FALLBACK ถ้า Sheets ไม่ได้ส่ง note มาด้วย
-          const fallback = EQUIPMENT_FALLBACK.find(f => f.name === item.name);
-          return {
-            name:   item.name,
-            floor:  item.floor  || '',
-            exp:    item.exp    || '',
-            fifo:   item.fifo   || '',
-            note:   item.note   || fallback?.note || '',
-            imgId:  item.imgId  || fallback?.imgId || '',
-          };
-        });
-        // ล้าง equipStatus เดิม (key เป็น index) ทิ้งก่อน เพราะ index อ้างอิงกับลำดับของ array เดิม
-        // ถ้าลำดับ/จำนวนรายการเปลี่ยนไป index เดิมอาจไปตรงกับอุปกรณ์ชิ้นอื่นโดยไม่ตั้งใจ
-        // (จะถูกเติมกลับให้ถูกต้องตามชื่อใน loadEquipMeta() ด้านล่าง)
-        equipStatus = {};
-      }
-      if(json.equipInfoData && Array.isArray(json.equipInfoData)) {
-        mergeEquipInfoFromSheets(json.equipInfoData);
-      }
-    } catch(err) { console.error("loadEquipList:", err); }
-    finally { hideLoadOverlay(); }
+  // แสดงค่าที่แคชไว้ใน localStorage ก่อนทันที ระหว่างรอเน็ต (ไม่ต้องรอ round-trip)
+  applyLocalEquipMeta();
+  if(!config.scriptUrl) return;
+
+  showLoadOverlay('เตรียมความพร้อม...', 'กำลังดึงข้อมูลอุปกรณ์จาก Sheets...');
+  try {
+    const resp = await fetch(config.scriptUrl + '?type=equip&t=' + Date.now());
+    const json = await resp.json();
+    if(json.equipList && Array.isArray(json.equipList) && json.equipList.length > 0) {
+      equipment = json.equipList.map(item => {
+        // คง note จาก EQUIPMENT_FALLBACK ถ้า Sheets ไม่ได้ส่ง note มาด้วย
+        const fallback = EQUIPMENT_FALLBACK.find(f => f.name === item.name);
+        return {
+          name:   item.name,
+          floor:  item.floor  || '',
+          exp:    item.exp    || '',
+          fifo:   item.fifo   || '',
+          note:   item.note   || fallback?.note || '',
+          imgId:  item.imgId  || fallback?.imgId || '',
+        };
+      });
+      // ล้าง equipStatus เดิม (key เป็น index) ทิ้งก่อน เพราะ index อ้างอิงกับลำดับของ array เดิม
+      // ถ้าลำดับ/จำนวนรายการเปลี่ยนไป index เดิมอาจไปตรงกับอุปกรณ์ชิ้นอื่นโดยไม่ตั้งใจ
+      equipStatus = {};
+      applyLocalEquipMeta(); // ต้อง apply local ใหม่ เพราะ index/array เพิ่งถูกสร้างใหม่
+    }
+    if(json.equipInfoData && Array.isArray(json.equipInfoData)) {
+      mergeEquipInfoFromSheets(json.equipInfoData);
+    }
+    if(json.equipMeta && Array.isArray(json.equipMeta)) {
+      applySheetsEquipMeta(json.equipMeta);
+    }
+  } catch(err) {
+    console.error("loadEquipList:", err);
+    showToast("❌ ดึงข้อมูลไม่สำเร็จ: " + err.message, "#C4708A");
+  } finally {
+    hideLoadOverlay();
   }
-  loadEquipMeta();
 }
 
 // รวมเนื้อหา "เกี่ยวกับอุปกรณ์" ที่ผู้ใช้แก้ไข/เพิ่มเองจาก Google Sheets เข้ากับ EQUIP_INFO (เริ่มต้น)
@@ -2390,8 +2399,8 @@ function mergeEquipInfoFromSheets(rows) {
   });
 }
 
-async function loadEquipMeta() {
-  // 1. load from localStorage first (instant)
+// แสดงค่าที่แคชไว้ใน localStorage ทันที (sync, ไม่ต้องรอเน็ต) — เรียกก่อนยิง fetch เพื่อให้ผู้ใช้เห็นข้อมูลไวขึ้น
+function applyLocalEquipMeta() {
   const meta = JSON.parse(localStorage.getItem('equipMeta') || '{}');
   Object.keys(meta).forEach(name => {
     const idx = equipment.findIndex(e => e.name === name);
@@ -2405,34 +2414,31 @@ async function loadEquipMeta() {
   computeFifo();
   renderEquip();
   updateEquipProgress();
-  // 2. then try Sheets for latest data
-  if(!config.scriptUrl) return;
-  try {
-    const resp = await fetch(config.scriptUrl + '?t=' + Date.now());
-    const json = await resp.json();
-    if(json.equipMeta && Array.isArray(json.equipMeta)) {
-      const newMeta = {};
-      json.equipMeta.forEach(row => {
-        const idx = equipment.findIndex(e => e.name === row.name);
-        if(idx < 0) return;
-        // normalize exp to YYYY-MM-DD
-        if(row.exp) {
-          const d = parseExpDate(row.exp);
-          if(d) row.exp = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-        }
-        // อัปเดตเสมอ (รวมถึงกรณีล้างค่า/กลับเป็นปกติ) ไม่ใช่แค่ตอนมีค่า
-        // เดิมเช็คแค่ "ถ้ามีค่า" ทำให้ข้อมูลเก่าติดค้างเวลามีการล้าง/แก้กลับในชีต
-        equipment[idx].exp  = row.exp || '';
-        equipment[idx].note = row.note !== undefined ? row.note : equipment[idx].note;
-        if(row.status && row.status !== 'ปกติ') equipStatus[idx] = row.status;
-        else delete equipStatus[idx];
-        newMeta[row.name] = { exp: row.exp||'', note: row.note||'', status: row.status||'ปกติ' };
-      });
-      localStorage.setItem('equipMeta', JSON.stringify(newMeta));
-      computeFifo();
-      renderEquip();
+}
+
+// merge equipMeta ที่ได้จาก Sheets (มาจาก loadEquipList) เข้ากับ equipment ปัจจุบัน + อัปเดตแคช localStorage
+// (เดิมฟังก์ชันนี้ยิง fetch ของตัวเองซ้ำอีกรอบ — ตอนนี้ใช้ผลจาก fetch เดียวกับ loadEquipList แทน)
+function applySheetsEquipMeta(rows) {
+  const newMeta = {};
+  rows.forEach(row => {
+    const idx = equipment.findIndex(e => e.name === row.name);
+    if(idx < 0) return;
+    // normalize exp to YYYY-MM-DD
+    if(row.exp) {
+      const d = parseExpDate(row.exp);
+      if(d) row.exp = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
     }
-  } catch(err) { console.error("loadEquipMeta:",err); showToast("❌ ดึงข้อมูลไม่สำเร็จ: "+err.message,"#C4708A"); }
+    // อัปเดตเสมอ (รวมถึงกรณีล้างค่า/กลับเป็นปกติ) ไม่ใช่แค่ตอนมีค่า
+    // เดิมเช็คแค่ "ถ้ามีค่า" ทำให้ข้อมูลเก่าติดค้างเวลามีการล้าง/แก้กลับในชีต
+    equipment[idx].exp  = row.exp || '';
+    equipment[idx].note = row.note !== undefined ? row.note : equipment[idx].note;
+    if(row.status && row.status !== 'ปกติ') equipStatus[idx] = row.status;
+    else delete equipStatus[idx];
+    newMeta[row.name] = { exp: row.exp||'', note: row.note||'', status: row.status||'ปกติ' };
+  });
+  localStorage.setItem('equipMeta', JSON.stringify(newMeta));
+  computeFifo();
+  renderEquip();
 }
 
 function updateEquipProgress() {
@@ -3586,7 +3592,7 @@ async function renderHistory() {
   if(config.scriptUrl) {
     document.getElementById('hist-list').innerHTML = '<div class="empty-state"><div class="es-icon">🔄</div><p>กำลังโหลด...</p></div>';
     try {
-      const resp = await fetch(config.scriptUrl + '?t=' + Date.now());
+      const resp = await fetch(config.scriptUrl + '?type=history&t=' + Date.now());
       const json = await resp.json();
       if(json.checkRows) {
         // normalize: แปลง field ภาษาไทย (จาก Sheets header) → field ภาษาอังกฤษ
