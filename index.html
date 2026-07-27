@@ -1379,6 +1379,12 @@ function updateFDateDisplay(){
 
 // ─── INIT ──────────────────────────────────────────────────
 function init() {
+  // ── Warmup ping: ส่ง request เล็กๆ ไปปลุก Apps Script ก่อนเลย
+  // เพื่อลด cold start delay (~3-5 วิ) เมื่อ loadEquipList() ทำงานจริง
+  if(config.scriptUrl) {
+    fetch(config.scriptUrl + '?type=ping', {priority: 'low'}).catch(() => {});
+  }
+
   const now = new Date();
   const dateBE = now.toLocaleDateString('th-TH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
   document.getElementById('hdr-date').textContent = dateBE + ' (ค.ศ. ' + now.getFullYear() + ')';
@@ -2350,50 +2356,81 @@ async function confirmDeleteManageItem(idx) {
 // จึงไม่โชว์ค่าจาก localStorage ล่วงหน้าระหว่างรอเน็ตอีกต่อไป — รอข้อมูลจริงจาก Sheets เสมอ
 async function loadEquipList() {
   if(!config.scriptUrl) {
-    // ไม่ได้ตั้งค่า Sheets เลย — ไม่มีทางเลือกอื่น ใช้ข้อมูลที่แคชไว้เป็นฐาน
     applyLocalEquipMeta();
     return;
   }
 
-  showLoadOverlay('เตรียมความพร้อม...', 'กำลังดึงข้อมูลอุปกรณ์จาก Sheets...');
+  // ── STEP 1: แสดงข้อมูลจาก cache ทันทีก่อนเลย (0 วินาที รอไม่เลย) ──
+  const CACHE_KEY  = 'equipCache_v2';
+  const CACHE_TIME = 'equipCacheTime_v2';
+  const MAX_AGE_MS = 5 * 60 * 1000; // 5 นาที — ถ้าข้อมูลไม่เกิน 5 นาที ไม่ต้อง fetch ใหม่เลย
+
+  const cached     = localStorage.getItem(CACHE_KEY);
+  const cachedTime = parseInt(localStorage.getItem(CACHE_TIME) || '0');
+  const age        = Date.now() - cachedTime;
+  const isFresh    = cached && age < MAX_AGE_MS;
+
+  if (cached) {
+    // มี cache — แสดงทันที ไม่รอ (แม้จะเก่าแล้วก็ยังแสดงไปก่อน)
+    try {
+      const json = JSON.parse(cached);
+      _applyEquipJson(json);
+    } catch(e) { /* cache เสีย — ข้ามไป fetch ใหม่ */ }
+  }
+
+  if (isFresh) {
+    // ข้อมูลใหม่พอ — ไม่ต้อง fetch เลย เสร็จเลย
+    hideLoadOverlay();
+    return;
+  }
+
+  // ── STEP 2: fetch ใหม่ในพื้นหลัง ถ้ามี cache แสดงอยู่แล้วไม่แสดง overlay ──
+  if (!cached) {
+    // ไม่มี cache เลย — แสดง overlay รอ (ครั้งแรกที่ใช้งาน)
+    showLoadOverlay('เตรียมความพร้อม...', 'กำลังดึงข้อมูลอุปกรณ์จาก Sheets...');
+  }
+
   try {
     const resp = await fetch(config.scriptUrl + '?type=equip&t=' + Date.now());
     const json = await resp.json();
-    if(json.equipList && Array.isArray(json.equipList) && json.equipList.length > 0) {
-      equipment = json.equipList.map(item => {
-        // คง note จาก EQUIPMENT_FALLBACK ถ้า Sheets ไม่ได้ส่ง note มาด้วย
-        const fallback = EQUIPMENT_FALLBACK.find(f => f.name === item.name);
-        return {
-          name:   item.name,
-          floor:  item.floor  || '',
-          exp:    item.exp    || '',
-          fifo:   item.fifo   || '',
-          note:   item.note   || fallback?.note || '',
-          imgId:  item.imgId  || fallback?.imgId || '',
-        };
-      });
-      // ล้าง equipStatus เดิม (key เป็น index) ทิ้งก่อน เพราะ index อ้างอิงกับลำดับของ array เดิม
-      // ถ้าลำดับ/จำนวนรายการเปลี่ยนไป index เดิมอาจไปตรงกับอุปกรณ์ชิ้นอื่นโดยไม่ตั้งใจ
-      equipStatus = {};
-    }
-    if(json.equipInfoData && Array.isArray(json.equipInfoData)) {
-      mergeEquipInfoFromSheets(json.equipInfoData);
-    }
-    if(json.equipMeta && Array.isArray(json.equipMeta)) {
-      applySheetsEquipMeta(json.equipMeta);
-    } else {
-      renderEquip();
-    }
+    // บันทึก cache ใหม่
+    localStorage.setItem(CACHE_KEY, JSON.stringify(json));
+    localStorage.setItem(CACHE_TIME, String(Date.now()));
+    _applyEquipJson(json);
     hideStaleDataBanner();
   } catch(err) {
     console.error("loadEquipList:", err);
-    // ดึงข้อมูลจริงไม่สำเร็จ (เช่นเน็ตหลุด) — fallback เป็นข้อมูลที่แคชไว้ในเครื่องนี้ครั้งล่าสุด
-    // พร้อมติดแบนเนอร์เตือนค้างไว้บนจอ จนกว่าจะซิงก์กับ Sheets สำเร็จ เพื่อไม่ให้เข้าใจผิดว่าเป็นข้อมูลปัจจุบัน
     applyLocalEquipMeta();
     showStaleDataBanner();
-    showToast("❌ ดึงข้อมูลล่าสุดไม่สำเร็จ: " + err.message, "#C4708A");
+    if (!cached) showToast("❌ ดึงข้อมูลล่าสุดไม่สำเร็จ: " + err.message, "#C4708A");
   } finally {
     hideLoadOverlay();
+  }
+}
+
+// แยก logic apply ออกมาใช้ร่วมกัน ทั้งจาก cache และจาก fetch
+function _applyEquipJson(json) {
+  if(json.equipList && Array.isArray(json.equipList) && json.equipList.length > 0) {
+    equipment = json.equipList.map(item => {
+      const fallback = EQUIPMENT_FALLBACK.find(f => f.name === item.name);
+      return {
+        name:  item.name,
+        floor: item.floor  || '',
+        exp:   item.exp    || '',
+        fifo:  item.fifo   || '',
+        note:  item.note   || fallback?.note || '',
+        imgId: item.imgId  || fallback?.imgId || '',
+      };
+    });
+    equipStatus = {};
+  }
+  if(json.equipInfoData && Array.isArray(json.equipInfoData)) {
+    mergeEquipInfoFromSheets(json.equipInfoData);
+  }
+  if(json.equipMeta && Array.isArray(json.equipMeta)) {
+    applySheetsEquipMeta(json.equipMeta);
+  } else {
+    renderEquip();
   }
 }
 
