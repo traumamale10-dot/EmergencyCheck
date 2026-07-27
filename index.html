@@ -2360,40 +2360,33 @@ async function loadEquipList() {
     return;
   }
 
-  // ── STEP 1: แสดงข้อมูลจาก cache ทันทีก่อนเลย (0 วินาที รอไม่เลย) ──
   const CACHE_KEY  = 'equipCache_v2';
   const CACHE_TIME = 'equipCacheTime_v2';
-  const MAX_AGE_MS = 5 * 60 * 1000; // 5 นาที — ถ้าข้อมูลไม่เกิน 5 นาที ไม่ต้อง fetch ใหม่เลย
+  const MAX_AGE_MS = 30 * 60 * 1000; // 30 นาที
 
   const cached     = localStorage.getItem(CACHE_KEY);
   const cachedTime = parseInt(localStorage.getItem(CACHE_TIME) || '0');
   const age        = Date.now() - cachedTime;
   const isFresh    = cached && age < MAX_AGE_MS;
 
+  // ── แสดงข้อมูลทันทีโดยไม่รอ Sheets เลย ──
+  // ลำดับความสำคัญ: cache (ล่าสุด) → EQUIPMENT_FALLBACK (ฝังในโค้ด)
   if (cached) {
-    // มี cache — แสดงทันที ไม่รอ (แม้จะเก่าแล้วก็ยังแสดงไปก่อน)
-    try {
-      const json = JSON.parse(cached);
-      _applyEquipJson(json);
-    } catch(e) { /* cache เสีย — ข้ามไป fetch ใหม่ */ }
+    try { _applyEquipJson(JSON.parse(cached)); } catch(e) {}
+  } else {
+    // ไม่มี cache เลย — แสดง fallback ก่อน ผู้ใช้เห็นรายการทันที ไม่หน้าขาว
+    renderEquip();
   }
 
-  if (isFresh) {
-    // ข้อมูลใหม่พอ — ไม่ต้อง fetch เลย เสร็จเลย
-    hideLoadOverlay();
-    return;
-  }
+  // ถ้า cache ยังสด — ไม่ต้อง fetch เลย เสร็จ
+  if (isFresh) { hideLoadOverlay(); return; }
 
-  // ── STEP 2: fetch ใหม่ในพื้นหลัง ถ้ามี cache แสดงอยู่แล้วไม่แสดง overlay ──
-  if (!cached) {
-    // ไม่มี cache เลย — แสดง overlay รอ (ครั้งแรกที่ใช้งาน)
-    showLoadOverlay('เตรียมความพร้อม...', 'กำลังดึงข้อมูลอุปกรณ์จาก Sheets...');
-  }
-
+  // ── fetch ในพื้นหลัง — ไม่บังด้วย overlay เพราะมีข้อมูลแสดงอยู่แล้ว ──
+  hideLoadOverlay(); // ปิด overlay ก่อน ให้ผู้ใช้ใช้งานได้เลย
+  setSyncStatus(true);
   try {
     const resp = await fetch(config.scriptUrl + '?type=equip&t=' + Date.now());
     const json = await resp.json();
-    // บันทึก cache ใหม่
     localStorage.setItem(CACHE_KEY, JSON.stringify(json));
     localStorage.setItem(CACHE_TIME, String(Date.now()));
     _applyEquipJson(json);
@@ -2402,9 +2395,8 @@ async function loadEquipList() {
     console.error("loadEquipList:", err);
     applyLocalEquipMeta();
     showStaleDataBanner();
-    if (!cached) showToast("❌ ดึงข้อมูลล่าสุดไม่สำเร็จ: " + err.message, "#C4708A");
   } finally {
-    hideLoadOverlay();
+    setSyncStatus(false);
   }
 }
 
@@ -4359,6 +4351,17 @@ function updateSheetsStatus() {
   } else {
     dot.textContent = 'ยังไม่เชื่อมต่อ Sheets';
     dot.style.color = 'rgba(255,255,255,.7)';
+  }
+}
+
+function setSyncStatus(syncing) {
+  const dot = document.getElementById('sheets-status-dot');
+  if(!dot) return;
+  if(syncing) {
+    dot.textContent = '🔄 กำลัง sync...';
+    dot.style.color = 'rgba(255,255,255,.85)';
+  } else {
+    updateSheetsStatus();
   }
 }
 
