@@ -615,7 +615,7 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
 
 /* ═══ Verify Popup (ตรวจสอบก่อนเริ่มบันทึก) ═══ */
 .vf-backdrop {
-  position:fixed; inset:0; z-index:900; display:none;
+  position:fixed; top:0; left:0; right:0; bottom:0; width:100%; height:100%; z-index:2000; display:none;
   background:rgba(68,58,94,.45); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
   align-items:center; justify-content:center; padding:16px;
   animation:vfFade .25s ease;
@@ -671,7 +671,7 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
 .vf-progress { text-align:center; font-size:11.5px; color:var(--gray-600); margin-top:8px; }
 /* ล็อกฟอร์มจนกว่าจะยืนยันการตรวจ */
 .check-lock {
-  position:absolute; inset:0; z-index:5; border-radius:var(--r);
+  position:absolute; top:0; left:0; right:0; bottom:0; width:100%; height:100%; z-index:5; border-radius:var(--r);
   background:rgba(250,248,253,.72); backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px);
   display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:20px; text-align:center;
 }
@@ -1281,6 +1281,61 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
 ════════════════════════════════════════════ -->
 <script>
 // ═══════════════════════════════════════════════════════════
+// SAFE STORAGE SHIM — ต้องอยู่บนสุดก่อนโค้ดอื่นทั้งหมด
+// เมื่อรันใน iframe ของ GAS (script.googleusercontent.com) บางเครื่อง/บาง
+// เบราว์เซอร์จะบล็อก third-party storage ทำให้ localStorage โยน SecurityError
+// ตั้งแต่บรรทัดแรก → สคริปต์ทั้งหน้าตาย (อาการ: หน้าค้าง "กำลังโหลด...")
+// shim นี้ตรวจก่อน ถ้าใช้ไม่ได้จะสลับเป็นหน่วยความจำชั่วคราวแทน (แอปทำงานได้
+// ปกติ เพียงแต่แคชในเครื่องจะไม่คงอยู่ข้ามการรีเฟรช — ข้อมูลจริงอยู่บน Sheets)
+// ═══════════════════════════════════════════════════════════
+(function(){
+  var usable = false;
+  try {
+    var t = '__ls_test__';
+    window.localStorage.setItem(t, '1');
+    window.localStorage.removeItem(t);
+    usable = true;
+  } catch(e) { usable = false; }
+  window.STORAGE_PERSISTENT = usable;
+  if (usable) return;
+
+  var mem = {};
+  var shim = {
+    getItem:    function(k){ return (k in mem) ? mem[k] : null; },
+    setItem:    function(k,v){ mem[k] = String(v); },
+    removeItem: function(k){ delete mem[k]; },
+    clear:      function(){ mem = {}; },
+    key:        function(i){ return Object.keys(mem)[i] || null; },
+    get length(){ return Object.keys(mem).length; }
+  };
+  try {
+    Object.defineProperty(window, 'localStorage', { get: function(){ return shim; }, configurable: true });
+  } catch(e2) {
+    try { window.localStorage = shim; } catch(e3) {}
+  }
+})();
+
+// ═══ GLOBAL ERROR BANNER — ถ้า JS พังจะเห็นสาเหตุบนจอ ไม่ค้างเงียบ ═══
+window.addEventListener('error', function(ev){
+  try {
+    var msg = (ev && ev.message) || 'Unknown error';
+    var line = ev && ev.lineno ? ' (บรรทัด ' + ev.lineno + ')' : '';
+    var el = document.getElementById('js-error-banner');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'js-error-banner';
+      el.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#C4708A;color:#fff;'
+        + 'padding:10px 16px;font-family:sans-serif;font-size:13px;line-height:1.5;box-shadow:0 2px 8px rgba(0,0,0,.25)';
+      document.body ? document.body.appendChild(el)
+        : document.addEventListener('DOMContentLoaded', function(){ document.body.appendChild(el); });
+    }
+    el.innerHTML = '⚠️ เกิดข้อผิดพลาด: ' + msg + line
+      + ' <span style="opacity:.85">— แคปหน้าจอนี้ส่งให้ผู้ดูแลระบบได้เลย</span>'
+      + ' <span onclick="this.parentNode.remove()" style="float:right;cursor:pointer;font-weight:700">✕</span>';
+  } catch(e) {}
+});
+
+// ═══════════════════════════════════════════════════════════
 // GAS BRIDGE — ทำงานอัตโนมัติเมื่อหน้านี้ถูก serve จาก Apps Script (HtmlService)
 // ดัก fetch() ที่ยิงไป script.google.com แล้วเปลี่ยนเป็น google.script.run แทน
 // ข้อดี: ไม่มี CORS, ไม่ต้อง no-cors (อ่านผลลัพธ์ POST ได้จริง), เร็วกว่าเพราะไม่ผ่าน redirect /exec
@@ -1564,6 +1619,9 @@ function init() {
     fetch(config.scriptUrl + '?type=ping', {priority: 'low'}).catch(() => {});
     // ดึงผลตรวจชุดล่าสุดล่วงหน้า — พร้อมแสดงทันทีเมื่อเปิด popup ตรวจสอบ
     loadLatestCheck();
+  }
+  if(window.STORAGE_PERSISTENT === false) {
+    setTimeout(() => showToast('ℹ️ เบราว์เซอร์บล็อกการจำข้อมูลในเครื่อง — ใช้งานได้ปกติ ข้อมูลบันทึกขึ้น Sheets ตามเดิม', '#9B86C4'), 800);
   }
 
   const now = new Date();
@@ -3697,11 +3755,16 @@ let latestCheck = null;     // ผลตรวจชุดล่าสุดจ�
 let latestLoaded = false;
 
 function openVerifyPopup() {
-  document.getElementById('vf-backdrop').classList.add('open');
+  const bd = document.getElementById('vf-backdrop');
+  bd.classList.add('open');
+  document.body.style.overflow = 'hidden';           // ล็อกหน้าหลังไม่ให้เลื่อน
+  const modal = bd.querySelector('.vf-modal');
+  if (modal) modal.scrollTop = 0;                    // เริ่มที่บนสุดของ popup เสมอ
   if (!latestLoaded) loadLatestCheck();
 }
 function closeVerifyPopup() {
   document.getElementById('vf-backdrop').classList.remove('open');
+  document.body.style.overflow = '';
 }
 
 // ── ดึงข้อมูลชุดล่าสุดจาก Sheets มาแสดงเปรียบเทียบ ──
