@@ -1258,7 +1258,7 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
         margin-top:10px;cursor:pointer;text-decoration:underline;padding:6px">
         ไว้ตรวจภายหลัง (ดูข้อมูลอื่นก่อน)
       </div>
-      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:2px">build v2026-08-19.9</div>
+      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:2px">build v2026-08-19.10</div>
     </div>
   </div>
 </div>
@@ -4027,10 +4027,20 @@ let fullHistLoaded = false;
 async function renderHistory() {
   fullHistLoaded = false; // กด "โหลดใหม่" = รีเซ็ต ให้ดึงสดเมื่อค้นหา
   const statusEl = document.getElementById('hist-current-status');
-  if(statusEl) statusEl.innerHTML = '<div class="empty-state" style="padding:20px"><div class="es-icon">🔄</div><p>กำลังโหลดข้อมูลชุดล่าสุด...</p></div>';
+  if(statusEl) statusEl.innerHTML = '<div class="empty-state" style="padding:20px"><div class="es-icon">🔄</div><p id="hist-load-msg">กำลังโหลดข้อมูลชุดล่าสุด...</p></div>';
+
+  // ถ้าช้าเกิน 6 วิ = backend น่าจะเป็นเวอร์ชันเก่า (กำลังประมวลผลข้อมูลทั้งหมด)
+  const slowTimer = setTimeout(() => {
+    const msg = document.getElementById('hist-load-msg');
+    if(msg) msg.innerHTML = 'เซิร์ฟเวอร์ตอบช้า... กำลังรอ<br><span style="font-size:11px;color:var(--gray-600)">ถ้าค้างบ่อย: Apps Script ยังเป็นเวอร์ชันเก่า — วาง Code.gs v8 แล้ว Deploy → New version</span>';
+  }, 6000);
+
   if(config.scriptUrl) {
     try {
-      const resp = await fetch(config.scriptUrl + '?type=latest&t=' + Date.now());
+      const ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+      const killer = ctrl ? setTimeout(() => ctrl.abort(), 25000) : null;
+      const resp = await fetch(config.scriptUrl + '?type=latest&t=' + Date.now(), ctrl ? {signal: ctrl.signal} : undefined);
+      if(killer) clearTimeout(killer);
       const json = await resp.json();
       if(json.latestEquipRows) {
         // ── backend v8: ได้เฉพาะชุดล่าสุด (เร็ว) ──
@@ -4051,10 +4061,30 @@ async function renderHistory() {
         fullHistLoaded = true; // ได้ครบแล้ว ไม่ต้องดึงซ้ำตอนค้นหา
         console.warn('Backend ยังเป็นเวอร์ชันเก่า — deploy Code.gs v8 เพื่อให้หน้าประวัติโหลดเร็วขึ้น');
       }
-    } catch(e) { console.error('renderHistory latest:', e); }
+    } catch(e) {
+      console.error('renderHistory latest:', e);
+      clearTimeout(slowTimer);
+      if(statusEl) statusEl.innerHTML = `<div class="empty-state" style="padding:20px">
+        <div class="es-icon">⚠️</div>
+        <p style="font-weight:600">โหลดข้อมูลชุดล่าสุดไม่สำเร็จ</p>
+        <p style="font-size:12px;color:var(--gray-600);margin:4px 0 10px">${e.name==='AbortError' ? 'เซิร์ฟเวอร์ไม่ตอบสนองภายใน 25 วินาที — กรุณา deploy Code.gs v8 (Manage deployments → New version)' : e.message}</p>
+        <button onclick="renderHistory()" style="padding:8px 18px;border-radius:20px;border:none;background:var(--blue-md);color:#fff;font-family:'IBM Plex Sans Thai',sans-serif;font-size:13px;font-weight:600;cursor:pointer">🔄 ลองใหม่</button>
+      </div>`;
+      return;
+    }
   }
-  buildEquipHistSessions();
-  renderCheckHistory();
+  clearTimeout(slowTimer);
+  try {
+    buildEquipHistSessions();
+    renderCheckHistory();
+    // ถ้าไม่มีข้อมูลชุดล่าสุดเลย — แจ้งแทนที่จะปล่อยว่าง
+    if(statusEl && !statusEl.innerHTML.trim()) {
+      statusEl.innerHTML = '<div class="empty-state" style="padding:16px"><div class="es-icon">📭</div><p>ยังไม่มีข้อมูลการตรวจชุดล่าสุด</p></div>';
+    }
+  } catch(e) {
+    console.error('renderCheckHistory:', e);
+    if(statusEl) statusEl.innerHTML = '<div class="empty-state" style="padding:16px"><div class="es-icon">⚠️</div><p>แสดงผลไม่สำเร็จ: '+e.message+'</p></div>';
+  }
 }
 
 // ── โหลดประวัติทั้งหมด — เรียกเมื่อผู้ใช้ค้นหา/กรองเท่านั้น ──
@@ -4942,7 +4972,7 @@ function showToast(msg, color='#202124') {
 }
 
 // ─── BOOT ──────────────────────────────────────────────────
-console.log('EmergencyCheck build v2026-08-19.9');
+console.log('EmergencyCheck build v2026-08-19.10');
 init();
 </script>
 </body>
