@@ -760,23 +760,6 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
     <span>✅</span><span id="equip-float-count">0/54</span>
   </div>
 
-  <div class="search-bar">
-    <input type="text" id="eq-search" placeholder="ค้นหาอุปกรณ์..." oninput="renderEquip()">
-  </div>
-  <div class="filter-row">
-    <div class="filter-pill active" onclick="setFilter(this,'all')">ทั้งหมด</div>
-    <div class="filter-pill" onclick="setFilter(this,'ชั้นที่ 1')">ชั้นที่ 1</div>
-    <div class="filter-pill" onclick="setFilter(this,'ชั้นที่ 2')">ชั้นที่ 2</div>
-    <div class="filter-pill" onclick="setFilter(this,'ชั้นที่ 3')">ชั้นที่ 3</div>
-    <div class="filter-pill" onclick="setFilter(this,'ด้านบน')">ด้านบน</div>
-    <div class="filter-pill" onclick="setFilter(this,'ด้านนอก')">ด้านนอก</div>
-    <div class="filter-pill" onclick="setFilter(this,'__fifo')">⚠ ใช้ก่อน</div>
-    <div class="filter-pill" onclick="setFilter(this,'__checked')" id="pill-checked">✅ ตรวจแล้ว</div>
-  </div>
-  <div id="eq-container"></div>
-
-  <hr style="border:none;border-top:2px dashed var(--gray-200);margin:24px 0 16px">
-
   <!-- ผลการตรวจสอบอุปกรณ์ -->
   <div style="font-size:14px;font-weight:700;color:var(--gray-800);margin-bottom:12px;display:flex;align-items:center;gap:8px">
     ✅ ผลการตรวจสอบอุปกรณ์
@@ -818,6 +801,24 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
       </div>
     </div>
   </div>
+
+
+  <hr style="border:none;border-top:2px dashed var(--gray-200);margin:20px 0 16px">
+
+  <div class="search-bar">
+    <input type="text" id="eq-search" placeholder="ค้นหาอุปกรณ์..." oninput="renderEquip()">
+  </div>
+  <div class="filter-row">
+    <div class="filter-pill active" onclick="setFilter(this,'all')">ทั้งหมด</div>
+    <div class="filter-pill" onclick="setFilter(this,'ชั้นที่ 1')">ชั้นที่ 1</div>
+    <div class="filter-pill" onclick="setFilter(this,'ชั้นที่ 2')">ชั้นที่ 2</div>
+    <div class="filter-pill" onclick="setFilter(this,'ชั้นที่ 3')">ชั้นที่ 3</div>
+    <div class="filter-pill" onclick="setFilter(this,'ด้านบน')">ด้านบน</div>
+    <div class="filter-pill" onclick="setFilter(this,'ด้านนอก')">ด้านนอก</div>
+    <div class="filter-pill" onclick="setFilter(this,'__fifo')">⚠ ใช้ก่อน</div>
+    <div class="filter-pill" onclick="setFilter(this,'__checked')" id="pill-checked">✅ ตรวจแล้ว</div>
+  </div>
+  <div id="eq-container"></div>
 
   <div class="card">
     <div class="card-header"><span class="ch-icon">👩‍⚕️</span><h3>หัวหน้าหอ / หัวหน้าเวร</h3></div>
@@ -1219,6 +1220,36 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
         <div id="vf-last-content"><span class="vf-spin"></span> กำลังดึงข้อมูลปัจจุบันจาก Google Sheets...</div>
       </div>
 
+      <div class="vf-sec" id="vf-sec-b1">
+        <div class="vf-sec-title">📦 Emergency box 1</div>
+        <div class="vf-sec-hint">ตรวจสภาพกล่องและเช็คยา/เวชภัณฑ์ด้านในจริง</div>
+        <div class="vf-opts">
+          <div class="vf-pill" data-group="b1" data-val="พร้อมใช้" data-tone="ok" onclick="pickVerify(this)">✅ พร้อมใช้</div>
+          <div class="vf-pill" data-group="b1" data-val="ไม่พร้อมใช้" data-tone="bad" onclick="pickVerify(this)">❌ ไม่พร้อมใช้</div>
+        </div>
+        <div class="vf-sub-label">💊 สถานะยา</div>
+        <div class="vf-opts">
+          <div class="vf-pill" data-group="b1s" data-val="ยาครบ" data-tone="ok" onclick="pickVerify(this)">✅ ยาครบ</div>
+          <div class="vf-pill" data-group="b1s" data-val="กำลังเติมยา" data-tone="warn" onclick="pickVerify(this)">🔄 กำลังเติมยา</div>
+          <div class="vf-pill" data-group="b1s" data-val="มีการใช้ยา" data-tone="warn" onclick="pickVerify(this)">📤 มีการใช้ยา</div>
+        </div>
+      </div>
+
+      <div class="vf-sec" id="vf-sec-b2">
+        <div class="vf-sec-title">📦 Emergency box 2</div>
+        <div class="vf-sec-hint">ตรวจสภาพกล่องและเช็คยา/เวชภัณฑ์ด้านในจริง</div>
+        <div class="vf-opts">
+          <div class="vf-pill" data-group="b2" data-val="พร้อมใช้" data-tone="ok" onclick="pickVerify(this)">✅ พร้อมใช้</div>
+          <div class="vf-pill" data-group="b2" data-val="ไม่พร้อมใช้" data-tone="bad" onclick="pickVerify(this)">❌ ไม่พร้อมใช้</div>
+        </div>
+        <div class="vf-sub-label">💊 สถานะยา</div>
+        <div class="vf-opts">
+          <div class="vf-pill" data-group="b2s" data-val="ยาครบ" data-tone="ok" onclick="pickVerify(this)">✅ ยาครบ</div>
+          <div class="vf-pill" data-group="b2s" data-val="กำลังเติมยา" data-tone="warn" onclick="pickVerify(this)">🔄 กำลังเติมยา</div>
+          <div class="vf-pill" data-group="b2s" data-val="มีการใช้ยา" data-tone="warn" onclick="pickVerify(this)">📤 มีการใช้ยา</div>
+        </div>
+      </div>
+
       <div class="vf-sec" id="vf-sec-l1">
         <div class="vf-sec-title">🔦 ไฟ Laryngoscope (1)</div>
         <div class="vf-sec-hint">กดเปิดไฟที่ blade จริง — ไฟต้องติดสว่างชัดเจน</div>
@@ -1253,12 +1284,12 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
       </div>
 
       <button class="vf-confirm" id="vf-confirm" disabled onclick="confirmVerify()">ยืนยันผลตรวจ และเริ่มบันทึก</button>
-      <div class="vf-progress" id="vf-progress">ติ๊กให้ครบ 4 รายการเพื่อดำเนินการต่อ (0/4)</div>
+      <div class="vf-progress" id="vf-progress">ติ๊กให้ครบ 8 รายการเพื่อดำเนินการต่อ (0/8)</div>
       <div onclick="closeVerifyPopup()" style="text-align:center;font-size:12.5px;color:var(--gray-600);
         margin-top:10px;cursor:pointer;text-decoration:underline;padding:6px">
         ไว้ตรวจภายหลัง (ดูข้อมูลอื่นก่อน)
       </div>
-      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:2px">build v2026-08-19.13</div>
+      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:2px">build v2026-08-19.14</div>
     </div>
   </div>
 </div>
@@ -3738,7 +3769,7 @@ document.addEventListener('keydown', ev => {
 
 
 // ═══ VERIFY POPUP: ตรวจจริงก่อนบันทึก (ไฟ Laryngoscope + Defibrillator) ═══
-let verifyState = { l1:null, l2:null, df:null, bt:null };
+let verifyState = { b1:null, b1s:null, b2:null, b2s:null, l1:null, l2:null, df:null, bt:null };
 let verifyDone  = false;
 let latestCheck = null;     // ผลตรวจชุดล่าสุดจาก Sheets
 let latestLoaded = false;
@@ -3776,6 +3807,8 @@ async function loadLatestCheck() {
       const chips = [
         '📅 ' + (r.date||'-') + ' ' + (r.shift||''),
         '👩‍⚕️ ' + (r.nurse||r.incharge||'-'),
+        '📦 Box1: ' + (r.box1||'-') + (r.box1_med?' ('+r.box1_med+')':''),
+        '📦 Box2: ' + (r.box2||'-') + (r.box2_med?' ('+r.box2_med+')':''),
         '🔦 Lary1: ' + (r.lary1_light||r.lary1||'-'),
         '🔦 Lary2: ' + (r.lary2_light||r.lary2||'-'),
         '⚡ Defib: ' + (r.defib||'-'),
@@ -3800,9 +3833,13 @@ function pickVerify(el) {
   document.querySelectorAll('.vf-pill[data-group="'+group+'"]').forEach(p => p.classList.remove('sel-ok','sel-warn','sel-bad'));
   el.classList.add('sel-' + el.dataset.tone);
   // ไฮไลต์ section ที่ทำครบแล้ว
+  const secB1 = document.getElementById('vf-sec-b1');
+  const secB2 = document.getElementById('vf-sec-b2');
   const secL1 = document.getElementById('vf-sec-l1');
   const secL2 = document.getElementById('vf-sec-l2');
   const secDf = document.getElementById('vf-sec-df');
+  secB1.classList.toggle('done', !!(verifyState.b1 && verifyState.b1s));
+  secB2.classList.toggle('done', !!(verifyState.b2 && verifyState.b2s));
   secL1.classList.toggle('done', !!verifyState.l1);
   secL2.classList.toggle('done', !!verifyState.l2);
   secDf.classList.toggle('done', !!(verifyState.df && verifyState.bt));
@@ -3810,26 +3847,42 @@ function pickVerify(el) {
 }
 
 function updateVerifyProgress() {
-  const done = ['l1','l2','df','bt'].filter(k => !!verifyState[k]).length;
+  const keys = ['b1','b1s','b2','b2s','l1','l2','df','bt'];
+  const done = keys.filter(k => !!verifyState[k]).length;
+  const total = keys.length;
   const btn  = document.getElementById('vf-confirm');
   const prog = document.getElementById('vf-progress');
-  const ready = done === 4 && latestLoaded;
+  const ready = done === total && latestLoaded;
   btn.disabled = !ready;
-  if (!latestLoaded)   prog.textContent = 'กำลังดึงข้อมูลปัจจุบัน... กรุณารอสักครู่ ('+done+'/4)';
-  else if (done < 4)   prog.textContent = 'ติ๊กให้ครบ 4 รายการเพื่อดำเนินการต่อ ('+done+'/4)';
+  if (!latestLoaded)   prog.textContent = 'กำลังดึงข้อมูลปัจจุบัน... กรุณารอสักครู่ ('+done+'/'+total+')';
+  else if (done < total) prog.textContent = 'ติ๊กให้ครบ '+total+' รายการเพื่อดำเนินการต่อ ('+done+'/'+total+')';
   else                 prog.textContent = '✅ ครบแล้ว — กดยืนยันเพื่อลงข้อมูลอัตโนมัติ';
 }
 
 // ── ยืนยัน: ลงข้อมูลในฟอร์มให้อัตโนมัติ แล้วปลดล็อก ──
 function confirmVerify() {
-  if (!verifyState.l1 || !verifyState.l2 || !verifyState.df || !verifyState.bt) return;
+  const required = ['b1','b1s','b2','b2s','l1','l2','df','bt'];
+  if (required.some(k => !verifyState[k])) return;
   verifyDone = true;
 
-  // ลงค่า Defibrillator + Battery ในฟอร์มอัตโนมัติ
+  // ลงค่า Emergency box 1 + สถานะยา
+  const b1Radio = document.querySelector('input[name="ci-b1"][value="'+verifyState.b1+'"]');
+  if (b1Radio) { b1Radio.checked = true; onCheckChange('b1'); }
+  const b1sRadio = document.querySelector('input[name="ci-b1-s"][value="'+verifyState.b1s+'"]');
+  if (b1sRadio) b1sRadio.checked = true;
+
+  // ลงค่า Emergency box 2 + สถานะยา
+  const b2Radio = document.querySelector('input[name="ci-b2"][value="'+verifyState.b2+'"]');
+  if (b2Radio) { b2Radio.checked = true; onCheckChange('b2'); }
+  const b2sRadio = document.querySelector('input[name="ci-b2-s"][value="'+verifyState.b2s+'"]');
+  if (b2sRadio) b2sRadio.checked = true;
+
+  // ลงค่า Defibrillator + Battery
   const dfRadio = document.querySelector('input[name="ci-df"][value="'+verifyState.df+'"]');
   if (dfRadio) { dfRadio.checked = true; onCheckChange('df'); }
   const btRadio = document.querySelector('input[name="ci-df-s"][value="'+verifyState.bt+'"]');
-  if (btRadio) { btRadio.checked = true; }
+  if (btRadio) btRadio.checked = true;
+
   updateProgress();
 
   closeVerifyPopup();
@@ -3841,12 +3894,16 @@ function confirmVerify() {
   }, 250);
 
   const issues = [];
+  if (verifyState.b1 === 'ไม่พร้อมใช้') issues.push('Emergency box1');
+  if (verifyState.b1s !== 'ยาครบ') issues.push('ยา box1 ('+verifyState.b1s+')');
+  if (verifyState.b2 === 'ไม่พร้อมใช้') issues.push('Emergency box2');
+  if (verifyState.b2s !== 'ยาครบ') issues.push('ยา box2 ('+verifyState.b2s+')');
   if (verifyState.l1 === 'ไม่ติด') issues.push('ไฟ Lary1');
   if (verifyState.l2 === 'ไม่ติด') issues.push('ไฟ Lary2');
   if (verifyState.df === 'ไม่พร้อมใช้') issues.push('Defibrillator');
   if (verifyState.bt !== '3 ชม.') issues.push('Battery ('+verifyState.bt+')');
   if (issues.length) showToast('⚠️ พบปัญหา: ' + issues.join(', ') + ' — โปรดระบุในหมายเหตุ', '#C9A05E');
-  else showToast('✅ ลงข้อมูล Laryngoscope + Defibrillator ให้แล้ว กรอกส่วนที่เหลือต่อได้เลย');
+  else showToast('✅ ลงข้อมูลทุกรายการให้แล้ว เหลือแค่ Red dot และหัวหน้าเวร');
 }
 
 // ─── CHECK FORM ────────────────────────────────────────────
@@ -3987,7 +4044,7 @@ async function submitCheck() {
   // ข้อมูลเก่ากลับมาทับ records ในเครื่อง (ทำให้ดูเหมือนข้อมูลหาย ต้องรีเฟรสหลายรอบ)
   if(config.connected) await pushToSheets(d);
   // ── รีเซ็ตฟอร์ม + ล็อกใหม่ สำหรับการตรวจเวรถัดไป ──
-  verifyState = { l1:null, l2:null, df:null, bt:null };
+  verifyState = { b1:null, b1s:null, b2:null, b2s:null, l1:null, l2:null, df:null, bt:null };
   verifyDone  = false;
   latestLoaded = false;
   renderCheckGrid();
@@ -5006,7 +5063,7 @@ function showToast(msg, color='#202124') {
 }
 
 // ─── BOOT ──────────────────────────────────────────────────
-console.log('EmergencyCheck build v2026-08-19.13');
+console.log('EmergencyCheck build v2026-08-19.14');
 init();
 </script>
 </body>
