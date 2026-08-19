@@ -1258,7 +1258,7 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
         margin-top:10px;cursor:pointer;text-decoration:underline;padding:6px">
         ไว้ตรวจภายหลัง (ดูข้อมูลอื่นก่อน)
       </div>
-      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:2px">build v2026-08-19.10</div>
+      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:2px">build v2026-08-19.12</div>
     </div>
   </div>
 </div>
@@ -1372,16 +1372,15 @@ window.addEventListener('error', function(ev){
 // ─── CONFIG ───────────────────────────────────────────────
 const DRIVE_FOLDER   = '1tfNKiu55ocZbXF3ovQaH7dz97tSOKsUM';
 const SPREADSHEET_ID = '1X4NBGK_8xokrgl3qf1F1XtCdUUhFeyKvXjQTaJMMkbI';
-const SCRIPT_URL     = 'https://script.google.com/macros/s/AKfycbxu95_yWCVeDqo6IXi2pOXRLmZY9kXTqJ4MWDD6INwNDdib3PTF_iEsuH0G0ZIdjRCm/exec';
+const SCRIPT_URL     = 'https://script.google.com/macros/s/AKfycbyLusLlt-ebDQA4ACb0RP-0Ho_NY5oDdBwDKaQ05ZpGhfTAvWmBrc2IS8hLFiL6XBni/exec';
 
-// clear old scriptUrl from localStorage to always use hardcoded URL
-// force clear all old config from localStorage
-localStorage.removeItem('scriptUrl');
+// ใช้ URL ที่ผู้ใช้บันทึกไว้ก่อน (กรณีย้าย deployment แล้ว URL เปลี่ยน) — ไม่มีค่อยใช้ค่า default
 localStorage.removeItem('sheetName');
 localStorage.removeItem('savedCount');
+const SAVED_SCRIPT_URL = localStorage.getItem('scriptUrl') || '';
 let config = {
   sheetsId:  SPREADSHEET_ID,
-  scriptUrl: SCRIPT_URL,
+  scriptUrl: SAVED_SCRIPT_URL || SCRIPT_URL,
   sheetName: 'EmergencyCheck',
   connected: true
 };
@@ -4023,6 +4022,38 @@ function clearLocalRecords() {
 
 let fullHistLoaded = false;
 
+// ── เปลี่ยน URL เซิร์ฟเวอร์ (Apps Script) ได้เองจากหน้าแอป ──
+async function changeServerUrl() {
+  const url = prompt(
+    'วาง Web app URL ใหม่จาก Apps Script\n(Deploy → Manage deployments → คัดลอก URL ที่ลงท้าย /exec)',
+    config.scriptUrl || ''
+  );
+  if(url === null) return; // กดยกเลิก
+  const u = url.trim();
+  if(!/^https:\/\/script\.google\.com\/macros\/.+\/exec/.test(u)) {
+    showToast('⚠️ URL ไม่ถูกต้อง — ต้องขึ้นต้น https://script.google.com/macros/ และลงท้าย /exec', '#C4708A');
+    return;
+  }
+  showToast('🧪 กำลังทดสอบ URL ใหม่...');
+  try {
+    const ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+    const killer = ctrl ? setTimeout(() => ctrl.abort(), 15000) : null;
+    const r = await fetch(u + (u.indexOf('?')===-1?'?':'&') + 'type=ping', ctrl ? {signal: ctrl.signal} : undefined);
+    if(killer) clearTimeout(killer);
+    const j = await r.json();
+    if(!(j && (j.pong || j.status === 'ok'))) throw new Error('เซิร์ฟเวอร์ตอบกลับผิดรูปแบบ');
+    config.scriptUrl = u;
+    config.connected = true;
+    localStorage.setItem('scriptUrl', u);
+    showToast('✅ เชื่อมต่อสำเร็จ — บันทึก URL ใหม่แล้ว', '#8FB89A');
+    latestLoaded = false;
+    renderHistory();
+  } catch(e) {
+    const msg = (e && e.name === 'AbortError') ? 'ไม่ตอบสนองภายใน 15 วินาที' : e.message;
+    showToast('❌ URL นี้ใช้ไม่ได้: ' + msg, '#C4708A');
+  }
+}
+
 // ── โหลดเร็ว: ดึงเฉพาะข้อมูลชุดล่าสุด (?type=latest) — payload เล็ก ──
 async function renderHistory() {
   fullHistLoaded = false; // กด "โหลดใหม่" = รีเซ็ต ให้ดึงสดเมื่อค้นหา
@@ -4067,8 +4098,11 @@ async function renderHistory() {
       if(statusEl) statusEl.innerHTML = `<div class="empty-state" style="padding:20px">
         <div class="es-icon">⚠️</div>
         <p style="font-weight:600">โหลดข้อมูลชุดล่าสุดไม่สำเร็จ</p>
-        <p style="font-size:12px;color:var(--gray-600);margin:4px 0 10px">${e.name==='AbortError' ? 'เซิร์ฟเวอร์ไม่ตอบสนองภายใน 25 วินาที — กรุณา deploy Code.gs v8 (Manage deployments → New version)' : e.message}</p>
-        <button onclick="renderHistory()" style="padding:8px 18px;border-radius:20px;border:none;background:var(--blue-md);color:#fff;font-family:'IBM Plex Sans Thai',sans-serif;font-size:13px;font-weight:600;cursor:pointer">🔄 ลองใหม่</button>
+        <p style="font-size:12px;color:var(--gray-600);margin:4px 0 10px">${e.name==='AbortError' ? 'เซิร์ฟเวอร์ไม่ตอบสนองภายใน 25 วินาที — URL อาจเปลี่ยนหลัง deploy ใหม่' : e.message}</p>
+        <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+          <button onclick="renderHistory()" style="padding:8px 18px;border-radius:20px;border:none;background:var(--blue-md);color:#fff;font-family:'IBM Plex Sans Thai',sans-serif;font-size:13px;font-weight:600;cursor:pointer">🔄 ลองใหม่</button>
+          <button onclick="changeServerUrl()" style="padding:8px 18px;border-radius:20px;border:1.5px solid var(--blue-md);background:var(--blue-lt);color:var(--blue-md);font-family:'IBM Plex Sans Thai',sans-serif;font-size:13px;font-weight:600;cursor:pointer">🔧 เปลี่ยน URL เซิร์ฟเวอร์</button>
+        </div>
       </div>`;
       return;
     }
@@ -4972,7 +5006,7 @@ function showToast(msg, color='#202124') {
 }
 
 // ─── BOOT ──────────────────────────────────────────────────
-console.log('EmergencyCheck build v2026-08-19.10');
+console.log('EmergencyCheck build v2026-08-19.12');
 init();
 </script>
 </body>
