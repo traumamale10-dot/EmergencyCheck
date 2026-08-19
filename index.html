@@ -669,21 +669,7 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
 }
 .vf-confirm:disabled { background:var(--gray-300); box-shadow:none; cursor:not-allowed; color:var(--gray-600); }
 .vf-progress { text-align:center; font-size:11.5px; color:var(--gray-600); margin-top:8px; }
-/* ล็อกฟอร์มจนกว่าจะยืนยันการตรวจ */
-.check-lock {
-  position:absolute; top:0; left:0; right:0; bottom:0; width:100%; height:100%; z-index:5; border-radius:var(--r);
-  background:rgba(250,248,253,.72); backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px);
-  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:20px; text-align:center;
-}
-.check-lock .cl-icon { font-size:34px; }
-.check-lock .cl-text { font-size:13px; font-weight:600; color:var(--gray-800); line-height:1.6; }
-.check-lock button {
-  padding:12px 22px; border:none; border-radius:999px; cursor:pointer;
-  font-family:'IBM Plex Sans Thai',sans-serif; font-size:14.5px; font-weight:800; color:#fff;
-  background:linear-gradient(135deg,var(--blue-md),var(--red)); box-shadow:0 6px 18px rgba(155,134,196,.45);
-  animation:clPulse 2s ease-in-out infinite;
-}
-@keyframes clPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.04)} }
+50%{transform:scale(1.04)} }
 
 </style>
 </head>
@@ -818,11 +804,6 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
   </div>
 
   <div class="card" style="position:relative" id="check-form-card">
-    <div class="check-lock" id="check-lock">
-      <div class="cl-icon">🔒</div>
-      <div class="cl-text">เพื่อความถูกต้องของข้อมูล<br>กรุณาตรวจสอบอุปกรณ์จริงก่อนเริ่มบันทึก</div>
-      <button onclick="openVerifyPopup()">🔍 เริ่มตรวจสอบเวรนี้</button>
-    </div>
     <div class="card-header"><span class="ch-icon">🏥</span><h3>ผลการตรวจอุปกรณ์</h3></div>
     <div class="card-body">
       <div class="check-grid" id="check-grid"></div>
@@ -1280,7 +1261,7 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
         margin-top:10px;cursor:pointer;text-decoration:underline;padding:6px">
         ไว้ตรวจภายหลัง (ดูข้อมูลอื่นก่อน)
       </div>
-      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:2px">build v2026-08-19.6</div>
+      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:2px">build v2026-08-19.7</div>
     </div>
   </div>
 </div>
@@ -3855,9 +3836,6 @@ function confirmVerify() {
   if (btRadio) { btRadio.checked = true; }
   updateProgress();
 
-  // ปลดล็อกฟอร์ม + ซ่อนแบนเนอร์บนสุด
-  const lock = document.getElementById('check-lock');
-  if (lock) lock.style.display = 'none';
   closeVerifyPopup();
 
   // เลื่อนพาไปที่ฟอร์มให้เลย ไม่ต้องหาเอง
@@ -3990,7 +3968,7 @@ function getRadio(name) {
 async function submitCheck() {
   // ── ป้องกันการบันทึกโดยไม่ได้ตรวจจริง ──
   if(!verifyDone) {
-    showToast('🔒 กรุณาตรวจสอบอุปกรณ์จริงก่อน (กดปุ่ม "เริ่มตรวจสอบเวรนี้")', '#C4708A');
+    showToast('🔒 กรุณาตรวจสอบอุปกรณ์จริงใน popup ก่อนบันทึก', '#C4708A');
     openVerifyPopup();
     return;
   }
@@ -4021,8 +3999,6 @@ async function submitCheck() {
   document.querySelectorAll('.vf-sec').forEach(s => s.classList.remove('done'));
   document.getElementById('vf-last-content').innerHTML = '<span class="vf-spin"></span> กำลังดึงข้อมูลปัจจุบันจาก Google Sheets...';
   updateVerifyProgress();
-  const lockEl = document.getElementById('check-lock');
-  if(lockEl) lockEl.style.display = 'flex';
   setTimeout(() => {
     // สลับไปแท็บประวัติโดยไม่ขอ PIN ซ้ำ (เพิ่งบันทึกเสร็จ)
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -5014,7 +4990,7 @@ function showToast(msg, color='#202124') {
 }
 
 // ─── BOOT ──────────────────────────────────────────────────
-console.log('EmergencyCheck build v2026-08-19.6');
+console.log('EmergencyCheck build v2026-08-19.7');
 init();
 </script>
 </body>
