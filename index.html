@@ -3846,8 +3846,14 @@ async function fetchJsonSafe(url, opts) {
 async function loadLatestCheck() {
   const box = document.getElementById('vf-last-content');
   try {
-    const json = await fetchJsonSafe(config.scriptUrl + '?type=history&t=' + Date.now());
-    const r = (json.checkRows && json.checkRows[0]) || null;
+    // ★ v9.3: เปลี่ยนจาก type=history (อ่านทุกแถวในทั้ง 2 ชีต ทุกครั้งที่เปิดแอป — ช้ามาก)
+    //   มาใช้ type=latest ที่มีอยู่แล้ว (ออกแบบมาสำหรับกรณีนี้โดยเฉพาะ — payload เล็ก โหลดเร็ว)
+    //   นี่คือสาเหตุหลักที่ "ดึงข้อมูลช้า" เพราะ loadLatestCheck() ถูกเรียกอัตโนมัติทุกครั้งที่
+    //   เปิดแอปใน init() พร้อมๆ กับ warmup ping — การอ่านทั้งชีตแบบหนักไปแย่ง execution slot
+    //   ของ Apps Script กับ request อื่นที่ตามมา (เช่น checkPin ตอนกดเข้าแท็บประวัติ) ทำให้ดูเหมือน
+    //   ต้องกรอกรหัส 2 รอบ (รอบแรกค้าง/timeout เพราะติดคิวอยู่หลัง request หนักตัวนี้)
+    const json = await fetchJsonSafe(config.scriptUrl + '?type=latest&t=' + Date.now());
+    const r = json.latestCheck ? normalizeCheckRow(json.latestCheck) : null;
     latestCheck = r;
     latestLoaded = true;
     if (r) {
