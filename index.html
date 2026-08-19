@@ -1406,7 +1406,9 @@ window.addEventListener('error', function(ev){
         var type = 'all';
         var m = u.match(/[?&]type=([^&]+)/);
         if (m) type = decodeURIComponent(m[1]);
-        return runApi('apiGet', type);
+        var pinM = u.match(/[?&]pin=([^&]+)/);
+        var arg = pinM ? (type + '&pin=' + pinM[1]) : type;
+        return runApi('apiGet', arg);
       }
     } catch(e){ /* fallthrough */ }
     return _fetch(url, opts);
@@ -5056,14 +5058,20 @@ async function pinKeyPress(k) {
       // timeout 15 วิ — ไม่ค้างเงียบ
       const ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
       const killer = ctrl ? setTimeout(() => ctrl.abort(), 15000) : null;
-      const resp = await fetch(config.scriptUrl, {
-        method: 'POST',
-        headers: {'Content-Type':'text/plain'},
-        body: JSON.stringify({type:'checkPin', pin: enteredPin}),
+      // ── ใช้ GET แทน POST: การ host นอก Apps Script (เช่น GitHub Pages) จะโดน Apps Script
+      //    redirect (302) ไปยัง googleusercontent.com เสมอ ซึ่งตาม fetch spec เบราว์เซอร์จะ
+      //    แปลง POST เป็น GET และทิ้ง body ทิ้งไปโดยอัตโนมัติ ทำให้ doPost() ไม่เคยถูกเรียกจริง
+      //    (เซิร์ฟเวอร์ตอบกลับเป็นหน้า HTML แทน JSON → ตรวจ PIN ล้มเหลวเสมอแม้กรอกถูก)
+      //    GET ไม่มีปัญหานี้ เพราะ query string ถูกส่งต่อผ่าน redirect ได้ตามปกติ
+      const resp = await fetch(config.scriptUrl + '?type=checkPin&pin=' + encodeURIComponent(enteredPin) + '&t=' + Date.now(), {
         signal: ctrl ? ctrl.signal : undefined
       });
       if(killer) clearTimeout(killer);
-      const json = await resp.json();
+      const raw = await resp.text();
+      if (raw.trim().startsWith('<')) {
+        throw new Error('เซิร์ฟเวอร์ตอบกลับเป็นหน้าเว็บ ไม่ใช่ข้อมูล — ตรวจสอบว่า Deploy → Who has access ตั้งเป็น "Anyone"');
+      }
+      const json = JSON.parse(raw);
       document.getElementById('pin-status').textContent = '';
       if(json.valid) {
         closePinPad(true);
