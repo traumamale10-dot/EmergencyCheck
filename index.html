@@ -764,6 +764,22 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
 ════════════════════════════════════════════ -->
 <div id="page-equip" class="page active">
 
+  <!-- ═══ แบนเนอร์เริ่มตรวจสอบ — อยู่บนสุดของหน้า ═══ -->
+  <div id="check-topbar" style="margin-bottom:14px;border-radius:16px;padding:14px 16px;
+    background:linear-gradient(135deg,var(--blue) 0%,var(--blue-md) 60%,var(--red) 140%);
+    box-shadow:0 6px 20px rgba(155,134,196,.35);display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+    <div style="font-size:26px">🔒</div>
+    <div style="flex:1;min-width:180px">
+      <div style="font-size:14px;font-weight:800;color:#fff">ยังไม่ได้ตรวจสอบเวรนี้</div>
+      <div style="font-size:11.5px;color:rgba(255,255,255,.9);line-height:1.5">กรุณาตรวจไฟ Laryngoscope และ Defibrillator ของจริงก่อนเริ่มบันทึก</div>
+    </div>
+    <button onclick="openVerifyPopup()" style="padding:11px 20px;border:none;border-radius:999px;cursor:pointer;
+      font-family:'IBM Plex Sans Thai',sans-serif;font-size:14px;font-weight:800;color:var(--blue);
+      background:#fff;box-shadow:0 4px 12px rgba(0,0,0,.15);white-space:nowrap;animation:clPulse 2s ease-in-out infinite">
+      🔍 เริ่มตรวจสอบเวรนี้
+    </button>
+  </div>
+
   <!-- Floating checked-count badge (visible while scrolling) -->
   <div id="equip-float-badge"
     style="position:fixed;right:16px;bottom:92px;z-index:150;display:none;
@@ -1272,6 +1288,7 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
 
       <button class="vf-confirm" id="vf-confirm" disabled onclick="confirmVerify()">ยืนยันผลตรวจ และเริ่มบันทึก</button>
       <div class="vf-progress" id="vf-progress">ติ๊กให้ครบ 4 รายการเพื่อดำเนินการต่อ (0/4)</div>
+      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:6px">build v2026-08-19.4</div>
     </div>
   </div>
 </div>
@@ -3756,14 +3773,21 @@ let latestLoaded = false;
 
 function openVerifyPopup() {
   const bd = document.getElementById('vf-backdrop');
+  document.body.appendChild(bd); // ย้ายมาเป็นลูกของ body ตรงๆ เสมอ (กัน container ครอบ)
+  // ── สั่งตำแหน่งด้วย inline style ตรงๆ — ชนะทุก CSS ทุกเบราว์เซอร์ ──
+  bd.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;width:100vw;height:100vh;'
+    + 'z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px;'
+    + 'box-sizing:border-box;background:rgba(68,58,94,.5);overflow:hidden';
   bd.classList.add('open');
   document.body.style.overflow = 'hidden';           // ล็อกหน้าหลังไม่ให้เลื่อน
   const modal = bd.querySelector('.vf-modal');
-  if (modal) modal.scrollTop = 0;                    // เริ่มที่บนสุดของ popup เสมอ
+  if (modal) { modal.scrollTop = 0; modal.style.maxHeight = '90vh'; modal.style.overflowY = 'auto'; }
   if (!latestLoaded) loadLatestCheck();
 }
 function closeVerifyPopup() {
-  document.getElementById('vf-backdrop').classList.remove('open');
+  const bd = document.getElementById('vf-backdrop');
+  bd.classList.remove('open');
+  bd.style.display = 'none';
   document.body.style.overflow = '';
 }
 
@@ -3836,10 +3860,18 @@ function confirmVerify() {
   if (btRadio) { btRadio.checked = true; }
   updateProgress();
 
-  // ปลดล็อกฟอร์ม
+  // ปลดล็อกฟอร์ม + ซ่อนแบนเนอร์บนสุด
   const lock = document.getElementById('check-lock');
   if (lock) lock.style.display = 'none';
+  const topbar = document.getElementById('check-topbar');
+  if (topbar) topbar.style.display = 'none';
   closeVerifyPopup();
+
+  // เลื่อนพาไปที่ฟอร์มให้เลย ไม่ต้องหาเอง
+  setTimeout(() => {
+    const card = document.getElementById('check-form-card');
+    if (card) card.scrollIntoView({behavior:'smooth', block:'start'});
+  }, 250);
 
   const issues = [];
   if (verifyState.l1 === 'ไม่ติด') issues.push('ไฟ Lary1');
@@ -3998,6 +4030,8 @@ async function submitCheck() {
   updateVerifyProgress();
   const lockEl = document.getElementById('check-lock');
   if(lockEl) lockEl.style.display = 'flex';
+  const topbarEl = document.getElementById('check-topbar');
+  if(topbarEl) topbarEl.style.display = 'flex';
   setTimeout(() => {
     // สลับไปแท็บประวัติโดยไม่ขอ PIN ซ้ำ (เพิ่งบันทึกเสร็จ)
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -4989,6 +5023,7 @@ function showToast(msg, color='#202124') {
 }
 
 // ─── BOOT ──────────────────────────────────────────────────
+console.log('EmergencyCheck build v2026-08-19.4');
 init();
 </script>
 </body>
