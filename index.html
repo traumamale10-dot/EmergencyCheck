@@ -1242,7 +1242,10 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
 <!-- ═══ Verify Popup: ตรวจสอบไฟ Laryngoscope + Defibrillator ก่อนเริ่มบันทึก ═══ -->
 <div class="vf-backdrop" id="vf-backdrop">
   <div class="vf-modal">
-    <div class="vf-head">
+    <div class="vf-head" style="position:relative">
+      <div onclick="closeVerifyPopup()" style="position:absolute;top:12px;right:14px;cursor:pointer;
+        width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.22);
+        display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#fff">✕</div>
       <h2>🔍 ตรวจสอบอุปกรณ์ก่อนเริ่มบันทึก</h2>
       <p>กรุณาตรวจสอบอุปกรณ์จริงที่รถ Emergency แล้วติ๊กผลด้านล่าง ระบบจะลงข้อมูลในฟอร์มให้อัตโนมัติ</p>
     </div>
@@ -1288,7 +1291,11 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
 
       <button class="vf-confirm" id="vf-confirm" disabled onclick="confirmVerify()">ยืนยันผลตรวจ และเริ่มบันทึก</button>
       <div class="vf-progress" id="vf-progress">ติ๊กให้ครบ 4 รายการเพื่อดำเนินการต่อ (0/4)</div>
-      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:6px">build v2026-08-19.4</div>
+      <div onclick="closeVerifyPopup()" style="text-align:center;font-size:12.5px;color:var(--gray-600);
+        margin-top:10px;cursor:pointer;text-decoration:underline;padding:6px">
+        ไว้ตรวจภายหลัง (ดูข้อมูลอื่นก่อน)
+      </div>
+      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:2px">build v2026-08-19.5</div>
     </div>
   </div>
 </div>
@@ -1640,6 +1647,9 @@ function init() {
   if(window.STORAGE_PERSISTENT === false) {
     setTimeout(() => showToast('ℹ️ เบราว์เซอร์บล็อกการจำข้อมูลในเครื่อง — ใช้งานได้ปกติ ข้อมูลบันทึกขึ้น Sheets ตามเดิม', '#9B86C4'), 800);
   }
+
+  // ── เด้ง popup ตรวจสอบขึ้นเองทันทีที่เปิดแอป ──
+  setTimeout(() => { if(!verifyDone) openVerifyPopup(); }, 600);
 
   const now = new Date();
   const dateBE = now.toLocaleDateString('th-TH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
