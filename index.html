@@ -1218,8 +1218,8 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
     <div class="vf-body">
 
       <div class="vf-last" id="vf-last">
-        <div class="vf-last-title">📋 ผลตรวจชุดล่าสุด</div>
-        <div id="vf-last-content"><span class="vf-spin"></span> กำลังดึงข้อมูลปัจจุบันจาก Google Sheets...</div>
+        <div class="vf-last-title">📋 สถานะข้อมูลอุปกรณ์</div>
+        <div id="vf-last-content"><span class="vf-spin"></span> กำลังโหลดวันหมดอายุอุปกรณ์ล่าสุด...</div>
       </div>
 
       <div class="vf-sec" id="vf-sec-df">
@@ -1649,8 +1649,6 @@ function init() {
   // เพื่อลด cold start delay (~3-5 วิ) เมื่อ loadEquipList() ทำงานจริง
   if(config.scriptUrl) {
     fetch(config.scriptUrl + '?type=ping', {priority: 'low'}).catch(() => {});
-    // ดึงผลตรวจชุดล่าสุดล่วงหน้า — พร้อมแสดงทันทีเมื่อเปิด popup ตรวจสอบ
-    loadLatestCheck();
   }
   if(window.STORAGE_PERSISTENT === false) {
     setTimeout(() => showToast('ℹ️ เบราว์เซอร์บล็อกการจำข้อมูลในเครื่อง — ใช้งานได้ปกติ ข้อมูลบันทึกขึ้น Sheets ตามเดิม', '#9B86C4'), 800);
@@ -2643,6 +2641,7 @@ async function confirmDeleteManageItem(idx) {
 async function loadEquipList() {
   if(!config.scriptUrl) {
     applyLocalEquipMeta();
+    markEquipListLoaded_();
     return;
   }
 
@@ -2665,7 +2664,7 @@ async function loadEquipList() {
   }
 
   // ถ้า cache ยังสด — ไม่ต้อง fetch เลย เสร็จ
-  if (isFresh) { hideLoadOverlay(); return; }
+  if (isFresh) { hideLoadOverlay(); markEquipListLoaded_(); return; }
 
   // ── fetch ในพื้นหลัง — ไม่บังด้วย overlay เพราะมีข้อมูลแสดงอยู่แล้ว ──
   hideLoadOverlay(); // ปิด overlay ก่อน ให้ผู้ใช้ใช้งานได้เลย
@@ -2683,8 +2682,19 @@ async function loadEquipList() {
     showStaleDataBanner();
   } finally {
     setSyncStatus(false);
+    markEquipListLoaded_(); // ไม่บล็อกการทำงานหน้างานกรณีเน็ตล่ม — ยังตรวจ/บันทึกได้ตามปกติ
   }
 }
+
+// ★ v9.4: ทำเครื่องหมายว่าวันหมดอายุอุปกรณ์ล่าสุดโหลดแล้ว — ใช้เป็นเงื่อนไข "พร้อมยืนยัน"
+// ใน verify popup แทนการดึง "ผลตรวจชุดล่าสุด" แยกต่างหาก (ตัดออกไปแล้ว เพราะเป็นตัวการหลัก
+// ที่ทำให้แอปช้าและดูเหมือนต้องกรอก PIN 2 รอบ — ดูคอมเมนต์เดิมใน git history)
+function markEquipListLoaded_() {
+  equipListLoaded = true;
+  updateVerifyLastBox();
+  updateVerifyProgress();
+}
+
 
 // แยก logic apply ออกมาใช้ร่วมกัน ทั้งจาก cache และจาก fetch
 function _applyEquipJson(json) {
@@ -3798,8 +3808,7 @@ document.addEventListener('keydown', ev => {
 // ═══ VERIFY POPUP: ตรวจจริงก่อนบันทึก (ไฟ Laryngoscope + Defibrillator) ═══
 let verifyState = { b1:null, b1s:null, b2:null, b2s:null, l1:null, l2:null, df:null, bt:null };
 let verifyDone  = false;
-let latestCheck = null;     // ผลตรวจชุดล่าสุดจาก Sheets
-let latestLoaded = false;
+let equipListLoaded = false;   // true เมื่อโหลดวันหมดอายุอุปกรณ์ล่าสุด (จาก loadEquipList) เสร็จแล้ว
 
 function openVerifyPopup() {
   const bd = document.getElementById('vf-backdrop');
@@ -3816,7 +3825,11 @@ function openVerifyPopup() {
   const vfRd = document.getElementById('vf-rd');
   const mainRd = document.getElementById('ci-rd');
   if (vfRd) vfRd.value = (mainRd && mainRd.value) ? mainRd.value : '10';
-  if (!latestLoaded) loadLatestCheck();
+  updateVerifyLastBox();
+  // ★ v9.4: ไม่ดึง "ผลตรวจชุดล่าสุด" มาโชว์ใน popup อีกต่อไป (ตัด loadLatestCheck() ออก
+  //   ทั้งฟังก์ชัน — เคยเป็นสาเหตุหลักของอาการช้า/ต้องกรอก PIN 2 รอบ) แค่รอให้ loadEquipList()
+  //   (วันหมดอายุอุปกรณ์ — โหลดตอน init() อยู่แล้ว) เสร็จก็พอ ไม่ต้องยิง fetch ซ้ำอีกรอบที่นี่
+  updateVerifyProgress();
 }
 function adjustVfRd(delta) {
   const el = document.getElementById('vf-rd');
@@ -3831,7 +3844,6 @@ function closeVerifyPopup() {
   document.body.style.overflow = '';
 }
 
-// ── ดึงข้อมูลชุดล่าสุดจาก Sheets มาแสดงเปรียบเทียบ ──
 // ── ดึง JSON อย่างปลอดภัย: ถ้าเซิร์ฟเวอร์ตอบเป็น HTML (เช่น หน้า login) จะบอกสาเหตุชัดเจนแทน error กลางๆ ──
 async function fetchJsonSafe(url, opts) {
   const resp = await fetch(url, opts);
@@ -3843,41 +3855,13 @@ async function fetchJsonSafe(url, opts) {
   catch(pe) { throw new Error('รูปแบบข้อมูลที่ได้ไม่ถูกต้อง (' + raw.slice(0,60).replace(/\s+/g,' ') + '...)'); }
 }
 
-async function loadLatestCheck() {
+// ── อัปเดตกล่องสถานะใน popup ให้ตรงกับสถานะการโหลดวันหมดอายุอุปกรณ์ (equipListLoaded) ──
+function updateVerifyLastBox() {
   const box = document.getElementById('vf-last-content');
-  try {
-    // ★ v9.3: เปลี่ยนจาก type=history (อ่านทุกแถวในทั้ง 2 ชีต ทุกครั้งที่เปิดแอป — ช้ามาก)
-    //   มาใช้ type=latest ที่มีอยู่แล้ว (ออกแบบมาสำหรับกรณีนี้โดยเฉพาะ — payload เล็ก โหลดเร็ว)
-    //   นี่คือสาเหตุหลักที่ "ดึงข้อมูลช้า" เพราะ loadLatestCheck() ถูกเรียกอัตโนมัติทุกครั้งที่
-    //   เปิดแอปใน init() พร้อมๆ กับ warmup ping — การอ่านทั้งชีตแบบหนักไปแย่ง execution slot
-    //   ของ Apps Script กับ request อื่นที่ตามมา (เช่น checkPin ตอนกดเข้าแท็บประวัติ) ทำให้ดูเหมือน
-    //   ต้องกรอกรหัส 2 รอบ (รอบแรกค้าง/timeout เพราะติดคิวอยู่หลัง request หนักตัวนี้)
-    const json = await fetchJsonSafe(config.scriptUrl + '?type=latest&t=' + Date.now());
-    const r = json.latestCheck ? normalizeCheckRow(json.latestCheck) : null;
-    latestCheck = r;
-    latestLoaded = true;
-    if (r) {
-      const chips = [
-        '📅 ' + (r.date||'-') + ' ' + (r.shift||''),
-        '👩‍⚕️ ' + (r.nurse||r.incharge||'-'),
-        '📦 Box1: ' + (r.box1||'-') + (r.box1_med?' ('+r.box1_med+')':''),
-        '📦 Box2: ' + (r.box2||'-') + (r.box2_med?' ('+r.box2_med+')':''),
-        '🔦 Lary1: ' + (r.lary1_light||r.lary1||'-'),
-        '🔦 Lary2: ' + (r.lary2_light||r.lary2||'-'),
-        '⚡ Defib: ' + (r.defib||'-'),
-        '🔋 Battery: ' + (r.battery||'-'),
-        '🔴 Red dot: ' + (r.reddot||'-') + ' แผ่น'
-      ];
-      box.innerHTML = chips.map(c => '<span class="vf-chip">'+c+'</span>').join('')
-        + '<div style="margin-top:6px;font-size:11px;color:var(--gray-600)">↑ ข้อมูลเดิม — โปรดตรวจของจริงแล้วติ๊กผลใหม่ด้านล่าง</div>';
-    } else {
-      box.innerHTML = 'ยังไม่มีประวัติการตรวจใน Sheets — เริ่มบันทึกครั้งแรกได้เลย';
-    }
-  } catch (err) {
-    latestLoaded = true; // ไม่บล็อกการทำงานหน้างานกรณีเน็ตล่ม
-    box.innerHTML = '⚠️ ดึงข้อมูลชุดล่าสุดไม่สำเร็จ (' + err.message + ')<br><span style="font-size:11px">ยังบันทึกผลตรวจใหม่ได้ตามปกติ</span>';
-  }
-  updateVerifyProgress();
+  if (!box) return;
+  box.innerHTML = equipListLoaded
+    ? '✅ โหลดวันหมดอายุอุปกรณ์ล่าสุดแล้ว — พร้อมตรวจสอบได้เลย'
+    : '<span class="vf-spin"></span> กำลังโหลดวันหมดอายุอุปกรณ์ล่าสุด...';
 }
 
 function pickVerify(el) {
@@ -3906,9 +3890,9 @@ function updateVerifyProgress() {
   const total = keys.length;
   const btn  = document.getElementById('vf-confirm');
   const prog = document.getElementById('vf-progress');
-  const ready = done === total && latestLoaded;
+  const ready = done === total && equipListLoaded;
   btn.disabled = !ready;
-  if (!latestLoaded)   prog.textContent = 'กำลังดึงข้อมูลปัจจุบัน... กรุณารอสักครู่ ('+done+'/'+total+')';
+  if (!equipListLoaded) prog.textContent = 'กำลังโหลดวันหมดอายุอุปกรณ์ล่าสุด... กรุณารอสักครู่ ('+done+'/'+total+')';
   else if (done < total) prog.textContent = 'ติ๊กให้ครบ '+total+' รายการเพื่อดำเนินการต่อ ('+done+'/'+total+')';
   else                 prog.textContent = '✅ ครบแล้ว — กดยืนยันเพื่อลงข้อมูลอัตโนมัติ';
 }
@@ -4105,11 +4089,12 @@ async function submitCheck() {
   // ── รีเซ็ตฟอร์ม + ล็อกใหม่ สำหรับการตรวจเวรถัดไป ──
   verifyState = { b1:null, b1s:null, b2:null, b2s:null, l1:null, l2:null, df:null, bt:null };
   verifyDone  = false;
-  latestLoaded = false;
+  // หมายเหตุ: ไม่รีเซ็ต equipListLoaded ที่นี่ — วันหมดอายุอุปกรณ์ไม่เกี่ยวกับการตรวจ box/lary/defib
+  // นี้ จึงไม่จำเป็นต้องโหลดซ้ำทุกครั้งที่บันทึกเวร (loadEquipList มีรอบรีเฟรชของตัวเองอยู่แล้ว)
   renderCheckGrid();
   document.querySelectorAll('.vf-pill').forEach(p => p.classList.remove('sel-ok','sel-warn','sel-bad'));
   document.querySelectorAll('.vf-sec').forEach(s => s.classList.remove('done'));
-  document.getElementById('vf-last-content').innerHTML = '<span class="vf-spin"></span> กำลังดึงข้อมูลปัจจุบันจาก Google Sheets...';
+  updateVerifyLastBox();
   updateVerifyProgress();
   setTimeout(() => {
     // สลับไปแท็บประวัติโดยไม่ขอ PIN ซ้ำ (เพิ่งบันทึกเสร็จ)
@@ -4162,7 +4147,8 @@ async function changeServerUrl() {
     config.connected = true;
     localStorage.setItem('scriptUrl', u);
     showToast('✅ เชื่อมต่อสำเร็จ — บันทึก URL ใหม่แล้ว', '#8FB89A');
-    latestLoaded = false;
+    equipListLoaded = false; // URL เปลี่ยน = backend คนละตัว ต้องโหลดวันหมดอายุอุปกรณ์ใหม่
+    loadEquipList();
     renderHistory();
   } catch(e) {
     const msg = (e && e.name === 'AbortError') ? 'ไม่ตอบสนองภายใน 15 วินาที' : e.message;
