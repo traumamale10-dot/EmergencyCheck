@@ -890,9 +890,6 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
   <!-- ── สถานะอุปกรณ์ปัจจุบัน (ขึ้นก่อน) ── -->
   <div id="hist-current-status" style="margin-bottom:14px"></div>
 
-  <!-- ── DASHBOARD ── -->
-  <div id="hist-dashboard" style="margin-bottom:14px"></div>
-
   <!-- ── SEARCH & FILTER BAR ── -->
   <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:var(--r);padding:12px;box-shadow:var(--shadow-sm);margin-bottom:12px">
     <!-- search row -->
@@ -1261,7 +1258,7 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
         margin-top:10px;cursor:pointer;text-decoration:underline;padding:6px">
         ไว้ตรวจภายหลัง (ดูข้อมูลอื่นก่อน)
       </div>
-      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:2px">build v2026-08-19.7</div>
+      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:2px">build v2026-08-19.8</div>
     </div>
   </div>
 </div>
@@ -4024,59 +4021,90 @@ function clearLocalRecords() {
   renderHistory();
 }
 
+let fullHistLoaded = false;
+
+// ── โหลดเร็ว: ดึงเฉพาะข้อมูลชุดล่าสุด (?type=latest) — payload เล็ก ──
 async function renderHistory() {
+  fullHistLoaded = false; // กด "โหลดใหม่" = รีเซ็ต ให้ดึงสดเมื่อค้นหา
+  const statusEl = document.getElementById('hist-current-status');
+  if(statusEl) statusEl.innerHTML = '<div class="empty-state" style="padding:20px"><div class="es-icon">🔄</div><p>กำลังโหลดข้อมูลชุดล่าสุด...</p></div>';
   if(config.scriptUrl) {
-    document.getElementById('hist-list').innerHTML = '<div class="empty-state"><div class="es-icon">🔄</div><p>กำลังโหลด...</p></div>';
+    try {
+      const resp = await fetch(config.scriptUrl + '?type=latest&t=' + Date.now());
+      const json = await resp.json();
+      if(json.latestEquipRows) equipHistory = json.latestEquipRows;
+      if(json.latestCheck) {
+        // เก็บแถวล่าสุดไว้หัว records เพื่อให้สถานะ/แก้ไขล่าสุดใช้ได้ (ไม่ทับ local ที่ใหม่กว่า)
+        const lc = normalizeCheckRow(json.latestCheck);
+        const k = (lc.date||'').slice(0,10)+'|'+(lc.shift||'')+'|'+(lc.nurse||'');
+        const exists = records.some(r => ((r.date||'').slice(0,10)+'|'+(r.shift||'')+'|'+(r.nurse||r.incharge||'')) === k);
+        if(!exists) records.unshift(lc);
+      }
+    } catch(e) { console.error('renderHistory latest:', e); }
+  }
+  buildEquipHistSessions();
+  renderCheckHistory();
+}
+
+// ── โหลดประวัติทั้งหมด — เรียกเมื่อผู้ใช้ค้นหา/กรองเท่านั้น ──
+async function loadFullHistory() {
+  if(fullHistLoaded) return;
+  const list = document.getElementById('hist-list');
+  if(list) list.innerHTML = '<div class="empty-state"><div class="es-icon">🔄</div><p>กำลังโหลดประวัติทั้งหมด...</p></div>';
+  if(config.scriptUrl) {
     try {
       const resp = await fetch(config.scriptUrl + '?type=history&t=' + Date.now());
       const json = await resp.json();
       if(json.checkRows) {
-        // normalize: แปลง field ภาษาไทย (จาก Sheets header) → field ภาษาอังกฤษ
-        const normalize = row => ({
-          date:        row.date        || row['วันที่']           || '',
-          shift:       row.shift       || row['เวร']               || '',
-          nurse:       row.nurse       || row['ผู้ตรวจสอบ']       || row['หัวหน้าเวร']    || '',
-          incharge:    row.incharge    || row['ผู้ตรวจสอบ']       || row['หัวหน้าเวร']    || '',
-          ward_head:   row.ward_head   || row['หัวหน้าหอ']        || row['หัวหน้าพยาบาล'] || '',
-          lary1:       row.lary1       || row['Laryngoscope(1)']   || row['ลาริงโกไสโค้1'] || '',
-          lary1_light: row.lary1_light || row['ไฟ Lary1']          || '',
-          lary2:       row.lary2       || row['Laryngoscope(2)']   || row['ลาริงโกไสโค้2'] || '',
-          lary2_light: row.lary2_light || row['ไฟ Lary2']          || '',
-          box1:        row.box1        || row['Emergency box(1)']  || row['Emergency box'] || '',
-          box1_med:    row.box1_med    || row['ยา box1']           || '',
-          box2:        row.box2        || row['Emergency box(2)']  || '',
-          box2_med:    row.box2_med    || row['ยา box2']           || '',
-          defib:       row.defib       || row['Defibrillator']     || '',
-          battery:     row.battery     || row['Battery']           || '',
-          reddot:      row.reddot      || row['Red dot']           || '',
-          note:        row.note        || row['หมายเหตุ']          || '',
-          timestamp:   row.timestamp   || row['เวลาบันทึก']       || '',
-          _row:        row._row,
-        });
-        const normalized = json.checkRows.map(normalize);
-        // merge: ใช้ date|shift|nurse เป็น key (timestamp format ต่างกันระหว่าง local และ Sheets)
+        const normalized = json.checkRows.map(normalizeCheckRow);
         const fetchedKeys = new Set(normalized.map(r =>
           (r.date||'').slice(0,10) + '|' + (r.shift||'') + '|' + (r.nurse||'')
         ));
-        // เก็บเฉพาะ local records ที่ยังไม่อยู่ใน Sheets และบันทึกภายใน 2 ชั่วโมง (กันข้อมูลเก่าค้าง)
         const twoHoursAgo = Date.now() - 2 * 60 * 60 * 1000;
         const localOnly = records.filter(r => {
           const k = (r.date||'').slice(0,10) + '|' + (r.shift||'') + '|' + (r.nurse||r.incharge||'');
-          if(fetchedKeys.has(k)) return false; // มีใน Sheets แล้ว
+          if(fetchedKeys.has(k)) return false;
           if(!r.timestamp) return false;
-          // ลองแปลง timestamp เป็น ms เพื่อเช็คอายุ
           const ts = new Date(r.timestamp).getTime();
-          if(!isNaN(ts) && ts < twoHoursAgo) return false; // เก่าเกิน 2 ชั่วโมง ตัดทิ้ง
+          if(!isNaN(ts) && ts < twoHoursAgo) return false;
           return true;
         });
         records = [...localOnly, ...normalized];
         localStorage.setItem('records', JSON.stringify(records));
       }
       if(json.equipRows) { equipHistory = json.equipRows; }
-    } catch(e) {}
+      fullHistLoaded = true;
+      buildEquipHistSessions();
+    } catch(e) {
+      console.error('loadFullHistory:', e);
+      showToast('❌ โหลดประวัติไม่สำเร็จ: ' + e.message, '#C4708A');
+    }
   }
-  buildEquipHistSessions();
-  renderCheckHistory();
+}
+
+// normalize: แปลง field ภาษาไทย (จาก Sheets header) → field ภาษาอังกฤษ
+function normalizeCheckRow(row) {
+  return {
+    date:        row.date        || row['วันที่']           || '',
+    shift:       row.shift       || row['เวร']               || '',
+    nurse:       row.nurse       || row['ผู้ตรวจสอบ']       || row['หัวหน้าเวร']    || '',
+    incharge:    row.incharge    || row['ผู้ตรวจสอบ']       || row['หัวหน้าเวร']    || '',
+    ward_head:   row.ward_head   || row['หัวหน้าหอ']        || row['หัวหน้าพยาบาล'] || '',
+    lary1:       row.lary1       || row['Laryngoscope(1)']   || row['ลาริงโกไสโค้1'] || '',
+    lary1_light: row.lary1_light || row['ไฟ Lary1']          || '',
+    lary2:       row.lary2       || row['Laryngoscope(2)']   || row['ลาริงโกไสโค้2'] || '',
+    lary2_light: row.lary2_light || row['ไฟ Lary2']          || '',
+    box1:        row.box1        || row['Emergency box(1)']  || row['Emergency box'] || '',
+    box1_med:    row.box1_med    || row['ยา box1']           || '',
+    box2:        row.box2        || row['Emergency box(2)']  || '',
+    box2_med:    row.box2_med    || row['ยา box2']           || '',
+    defib:       row.defib       || row['Defibrillator']     || '',
+    battery:     row.battery     || row['Battery']           || '',
+    reddot:      row.reddot      || row['Red dot']           || '',
+    note:        row.note        || row['หมายเหตุ']          || '',
+    timestamp:   row.timestamp   || row['เวลาบันทึก']       || '',
+    _row:        row._row,
+  };
 }
 
 // สร้าง map ของชุดตรวจคลังอุปกรณ์ ตาม key "วันที่|เวร" (ใช้เชื่อมกับ records และเปิด modal รายละเอียด)
@@ -4176,10 +4204,31 @@ function setHistChip(el, type, val) {
   applyHistFilter();
 }
 
-function applyHistFilter() {
+async function applyHistFilter() {
   const search   = (document.getElementById('hist-search')?.value || '').toLowerCase();
   const dateFrom = document.getElementById('hist-date-from')?.value || '';
   const dateTo   = document.getElementById('hist-date-to')?.value   || '';
+
+  // ── มีการค้นหา/กรองหรือยัง? ──
+  const hasFilter = !!search || !!dateFrom || !!dateTo
+    || histFilter.shift !== 'all' || histFilter.status !== 'all'
+    || (histFilter.alert && histFilter.alert !== 'none' && histFilter.alert !== 'all');
+
+  // ยังไม่ค้นหา → ไม่แสดงประวัติ (ประหยัดเวลาโหลด)
+  if(!hasFilter) {
+    const listEl = document.getElementById('hist-list');
+    if(listEl) listEl.innerHTML = `<div class="empty-state" style="padding:28px 16px">
+      <div class="es-icon">🔍</div>
+      <p style="font-weight:600;margin:6px 0 4px">พิมพ์ค้นหา หรือเลือกตัวกรองด้านบน</p>
+      <p style="font-size:12px;color:var(--gray-600)">เพื่อแสดงประวัติการตรวจสอบย้อนหลัง</p>
+    </div>`;
+    const cEl = document.getElementById('hist-result-count');
+    if(cEl) cEl.textContent = '';
+    return;
+  }
+
+  // ค้นหาครั้งแรก → โหลดประวัติทั้งหมดก่อน (โหลดครั้งเดียว ใช้ต่อได้ตลอด)
+  if(!fullHistLoaded) await loadFullHistory();
 
   // build laryStatus for override
   const laryStatusBySession = {};
@@ -4247,130 +4296,8 @@ function applyHistFilter() {
 }
 
 function renderCheckHistory() {
-  renderCurrentStatus();   // สถานะปัจจุบัน — ขึ้นก่อน
-  renderHistDashboard();   // dashboard สรุป
-  applyHistFilter();       // รายการประวัติ
-}
-
-function renderHistDashboard() {
-  const dashEl = document.getElementById('hist-dashboard');
-  if(!dashEl) return;
-
-  const total = records.length;
-  const today = new Date(); today.setHours(0,0,0,0);
-  const in30  = new Date(today); in30.setDate(in30.getDate()+30);
-
-  // build laryStatus
-  const laryStatusBySession = {};
-  equipHistory.forEach(r => {
-    const date=r['วันที่']||'', shift=r['เวร']||'', name=r['ชื่ออุปกรณ์']||'';
-    const done=String(r['ผลตรวจ']||'').includes('ตรวจแล้ว'), key=date+'|'+shift;
-    if(!laryStatusBySession[key]) laryStatusBySession[key]={};
-    if(name==='Laryngoscope(1)') laryStatusBySession[key].l1=done;
-    if(name==='Laryngoscope(2)') laryStatusBySession[key].l2=done;
-  });
-
-  let okCount=0, warnCount=0, expiredCount=0, missingCount=0;
-  const shiftCount={'เวรดึก':0,'เวรเช้า':0,'เวรบ่าย':0};
-
-  records.forEach(r => {
-    if(shiftCount[r.shift]!==undefined) shiftCount[r.shift]++;
-    const laryKey=(r.date||'').slice(0,10)+'|'+(r.shift||'');
-    const ls=laryStatusBySession[laryKey];
-    let l1=r.lary1||'', l2=r.lary2||'';
-    if(ls){if(ls.l1===true)l1='พร้อมใช้';if(ls.l2===true)l2='พร้อมใช้';}
-    const allOk=l1==='พร้อมใช้'&&l2==='พร้อมใช้'&&['box1','box2','defib'].every(k=>r[k]==='พร้อมใช้');
-    if(allOk) okCount++; else warnCount++;
-
-    const sess=equipHistSessions[laryKey];
-    if(sess){
-      if(sess.items.some(it=>['ขาด','ส่งนึ่ง','รอเบิก'].includes(it['สถานะ']||''))) missingCount++;
-      if(sess.items.some(it=>{
-        const exp=it['วันหมดอายุ']||it['exp']||'';
-        if(!exp||exp==='-') return false;
-        const d=new Date(exp);d.setHours(0,0,0,0); return d<=in30;
-      })) expiredCount++;
-    }
-  });
-
-  // last check date
-  const lastDate = records.length ? (records[0].date||'').slice(0,10) : '—';
-  const lastShift = records.length ? (records[0].shift||'') : '';
-
-  dashEl.innerHTML = `
-    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:8px">
-      <!-- total -->
-      <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:var(--r);padding:14px 12px;box-shadow:var(--shadow-sm);display:flex;align-items:center;gap:10px">
-        <div style="width:40px;height:40px;border-radius:10px;background:var(--blue-lt);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">📋</div>
-        <div>
-          <div style="font-size:22px;font-weight:800;color:var(--gray-900);line-height:1">${total}</div>
-          <div style="font-size:11px;color:var(--gray-600);margin-top:2px">รายการทั้งหมด</div>
-        </div>
-      </div>
-      <!-- last check -->
-      <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:var(--r);padding:14px 12px;box-shadow:var(--shadow-sm);display:flex;align-items:center;gap:10px">
-        <div style="width:40px;height:40px;border-radius:10px;background:var(--blue-lt);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🕐</div>
-        <div style="min-width:0">
-          <div style="font-size:14px;font-weight:800;color:var(--gray-900);line-height:1.2">${lastDate}</div>
-          <div style="font-size:11px;color:var(--gray-600);margin-top:2px">${lastShift} · ตรวจล่าสุด</div>
-        </div>
-      </div>
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:8px">
-      <!-- ok -->
-      <div onclick="setHistChipByVal('status','ok')" style="background:var(--green-lt);border:1.5px solid var(--green);border-radius:var(--r);padding:12px;box-shadow:var(--shadow-sm);cursor:pointer;display:flex;align-items:center;gap:10px;transition:opacity .15s" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
-        <div style="width:36px;height:36px;border-radius:9px;background:#d4efdc;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">✅</div>
-        <div>
-          <div style="font-size:22px;font-weight:800;color:var(--green);line-height:1">${okCount}</div>
-          <div style="font-size:11px;color:var(--green);margin-top:2px;font-weight:600">ผ่านปกติ</div>
-        </div>
-      </div>
-      <!-- warn -->
-      <div onclick="setHistChipByVal('status','warn')" style="background:var(--amber-lt);border:1.5px solid var(--amber);border-radius:var(--r);padding:12px;box-shadow:var(--shadow-sm);cursor:pointer;display:flex;align-items:center;gap:10px;transition:opacity .15s" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
-        <div style="width:36px;height:36px;border-radius:9px;background:#fde9c0;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">⚠️</div>
-        <div>
-          <div style="font-size:22px;font-weight:800;color:var(--amber);line-height:1">${warnCount}</div>
-          <div style="font-size:11px;color:var(--amber);margin-top:2px;font-weight:600">ต้องติดตาม</div>
-        </div>
-      </div>
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:8px">
-      <!-- expiring -->
-      <div onclick="setHistChipByVal('alert','expired')" style="background:var(--red-lt);border:1.5px solid var(--red);border-radius:var(--r);padding:12px;box-shadow:var(--shadow-sm);cursor:pointer;display:flex;align-items:center;gap:10px;transition:opacity .15s" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
-        <div style="width:36px;height:36px;border-radius:9px;background:#f5d0db;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">⏰</div>
-        <div>
-          <div style="font-size:22px;font-weight:800;color:var(--red);line-height:1">${expiredCount}</div>
-          <div style="font-size:11px;color:var(--red);margin-top:2px;font-weight:600">ใกล้/หมดอายุ</div>
-        </div>
-      </div>
-      <!-- missing -->
-      <div onclick="setHistChipByVal('alert','missing')" style="background:#F8EDFF;border:1.5px solid #9B86C4;border-radius:var(--r);padding:12px;box-shadow:var(--shadow-sm);cursor:pointer;display:flex;align-items:center;gap:10px;transition:opacity .15s" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
-        <div style="width:36px;height:36px;border-radius:9px;background:#e8d9f8;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">❌</div>
-        <div>
-          <div style="font-size:22px;font-weight:800;color:#7B65B0;line-height:1">${missingCount}</div>
-          <div style="font-size:11px;color:#7B65B0;margin-top:2px;font-weight:600">ขาด/ไม่พร้อม</div>
-        </div>
-      </div>
-    </div>
-    <!-- shift breakdown -->
-    <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:var(--r);padding:12px;box-shadow:var(--shadow-sm)">
-      <div style="font-size:11px;font-weight:700;color:var(--gray-600);margin-bottom:8px">จำนวนตรวจแยกตามเวร</div>
-      <div style="display:flex;gap:6px">
-        <div onclick="setHistChipByVal('shift','เวรดึก')" style="flex:1;text-align:center;padding:8px 4px;border-radius:8px;background:var(--blue-lt);cursor:pointer;transition:opacity .15s" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">
-          <div style="font-size:18px;font-weight:800;color:var(--blue-md)">${shiftCount['เวรดึก']}</div>
-          <div style="font-size:10px;color:var(--blue-md);font-weight:600">🌙 ดึก</div>
-        </div>
-        <div onclick="setHistChipByVal('shift','เวรเช้า')" style="flex:1;text-align:center;padding:8px 4px;border-radius:8px;background:var(--amber-lt);cursor:pointer;transition:opacity .15s" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">
-          <div style="font-size:18px;font-weight:800;color:var(--amber)">${shiftCount['เวรเช้า']}</div>
-          <div style="font-size:10px;color:var(--amber);font-weight:600">🌅 เช้า</div>
-        </div>
-        <div onclick="setHistChipByVal('shift','เวรบ่าย')" style="flex:1;text-align:center;padding:8px 4px;border-radius:8px;background:var(--green-lt);cursor:pointer;transition:opacity .15s" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">
-          <div style="font-size:18px;font-weight:800;color:var(--green)">${shiftCount['เวรบ่าย']}</div>
-          <div style="font-size:10px;color:var(--green);font-weight:600">🌤 บ่าย</div>
-        </div>
-      </div>
-    </div>
-  `;
+  renderCurrentStatus();   // สถานะปัจจุบัน (ชุดล่าสุด)
+  applyHistFilter();       // รายการประวัติ — แสดงเมื่อค้นหา/กรองเท่านั้น
 }
 
 // ── render สถานะปัจจุบันลง div แยก (ขึ้นก่อน dashboard) ────
@@ -4990,7 +4917,7 @@ function showToast(msg, color='#202124') {
 }
 
 // ─── BOOT ──────────────────────────────────────────────────
-console.log('EmergencyCheck build v2026-08-19.7');
+console.log('EmergencyCheck build v2026-08-19.8');
 init();
 </script>
 </body>
