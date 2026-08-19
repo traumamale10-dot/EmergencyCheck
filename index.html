@@ -1258,7 +1258,7 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
         margin-top:10px;cursor:pointer;text-decoration:underline;padding:6px">
         ไว้ตรวจภายหลัง (ดูข้อมูลอื่นก่อน)
       </div>
-      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:2px">build v2026-08-19.8</div>
+      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:2px">build v2026-08-19.9</div>
     </div>
   </div>
 </div>
@@ -4032,13 +4032,24 @@ async function renderHistory() {
     try {
       const resp = await fetch(config.scriptUrl + '?type=latest&t=' + Date.now());
       const json = await resp.json();
-      if(json.latestEquipRows) equipHistory = json.latestEquipRows;
-      if(json.latestCheck) {
-        // เก็บแถวล่าสุดไว้หัว records เพื่อให้สถานะ/แก้ไขล่าสุดใช้ได้ (ไม่ทับ local ที่ใหม่กว่า)
-        const lc = normalizeCheckRow(json.latestCheck);
-        const k = (lc.date||'').slice(0,10)+'|'+(lc.shift||'')+'|'+(lc.nurse||'');
-        const exists = records.some(r => ((r.date||'').slice(0,10)+'|'+(r.shift||'')+'|'+(r.nurse||r.incharge||'')) === k);
-        if(!exists) records.unshift(lc);
+      if(json.latestEquipRows) {
+        // ── backend v8: ได้เฉพาะชุดล่าสุด (เร็ว) ──
+        equipHistory = json.latestEquipRows;
+        if(json.latestCheck) {
+          const lc = normalizeCheckRow(json.latestCheck);
+          const k = (lc.date||'').slice(0,10)+'|'+(lc.shift||'')+'|'+(lc.nurse||'');
+          const exists = records.some(r => ((r.date||'').slice(0,10)+'|'+(r.shift||'')+'|'+(r.nurse||r.incharge||'')) === k);
+          if(!exists) records.unshift(lc);
+        }
+      } else if(json.equipRows || json.checkRows) {
+        // ── backend เก่า (ยังไม่ deploy v8): ตอบข้อมูลชุดเต็มกลับมา — ใช้ได้เลย ──
+        if(json.equipRows) equipHistory = json.equipRows;
+        if(json.checkRows && json.checkRows.length) {
+          records = json.checkRows.map(normalizeCheckRow);
+          localStorage.setItem('records', JSON.stringify(records));
+        }
+        fullHistLoaded = true; // ได้ครบแล้ว ไม่ต้องดึงซ้ำตอนค้นหา
+        console.warn('Backend ยังเป็นเวอร์ชันเก่า — deploy Code.gs v8 เพื่อให้หน้าประวัติโหลดเร็วขึ้น');
       }
     } catch(e) { console.error('renderHistory latest:', e); }
   }
@@ -4861,12 +4872,22 @@ async function pinKeyPress(k) {
     pinState.checking = true;
     document.getElementById('pin-status').textContent = 'กำลังตรวจสอบ...';
     const enteredPin = pinState.value;
+    // แจ้งผู้ใช้ถ้าเซิร์ฟเวอร์ตอบช้า (GAS cold start)
+    const slowTimer = setTimeout(() => {
+      const st = document.getElementById('pin-status');
+      if(st && pinState.checking) st.textContent = 'เซิร์ฟเวอร์กำลังตื่น... รอสักครู่';
+    }, 4000);
     try {
+      // timeout 15 วิ — ไม่ค้างเงียบ
+      const ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+      const killer = ctrl ? setTimeout(() => ctrl.abort(), 15000) : null;
       const resp = await fetch(config.scriptUrl, {
         method: 'POST',
         headers: {'Content-Type':'text/plain'},
-        body: JSON.stringify({type:'checkPin', pin: enteredPin})
+        body: JSON.stringify({type:'checkPin', pin: enteredPin}),
+        signal: ctrl ? ctrl.signal : undefined
       });
+      if(killer) clearTimeout(killer);
       const json = await resp.json();
       document.getElementById('pin-status').textContent = '';
       if(json.valid) {
@@ -4878,10 +4899,14 @@ async function pinKeyPress(k) {
       }
     } catch(err) {
       document.getElementById('pin-status').textContent = '';
-      showToast('❌ ตรวจสอบรหัสไม่สำเร็จ: ' + err.message, '#C4708A');
+      const msg = (err && err.name === 'AbortError')
+        ? 'เซิร์ฟเวอร์ไม่ตอบสนอง — ตรวจสอบการ Deploy ของ Apps Script แล้วลองใหม่'
+        : err.message;
+      showToast('❌ ตรวจสอบรหัสไม่สำเร็จ: ' + msg, '#C4708A');
       pinState.value = '';
       renderPinDots();
     } finally {
+      clearTimeout(slowTimer);
       pinState.checking = false;
     }
   }
@@ -4917,7 +4942,7 @@ function showToast(msg, color='#202124') {
 }
 
 // ─── BOOT ──────────────────────────────────────────────────
-console.log('EmergencyCheck build v2026-08-19.8');
+console.log('EmergencyCheck build v2026-08-19.9');
 init();
 </script>
 </body>
