@@ -279,6 +279,8 @@ body {
 
 /* ── BADGES ── */
 .badge { display: inline-block; padding: 3px 8px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+.badge-exp { font-size: 15px; padding: 5px 12px; font-weight: 800; letter-spacing: .2px; }
+.badge-exp .exp-days { font-size: 12px; opacity: .85; }
 .badge-ok { background: var(--green-lt); color: var(--green); }
 .badge-warn { background: var(--amber-lt); color: var(--amber); }
 .badge-danger { background: var(--red-lt); color: var(--red); }
@@ -1220,6 +1222,32 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
         <div id="vf-last-content"><span class="vf-spin"></span> กำลังดึงข้อมูลปัจจุบันจาก Google Sheets...</div>
       </div>
 
+      <div class="vf-sec" id="vf-sec-df">
+        <div class="vf-sec-title">⚡ เครื่อง Defibrillator</div>
+        <div class="vf-sec-hint">ตรวจสภาพเครื่อง สาย paddle และหน้าจอแสดงผลจริง</div>
+        <div class="vf-opts">
+          <div class="vf-pill" data-group="df" data-val="พร้อมใช้" data-tone="ok" onclick="pickVerify(this)">✅ พร้อมใช้</div>
+          <div class="vf-pill" data-group="df" data-val="ไม่พร้อมใช้" data-tone="bad" onclick="pickVerify(this)">❌ ไม่พร้อมใช้</div>
+        </div>
+        <div class="vf-sub-label">🔋 สถานะ Battery (ดูจากตัวเครื่องจริง)</div>
+        <div class="vf-opts">
+          <div class="vf-pill" data-group="bt" data-val="3 ชม." data-tone="ok" onclick="pickVerify(this)">🔋 3 ชม.</div>
+          <div class="vf-pill" data-group="bt" data-val="น้อยกว่า 3 ชม." data-tone="warn" onclick="pickVerify(this)">🪫 น้อยกว่า 3 ชม.</div>
+          <div class="vf-pill" data-group="bt" data-val="กำลังชาร์จไฟ" data-tone="warn" onclick="pickVerify(this)">🔌 กำลังชาร์จไฟ</div>
+        </div>
+      </div>
+
+      <div class="vf-sec" id="vf-sec-rd">
+        <div class="vf-sec-title">🔴 Red dot (จำนวน)</div>
+        <div class="vf-sec-hint">นับจำนวนแผ่น Red dot จริงบนรถ Emergency</div>
+        <div class="num-input">
+          <button class="num-btn" onclick="adjustVfRd(-1)">−</button>
+          <input type="number" id="vf-rd" value="10" min="0" max="99" onchange="onVfRdChange()">
+          <button class="num-btn" onclick="adjustVfRd(1)">+</button>
+          <span style="font-size:12px;color:var(--gray-600)">แผ่น</span>
+        </div>
+      </div>
+
       <div class="vf-sec" id="vf-sec-b1">
         <div class="vf-sec-title">📦 Emergency box 1</div>
         <div class="vf-sec-hint">ตรวจสภาพกล่องและเช็คยา/เวชภัณฑ์ด้านในจริง</div>
@@ -1268,28 +1296,13 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
         </div>
       </div>
 
-      <div class="vf-sec" id="vf-sec-df">
-        <div class="vf-sec-title">⚡ เครื่อง Defibrillator</div>
-        <div class="vf-sec-hint">ตรวจสภาพเครื่อง สาย paddle และหน้าจอแสดงผลจริง</div>
-        <div class="vf-opts">
-          <div class="vf-pill" data-group="df" data-val="พร้อมใช้" data-tone="ok" onclick="pickVerify(this)">✅ พร้อมใช้</div>
-          <div class="vf-pill" data-group="df" data-val="ไม่พร้อมใช้" data-tone="bad" onclick="pickVerify(this)">❌ ไม่พร้อมใช้</div>
-        </div>
-        <div class="vf-sub-label">🔋 สถานะ Battery (ดูจากตัวเครื่องจริง)</div>
-        <div class="vf-opts">
-          <div class="vf-pill" data-group="bt" data-val="3 ชม." data-tone="ok" onclick="pickVerify(this)">🔋 3 ชม.</div>
-          <div class="vf-pill" data-group="bt" data-val="น้อยกว่า 3 ชม." data-tone="warn" onclick="pickVerify(this)">🪫 น้อยกว่า 3 ชม.</div>
-          <div class="vf-pill" data-group="bt" data-val="กำลังชาร์จไฟ" data-tone="warn" onclick="pickVerify(this)">🔌 กำลังชาร์จไฟ</div>
-        </div>
-      </div>
-
       <button class="vf-confirm" id="vf-confirm" disabled onclick="confirmVerify()">ยืนยันผลตรวจ และเริ่มบันทึก</button>
       <div class="vf-progress" id="vf-progress">ติ๊กให้ครบ 8 รายการเพื่อดำเนินการต่อ (0/8)</div>
       <div onclick="closeVerifyPopup()" style="text-align:center;font-size:12.5px;color:var(--gray-600);
         margin-top:10px;cursor:pointer;text-decoration:underline;padding:6px">
         ไว้ตรวจภายหลัง (ดูข้อมูลอื่นก่อน)
       </div>
-      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:2px">build v2026-08-19.16</div>
+      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:2px">build v2026-08-19.22</div>
     </div>
   </div>
 </div>
@@ -1745,11 +1758,11 @@ function getExpBadge(exp) {
   const ceYear2 = String(expLocal.getFullYear()).slice(-2);
   const dateStrFull = `${dateStr} (ค.ศ.${ceYear2})`;
   const dayLabel = days === 0 ? 'วันนี้!' : `${days} วัน`;
-  if(days < 0)   return `<span class="badge badge-danger">หมดอายุ ${dateStrFull}</span>`;
-  if(days <= 3)  return `<span class="badge badge-danger" style="animation:pulse 1s infinite">🚨 ใกล้หมด! ${dayLabel}</span>`;
-  if(days < 60)  return `<span class="badge badge-danger">⚠ ${dateStrFull} <span style="opacity:.8;font-size:9px">(${dayLabel})</span></span>`;
-  if(days < 180) return `<span class="badge badge-warn">${dateStrFull} <span style="opacity:.8;font-size:9px">(${dayLabel})</span></span>`;
-  return `<span class="badge badge-ok">${dateStrFull} <span style="opacity:.7;font-size:9px">(${dayLabel})</span></span>`;
+  if(days < 0)   return `<span class="badge badge-danger badge-exp">หมดอายุ ${dateStrFull}</span>`;
+  if(days <= 3)  return `<span class="badge badge-danger badge-exp" style="animation:pulse 1s infinite">🚨 ใกล้หมด! ${dayLabel}</span>`;
+  if(days < 60)  return `<span class="badge badge-danger badge-exp">⚠ ${dateStrFull} <span class="exp-days">(${dayLabel})</span></span>`;
+  if(days < 180) return `<span class="badge badge-warn badge-exp">${dateStrFull} <span class="exp-days">(${dayLabel})</span></span>`;
+  return `<span class="badge badge-ok badge-exp">${dateStrFull} <span class="exp-days">(${dayLabel})</span></span>`;
 }
 
 
@@ -3797,8 +3810,18 @@ function openVerifyPopup() {
   document.body.style.overflow = 'hidden';           // ล็อกหน้าหลังไม่ให้เลื่อน
   const modal = bd.querySelector('.vf-modal');
   if (modal) { modal.scrollTop = 0; modal.style.maxHeight = '90vh'; modal.style.overflowY = 'auto'; }
+  // ── sync ค่า Red dot กับฟอร์มหลัก (ถ้ามีค่าที่กรอกไว้ก่อนแล้ว) ──
+  const vfRd = document.getElementById('vf-rd');
+  const mainRd = document.getElementById('ci-rd');
+  if (vfRd) vfRd.value = (mainRd && mainRd.value) ? mainRd.value : '10';
   if (!latestLoaded) loadLatestCheck();
 }
+function adjustVfRd(delta) {
+  const el = document.getElementById('vf-rd');
+  if (!el) return;
+  el.value = Math.max(0, Math.min(99, parseInt(el.value || 0) + delta));
+}
+function onVfRdChange() {} // เผื่อขยายการตรวจสอบเพิ่มเติมในอนาคต
 function closeVerifyPopup() {
   const bd = document.getElementById('vf-backdrop');
   bd.classList.remove('open');
@@ -3834,7 +3857,8 @@ async function loadLatestCheck() {
         '🔦 Lary1: ' + (r.lary1_light||r.lary1||'-'),
         '🔦 Lary2: ' + (r.lary2_light||r.lary2||'-'),
         '⚡ Defib: ' + (r.defib||'-'),
-        '🔋 Battery: ' + (r.battery||'-')
+        '🔋 Battery: ' + (r.battery||'-'),
+        '🔴 Red dot: ' + (r.reddot||'-') + ' แผ่น'
       ];
       box.innerHTML = chips.map(c => '<span class="vf-chip">'+c+'</span>').join('')
         + '<div style="margin-top:6px;font-size:11px;color:var(--gray-600)">↑ ข้อมูลเดิม — โปรดตรวจของจริงแล้วติ๊กผลใหม่ด้านล่าง</div>';
@@ -3905,6 +3929,11 @@ function confirmVerify() {
   const btRadio = document.querySelector('input[name="ci-df-s"][value="'+verifyState.bt+'"]');
   if (btRadio) btRadio.checked = true;
 
+  // ลงค่า Red dot (จำนวน)
+  const vfRd = document.getElementById('vf-rd');
+  const mainRd = document.getElementById('ci-rd');
+  if (vfRd && mainRd) mainRd.value = vfRd.value;
+
   updateProgress();
 
   closeVerifyPopup();
@@ -3925,7 +3954,7 @@ function confirmVerify() {
   if (verifyState.df === 'ไม่พร้อมใช้') issues.push('Defibrillator');
   if (verifyState.bt !== '3 ชม.') issues.push('Battery ('+verifyState.bt+')');
   if (issues.length) showToast('⚠️ พบปัญหา: ' + issues.join(', ') + ' — โปรดระบุในหมายเหตุ', '#C9A05E');
-  else showToast('✅ ลงข้อมูลทุกรายการให้แล้ว เหลือแค่ Red dot และหัวหน้าเวร');
+  else showToast('✅ ลงข้อมูลทุกรายการให้แล้ว เหลือแค่เลือกหัวหน้าเวร');
 }
 
 // ─── CHECK FORM ────────────────────────────────────────────
@@ -5088,7 +5117,7 @@ function showToast(msg, color='#202124') {
 }
 
 // ─── BOOT ──────────────────────────────────────────────────
-console.log('EmergencyCheck build v2026-08-19.16');
+console.log('EmergencyCheck build v2026-08-19.22');
 init();
 </script>
 </body>
