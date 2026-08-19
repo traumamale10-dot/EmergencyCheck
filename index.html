@@ -612,6 +612,79 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
   pointer-events: none; white-space: nowrap;
 }
 .zoomable-img { cursor: zoom-in; }
+
+/* ═══ Verify Popup (ตรวจสอบก่อนเริ่มบันทึก) ═══ */
+.vf-backdrop {
+  position:fixed; inset:0; z-index:900; display:none;
+  background:rgba(68,58,94,.45); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+  align-items:center; justify-content:center; padding:16px;
+  animation:vfFade .25s ease;
+}
+.vf-backdrop.open { display:flex; }
+@keyframes vfFade { from{opacity:0} to{opacity:1} }
+.vf-modal {
+  width:100%; max-width:440px; max-height:92vh; overflow-y:auto;
+  background:var(--white); border-radius:20px; box-shadow:0 24px 64px rgba(68,58,94,.35);
+  animation:vfPop .3s cubic-bezier(.34,1.4,.64,1);
+}
+@keyframes vfPop { from{transform:translateY(24px) scale(.96);opacity:0} to{transform:none;opacity:1} }
+.vf-head {
+  padding:20px 20px 16px; border-radius:20px 20px 0 0; color:#fff;
+  background:linear-gradient(135deg,var(--blue) 0%,var(--blue-md) 55%,var(--red) 130%);
+}
+.vf-head h2 { margin:0; font-size:17px; font-weight:800; display:flex; align-items:center; gap:8px; }
+.vf-head p  { margin:6px 0 0; font-size:12.5px; opacity:.92; line-height:1.5; }
+.vf-body { padding:16px 16px 18px; }
+.vf-last {
+  border:1.5px dashed var(--gray-300); border-radius:14px; padding:12px 14px;
+  background:var(--gray-50); margin-bottom:14px; font-size:12.5px; color:var(--gray-800);
+}
+.vf-last .vf-last-title { font-weight:700; color:var(--gray-600); font-size:11.5px; letter-spacing:.3px; margin-bottom:6px; display:flex; align-items:center; gap:6px; }
+.vf-last .vf-chip { display:inline-flex; align-items:center; gap:4px; background:var(--white); border:1px solid var(--gray-200); border-radius:8px; padding:3px 8px; margin:2px 3px 2px 0; font-size:11.5px; }
+.vf-spin { display:inline-block; width:14px; height:14px; border:2px solid var(--gray-300); border-top-color:var(--blue-md); border-radius:50%; animation:vfRot .7s linear infinite; vertical-align:-2px; }
+@keyframes vfRot { to{transform:rotate(360deg)} }
+.vf-sec {
+  border:1.5px solid var(--gray-200); border-radius:14px; padding:12px 14px 14px; margin-bottom:12px;
+  background:var(--white); transition:border-color .2s, box-shadow .2s;
+}
+.vf-sec.done { border-color:var(--green); background:var(--green-lt); }
+.vf-sec-title { font-size:13.5px; font-weight:700; color:var(--gray-900); display:flex; align-items:center; gap:8px; margin-bottom:4px; }
+.vf-sec-hint  { font-size:11.5px; color:var(--gray-600); margin-bottom:10px; line-height:1.5; }
+.vf-sub-label { font-size:11.5px; font-weight:700; color:var(--gray-600); margin:10px 0 6px; }
+.vf-opts { display:flex; flex-wrap:wrap; gap:8px; }
+.vf-pill {
+  border:1.5px solid var(--gray-300); border-radius:999px; padding:8px 14px;
+  font-size:13px; font-weight:600; color:var(--gray-800); background:var(--white);
+  cursor:pointer; user-select:none; transition:all .15s; display:inline-flex; align-items:center; gap:6px;
+}
+.vf-pill:active { transform:scale(.96); }
+.vf-pill.sel-ok   { background:var(--green);  border-color:var(--green);  color:#fff; box-shadow:0 3px 10px rgba(143,184,154,.4); }
+.vf-pill.sel-warn { background:var(--amber);  border-color:var(--amber);  color:#fff; box-shadow:0 3px 10px rgba(201,160,94,.4); }
+.vf-pill.sel-bad  { background:var(--red);    border-color:var(--red);    color:#fff; box-shadow:0 3px 10px rgba(196,112,138,.4); }
+.vf-confirm {
+  width:100%; padding:14px; border:none; border-radius:14px; cursor:pointer;
+  font-family:'IBM Plex Sans Thai',sans-serif; font-size:15px; font-weight:800; color:#fff;
+  background:linear-gradient(135deg,var(--blue-md),var(--blue)); box-shadow:0 6px 18px rgba(155,134,196,.4);
+  transition:all .2s; margin-top:4px;
+}
+.vf-confirm:disabled { background:var(--gray-300); box-shadow:none; cursor:not-allowed; color:var(--gray-600); }
+.vf-progress { text-align:center; font-size:11.5px; color:var(--gray-600); margin-top:8px; }
+/* ล็อกฟอร์มจนกว่าจะยืนยันการตรวจ */
+.check-lock {
+  position:absolute; inset:0; z-index:5; border-radius:var(--r);
+  background:rgba(250,248,253,.72); backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:20px; text-align:center;
+}
+.check-lock .cl-icon { font-size:34px; }
+.check-lock .cl-text { font-size:13px; font-weight:600; color:var(--gray-800); line-height:1.6; }
+.check-lock button {
+  padding:12px 22px; border:none; border-radius:999px; cursor:pointer;
+  font-family:'IBM Plex Sans Thai',sans-serif; font-size:14.5px; font-weight:800; color:#fff;
+  background:linear-gradient(135deg,var(--blue-md),var(--red)); box-shadow:0 6px 18px rgba(155,134,196,.45);
+  animation:clPulse 2s ease-in-out infinite;
+}
+@keyframes clPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.04)} }
+
 </style>
 </head>
 <body>
@@ -743,7 +816,12 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
     </div>
   </div>
 
-  <div class="card">
+  <div class="card" style="position:relative" id="check-form-card">
+    <div class="check-lock" id="check-lock">
+      <div class="cl-icon">🔒</div>
+      <div class="cl-text">เพื่อความถูกต้องของข้อมูล<br>กรุณาตรวจสอบอุปกรณ์จริงก่อนเริ่มบันทึก</div>
+      <button onclick="openVerifyPopup()">🔍 เริ่มตรวจสอบเวรนี้</button>
+    </div>
     <div class="card-header"><span class="ch-icon">🏥</span><h3>ผลการตรวจอุปกรณ์</h3></div>
     <div class="card-body">
       <div class="check-grid" id="check-grid"></div>
@@ -1144,10 +1222,111 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
   <div class="lightbox-hint">แตะสองครั้งหรือบีบนิ้วเพื่อซูม • ลากเพื่อเลื่อนดู</div>
 </div>
 
+
+<!-- ═══ Verify Popup: ตรวจสอบไฟ Laryngoscope + Defibrillator ก่อนเริ่มบันทึก ═══ -->
+<div class="vf-backdrop" id="vf-backdrop">
+  <div class="vf-modal">
+    <div class="vf-head">
+      <h2>🔍 ตรวจสอบอุปกรณ์ก่อนเริ่มบันทึก</h2>
+      <p>กรุณาตรวจสอบอุปกรณ์จริงที่รถ Emergency แล้วติ๊กผลด้านล่าง ระบบจะลงข้อมูลในฟอร์มให้อัตโนมัติ</p>
+    </div>
+    <div class="vf-body">
+
+      <div class="vf-last" id="vf-last">
+        <div class="vf-last-title">📋 ผลตรวจชุดล่าสุด</div>
+        <div id="vf-last-content"><span class="vf-spin"></span> กำลังดึงข้อมูลปัจจุบันจาก Google Sheets...</div>
+      </div>
+
+      <div class="vf-sec" id="vf-sec-l1">
+        <div class="vf-sec-title">🔦 ไฟ Laryngoscope (1)</div>
+        <div class="vf-sec-hint">กดเปิดไฟที่ blade จริง — ไฟต้องติดสว่างชัดเจน</div>
+        <div class="vf-opts">
+          <div class="vf-pill" data-group="l1" data-val="ติด" data-tone="ok" onclick="pickVerify(this)">💡 ไฟติดสว่างดี</div>
+          <div class="vf-pill" data-group="l1" data-val="ไม่ติด" data-tone="bad" onclick="pickVerify(this)">🚫 ไฟไม่ติด / หรี่</div>
+        </div>
+      </div>
+
+      <div class="vf-sec" id="vf-sec-l2">
+        <div class="vf-sec-title">🔦 ไฟ Laryngoscope (2)</div>
+        <div class="vf-sec-hint">กดเปิดไฟที่ blade จริง — ไฟต้องติดสว่างชัดเจน</div>
+        <div class="vf-opts">
+          <div class="vf-pill" data-group="l2" data-val="ติด" data-tone="ok" onclick="pickVerify(this)">💡 ไฟติดสว่างดี</div>
+          <div class="vf-pill" data-group="l2" data-val="ไม่ติด" data-tone="bad" onclick="pickVerify(this)">🚫 ไฟไม่ติด / หรี่</div>
+        </div>
+      </div>
+
+      <div class="vf-sec" id="vf-sec-df">
+        <div class="vf-sec-title">⚡ เครื่อง Defibrillator</div>
+        <div class="vf-sec-hint">ตรวจสภาพเครื่อง สาย paddle และหน้าจอแสดงผลจริง</div>
+        <div class="vf-opts">
+          <div class="vf-pill" data-group="df" data-val="พร้อมใช้" data-tone="ok" onclick="pickVerify(this)">✅ พร้อมใช้</div>
+          <div class="vf-pill" data-group="df" data-val="ไม่พร้อมใช้" data-tone="bad" onclick="pickVerify(this)">❌ ไม่พร้อมใช้</div>
+        </div>
+        <div class="vf-sub-label">🔋 สถานะ Battery (ดูจากตัวเครื่องจริง)</div>
+        <div class="vf-opts">
+          <div class="vf-pill" data-group="bt" data-val="3 ชม." data-tone="ok" onclick="pickVerify(this)">🔋 3 ชม.</div>
+          <div class="vf-pill" data-group="bt" data-val="น้อยกว่า 3 ชม." data-tone="warn" onclick="pickVerify(this)">🪫 น้อยกว่า 3 ชม.</div>
+          <div class="vf-pill" data-group="bt" data-val="กำลังชาร์จไฟ" data-tone="warn" onclick="pickVerify(this)">🔌 กำลังชาร์จไฟ</div>
+        </div>
+      </div>
+
+      <button class="vf-confirm" id="vf-confirm" disabled onclick="confirmVerify()">ยืนยันผลตรวจ และเริ่มบันทึก</button>
+      <div class="vf-progress" id="vf-progress">ติ๊กให้ครบ 4 รายการเพื่อดำเนินการต่อ (0/4)</div>
+    </div>
+  </div>
+</div>
+
 <!-- ════════════════════════════════════════════
      JAVASCRIPT
 ════════════════════════════════════════════ -->
 <script>
+// ═══════════════════════════════════════════════════════════
+// GAS BRIDGE — ทำงานอัตโนมัติเมื่อหน้านี้ถูก serve จาก Apps Script (HtmlService)
+// ดัก fetch() ที่ยิงไป script.google.com แล้วเปลี่ยนเป็น google.script.run แทน
+// ข้อดี: ไม่มี CORS, ไม่ต้อง no-cors (อ่านผลลัพธ์ POST ได้จริง), เร็วกว่าเพราะไม่ผ่าน redirect /exec
+// ถ้าเปิดจาก GitHub Pages ตามเดิม → bridge ไม่ทำงาน ใช้ fetch ปกติ (ไฟล์เดียวใช้ได้ 2 ที่)
+// ═══════════════════════════════════════════════════════════
+(function(){
+  var IN_GAS = (typeof google !== 'undefined' && google.script && google.script.run);
+  window.IS_GAS_HOSTED = !!IN_GAS;
+  if (!IN_GAS) return;
+
+  var _fetch = window.fetch.bind(window);
+
+  function runApi(fnName, arg){
+    return new Promise(function(resolve, reject){
+      google.script.run
+        .withSuccessHandler(function(res){
+          resolve({
+            ok: true, status: 200,
+            json: function(){ return Promise.resolve(JSON.parse(res)); },
+            text: function(){ return Promise.resolve(res); }
+          });
+        })
+        .withFailureHandler(function(err){ reject(err instanceof Error ? err : new Error(String(err && err.message || err))); })
+        [fnName](arg);
+    });
+  }
+
+  window.fetch = function(url, opts){
+    try {
+      var u = String(url || '');
+      if (u.indexOf('script.google.com/macros') !== -1) {
+        opts = opts || {};
+        var method = String(opts.method || 'GET').toUpperCase();
+        if (method === 'POST') {
+          return runApi('apiPost', String(opts.body || '{}'));
+        }
+        var type = 'all';
+        var m = u.match(/[?&]type=([^&]+)/);
+        if (m) type = decodeURIComponent(m[1]);
+        return runApi('apiGet', type);
+      }
+    } catch(e){ /* fallthrough */ }
+    return _fetch(url, opts);
+  };
+})();
+
 // ─── CONFIG ───────────────────────────────────────────────
 const DRIVE_FOLDER   = '1tfNKiu55ocZbXF3ovQaH7dz97tSOKsUM';
 const SPREADSHEET_ID = '1X4NBGK_8xokrgl3qf1F1XtCdUUhFeyKvXjQTaJMMkbI';
@@ -1383,6 +1562,8 @@ function init() {
   // เพื่อลด cold start delay (~3-5 วิ) เมื่อ loadEquipList() ทำงานจริง
   if(config.scriptUrl) {
     fetch(config.scriptUrl + '?type=ping', {priority: 'low'}).catch(() => {});
+    // ดึงผลตรวจชุดล่าสุดล่วงหน้า — พร้อมแสดงทันทีเมื่อเปิด popup ตรวจสอบ
+    loadLatestCheck();
   }
 
   const now = new Date();
@@ -3508,6 +3689,104 @@ document.addEventListener('keydown', ev => {
   if(ev.key==='Escape') document.getElementById('modal').classList.remove('open');
 });
 
+
+// ═══ VERIFY POPUP: ตรวจจริงก่อนบันทึก (ไฟ Laryngoscope + Defibrillator) ═══
+let verifyState = { l1:null, l2:null, df:null, bt:null };
+let verifyDone  = false;
+let latestCheck = null;     // ผลตรวจชุดล่าสุดจาก Sheets
+let latestLoaded = false;
+
+function openVerifyPopup() {
+  document.getElementById('vf-backdrop').classList.add('open');
+  if (!latestLoaded) loadLatestCheck();
+}
+function closeVerifyPopup() {
+  document.getElementById('vf-backdrop').classList.remove('open');
+}
+
+// ── ดึงข้อมูลชุดล่าสุดจาก Sheets มาแสดงเปรียบเทียบ ──
+async function loadLatestCheck() {
+  const box = document.getElementById('vf-last-content');
+  try {
+    const resp = await fetch(config.scriptUrl + '?type=history&t=' + Date.now());
+    const json = await resp.json();
+    const r = (json.checkRows && json.checkRows[0]) || null;
+    latestCheck = r;
+    latestLoaded = true;
+    if (r) {
+      const chips = [
+        '📅 ' + (r.date||'-') + ' ' + (r.shift||''),
+        '👩‍⚕️ ' + (r.nurse||r.incharge||'-'),
+        '🔦 Lary1: ' + (r.lary1_light||r.lary1||'-'),
+        '🔦 Lary2: ' + (r.lary2_light||r.lary2||'-'),
+        '⚡ Defib: ' + (r.defib||'-'),
+        '🔋 Battery: ' + (r.battery||'-')
+      ];
+      box.innerHTML = chips.map(c => '<span class="vf-chip">'+c+'</span>').join('')
+        + '<div style="margin-top:6px;font-size:11px;color:var(--gray-600)">↑ ข้อมูลเดิม — โปรดตรวจของจริงแล้วติ๊กผลใหม่ด้านล่าง</div>';
+    } else {
+      box.innerHTML = 'ยังไม่มีประวัติการตรวจใน Sheets — เริ่มบันทึกครั้งแรกได้เลย';
+    }
+  } catch (err) {
+    latestLoaded = true; // ไม่บล็อกการทำงานหน้างานกรณีเน็ตล่ม
+    box.innerHTML = '⚠️ ดึงข้อมูลชุดล่าสุดไม่สำเร็จ (' + err.message + ')<br><span style="font-size:11px">ยังบันทึกผลตรวจใหม่ได้ตามปกติ</span>';
+  }
+  updateVerifyProgress();
+}
+
+function pickVerify(el) {
+  const group = el.dataset.group;
+  verifyState[group] = el.dataset.val;
+  // เคลียร์การเลือกเดิมในกลุ่มเดียวกัน
+  document.querySelectorAll('.vf-pill[data-group="'+group+'"]').forEach(p => p.classList.remove('sel-ok','sel-warn','sel-bad'));
+  el.classList.add('sel-' + el.dataset.tone);
+  // ไฮไลต์ section ที่ทำครบแล้ว
+  const secL1 = document.getElementById('vf-sec-l1');
+  const secL2 = document.getElementById('vf-sec-l2');
+  const secDf = document.getElementById('vf-sec-df');
+  secL1.classList.toggle('done', !!verifyState.l1);
+  secL2.classList.toggle('done', !!verifyState.l2);
+  secDf.classList.toggle('done', !!(verifyState.df && verifyState.bt));
+  updateVerifyProgress();
+}
+
+function updateVerifyProgress() {
+  const done = ['l1','l2','df','bt'].filter(k => !!verifyState[k]).length;
+  const btn  = document.getElementById('vf-confirm');
+  const prog = document.getElementById('vf-progress');
+  const ready = done === 4 && latestLoaded;
+  btn.disabled = !ready;
+  if (!latestLoaded)   prog.textContent = 'กำลังดึงข้อมูลปัจจุบัน... กรุณารอสักครู่ ('+done+'/4)';
+  else if (done < 4)   prog.textContent = 'ติ๊กให้ครบ 4 รายการเพื่อดำเนินการต่อ ('+done+'/4)';
+  else                 prog.textContent = '✅ ครบแล้ว — กดยืนยันเพื่อลงข้อมูลอัตโนมัติ';
+}
+
+// ── ยืนยัน: ลงข้อมูลในฟอร์มให้อัตโนมัติ แล้วปลดล็อก ──
+function confirmVerify() {
+  if (!verifyState.l1 || !verifyState.l2 || !verifyState.df || !verifyState.bt) return;
+  verifyDone = true;
+
+  // ลงค่า Defibrillator + Battery ในฟอร์มอัตโนมัติ
+  const dfRadio = document.querySelector('input[name="ci-df"][value="'+verifyState.df+'"]');
+  if (dfRadio) { dfRadio.checked = true; onCheckChange('df'); }
+  const btRadio = document.querySelector('input[name="ci-df-s"][value="'+verifyState.bt+'"]');
+  if (btRadio) { btRadio.checked = true; }
+  updateProgress();
+
+  // ปลดล็อกฟอร์ม
+  const lock = document.getElementById('check-lock');
+  if (lock) lock.style.display = 'none';
+  closeVerifyPopup();
+
+  const issues = [];
+  if (verifyState.l1 === 'ไม่ติด') issues.push('ไฟ Lary1');
+  if (verifyState.l2 === 'ไม่ติด') issues.push('ไฟ Lary2');
+  if (verifyState.df === 'ไม่พร้อมใช้') issues.push('Defibrillator');
+  if (verifyState.bt !== '3 ชม.') issues.push('Battery ('+verifyState.bt+')');
+  if (issues.length) showToast('⚠️ พบปัญหา: ' + issues.join(', ') + ' — โปรดระบุในหมายเหตุ', '#C9A05E');
+  else showToast('✅ ลงข้อมูล Laryngoscope + Defibrillator ให้แล้ว กรอกส่วนที่เหลือต่อได้เลย');
+}
+
 // ─── CHECK FORM ────────────────────────────────────────────
 function renderCheckGrid() {
   document.getElementById('check-grid').innerHTML = checkDefs.map(item => {
@@ -3524,7 +3803,7 @@ function renderCheckGrid() {
     }
     const optsHtml = item.opts.map((o,i) => `
       <label class="radio-opt" id="opt-${item.id}-${i}">
-        <input type="radio" name="ci-${item.id}" value="${o}" ${i===0?'checked':''} onchange="onCheckChange('${item.id}')">
+        <input type="radio" name="ci-${item.id}" value="${o}" onchange="onCheckChange('${item.id}')">
         <span class="dot-status ${i===0?'dot-ok':'dot-bad'}"></span>${o}
       </label>`).join('');
     const subHtml = item.sub ? `
@@ -3533,7 +3812,7 @@ function renderCheckGrid() {
       <div class="radio-group">
         ${item.sub.opts.map((s,i) => `
           <label class="radio-opt">
-            <input type="radio" name="ci-${item.id}-s" value="${s}" ${i===0?'checked':''} onchange="updateProgress()">
+            <input type="radio" name="ci-${item.id}-s" value="${s}" onchange="updateProgress()">
             <span class="dot-status ${i===0?'dot-ok':'dot-warn'}"></span>${s}
           </label>`).join('')}
       </div>` : '';
@@ -3602,10 +3881,10 @@ function getFormData() {
     ward_head:  'นางอัญญารัตน์ เจียมธนานุรักษ์',
     incharge:   selectedIncharge || '—',
     note:       document.getElementById('f-note').value.trim(),
-    lary1:      getRadio('ci-l1'),
-    lary1_light:getRadio('ci-l1-s'),
-    lary2:      getRadio('ci-l2'),
-    lary2_light:getRadio('ci-l2-s'),
+    lary1:      verifyState.l1 ? (verifyState.l1==='ติด' ? 'พร้อมใช้' : 'ไม่พร้อมใช้') : '—',
+    lary1_light:verifyState.l1 || '—',
+    lary2:      verifyState.l2 ? (verifyState.l2==='ติด' ? 'พร้อมใช้' : 'ไม่พร้อมใช้') : '—',
+    lary2_light:verifyState.l2 || '—',
     box1:       getRadio('ci-b1'),
     box1_med:   getRadio('ci-b1-s'),
     box2:       getRadio('ci-b2'),
@@ -3621,6 +3900,22 @@ function getRadio(name) {
 }
 
 async function submitCheck() {
+  // ── ป้องกันการบันทึกโดยไม่ได้ตรวจจริง ──
+  if(!verifyDone) {
+    showToast('🔒 กรุณาตรวจสอบอุปกรณ์จริงก่อน (กดปุ่ม "เริ่มตรวจสอบเวรนี้")', '#C4708A');
+    openVerifyPopup();
+    return;
+  }
+  const missing = [];
+  checkDefs.forEach(item => {
+    if(item.isNum) return;
+    if(!document.querySelector(`input[name="ci-${item.id}"]:checked`)) missing.push(item.label);
+    if(item.sub && !document.querySelector(`input[name="ci-${item.id}-s"]:checked`)) missing.push(item.label + ' (' + item.sub.label + ')');
+  });
+  if(missing.length) {
+    showToast('⚠️ ยังตรวจไม่ครบ: ' + missing.join(', '), '#C4708A');
+    return;
+  }
   const d = getFormData();
   if(!d.nurse || d.nurse==='—') { showToast('⚠️ กรุณาเลือกชื่อหัวหน้าเวรและผู้ตรวจสอบ', '#C4708A'); return; }
   records.unshift(d);
@@ -3629,6 +3924,17 @@ async function submitCheck() {
   // ต้องรอให้บันทึกขึ้น Sheets เสร็จก่อน ไม่เช่นนั้น renderHistory() ที่ตามมาจะ GET
   // ข้อมูลเก่ากลับมาทับ records ในเครื่อง (ทำให้ดูเหมือนข้อมูลหาย ต้องรีเฟรสหลายรอบ)
   if(config.connected) await pushToSheets(d);
+  // ── รีเซ็ตฟอร์ม + ล็อกใหม่ สำหรับการตรวจเวรถัดไป ──
+  verifyState = { l1:null, l2:null, df:null, bt:null };
+  verifyDone  = false;
+  latestLoaded = false;
+  renderCheckGrid();
+  document.querySelectorAll('.vf-pill').forEach(p => p.classList.remove('sel-ok','sel-warn','sel-bad'));
+  document.querySelectorAll('.vf-sec').forEach(s => s.classList.remove('done'));
+  document.getElementById('vf-last-content').innerHTML = '<span class="vf-spin"></span> กำลังดึงข้อมูลปัจจุบันจาก Google Sheets...';
+  updateVerifyProgress();
+  const lockEl = document.getElementById('check-lock');
+  if(lockEl) lockEl.style.display = 'flex';
   setTimeout(() => {
     // สลับไปแท็บประวัติโดยไม่ขอ PIN ซ้ำ (เพิ่งบันทึกเสร็จ)
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -4335,10 +4641,12 @@ async function testSheets() {
   if(!url) { showToast('⚠️ กรุณาใส่ URL ก่อน', '#C4708A'); return; }
   showToast('🧪 กำลังทดสอบการเชื่อมต่อ...');
   try {
-    const r = await fetch(url, {mode:'no-cors'});
-    showToast('✅ เชื่อมต่อสำเร็จ (no-cors mode)', '#8FB89A');
+    const r = await fetch(url + (url.indexOf('?')===-1?'?':'&') + 'type=ping');
+    const j = await r.json();
+    if (j && (j.pong || j.status === 'ok')) showToast('✅ เชื่อมต่อสำเร็จ — Apps Script ตอบกลับแล้ว', '#8FB89A');
+    else showToast('⚠️ เชื่อมต่อได้ แต่คำตอบไม่ถูกต้อง', '#C4708A');
   } catch(e) {
-    showToast('❌ ไม่สามารถเชื่อมต่อได้', '#C4708A');
+    showToast('❌ ไม่สามารถเชื่อมต่อได้: ' + e.message, '#C4708A');
   }
 }
 
