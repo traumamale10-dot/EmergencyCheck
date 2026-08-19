@@ -1289,7 +1289,7 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
         margin-top:10px;cursor:pointer;text-decoration:underline;padding:6px">
         ไว้ตรวจภายหลัง (ดูข้อมูลอื่นก่อน)
       </div>
-      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:2px">build v2026-08-19.14</div>
+      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:2px">build v2026-08-19.16</div>
     </div>
   </div>
 </div>
@@ -1812,6 +1812,18 @@ function openEditModal(idx, ev) {
   showEquipDetail(idx);
 }
 
+// ── เรียงลำดับอุปกรณ์ชนิดเดียวกัน: ของที่ต้องใช้ก่อน (ใกล้/หมดอายุ) ขึ้นก่อนเสมอ
+//    แล้วภายในกลุ่มเดียวกัน เรียงตามวันหมดอายุจากใกล้สุด→ไกลสุด (ของไม่มีวันหมดอายุไปท้ายสุด) ──
+function compareEquipExpiry(a, b) {
+  const fa = isFifoItem(a) ? 1 : 0, fb = isFifoItem(b) ? 1 : 0;
+  if (fa !== fb) return fb - fa; // FIFO ก่อนเสมอ
+  const da = parseExpDate(a.exp), db = parseExpDate(b.exp);
+  if (da && db) return da - db;       // ทั้งคู่มีวันที่ → เรียงใกล้หมดอายุก่อน
+  if (da && !db) return -1;           // มีวันที่มาก่อนไม่มีวันที่
+  if (!da && db) return 1;
+  return 0;                           // ไม่มีวันที่ทั้งคู่ → คงลำดับเดิม
+}
+
 function renderEquip() {
   const q = document.getElementById('eq-search').value.toLowerCase();
   let items = equipment.map((e,idx) => ({...e,idx})).filter(e => {
@@ -1835,7 +1847,7 @@ function renderEquip() {
         if(!byBase[b]) { byBase[b] = []; baseOrder.push(b); }
         byBase[b].push(e);
       });
-      Object.keys(byBase).forEach(b => byBase[b].sort((a, bb) => (isFifoItem(bb)?1:0)-(isFifoItem(a)?1:0)));
+      Object.keys(byBase).forEach(b => byBase[b].sort(compareEquipExpiry));
       const withFifo = baseOrder.filter(b => byBase[b].some(e => isFifoItem(e)));
       const noFifo   = baseOrder.filter(b => !byBase[b].some(e => isFifoItem(e)));
       items = [];
@@ -1865,7 +1877,7 @@ function renderEquip() {
       byBase[b].push(e);
     });
     // sort within each base: fifo first
-    Object.keys(byBase).forEach(b => byBase[b].sort((a, bb) => (isFifoItem(bb)?1:0)-(isFifoItem(a)?1:0)));
+    Object.keys(byBase).forEach(b => byBase[b].sort(compareEquipExpiry));
 
     if(FIFO_FLOORS.has(f)) {
       // ชั้นที่ 1-3: กลุ่มที่มี FIFO ขึ้นก่อน จากนั้นตามด้วยกลุ่มที่ไม่มี FIFO
@@ -3795,11 +3807,21 @@ function closeVerifyPopup() {
 }
 
 // ── ดึงข้อมูลชุดล่าสุดจาก Sheets มาแสดงเปรียบเทียบ ──
+// ── ดึง JSON อย่างปลอดภัย: ถ้าเซิร์ฟเวอร์ตอบเป็น HTML (เช่น หน้า login) จะบอกสาเหตุชัดเจนแทน error กลางๆ ──
+async function fetchJsonSafe(url, opts) {
+  const resp = await fetch(url, opts);
+  const raw = await resp.text();
+  if (raw.trim().startsWith('<')) {
+    throw new Error('เซิร์ฟเวอร์ตอบกลับเป็นหน้าเว็บ ไม่ใช่ข้อมูล — มักเกิดจาก Deploy → Who has access ไม่ได้ตั้งเป็น "Anyone"');
+  }
+  try { return JSON.parse(raw); }
+  catch(pe) { throw new Error('รูปแบบข้อมูลที่ได้ไม่ถูกต้อง (' + raw.slice(0,60).replace(/\s+/g,' ') + '...)'); }
+}
+
 async function loadLatestCheck() {
   const box = document.getElementById('vf-last-content');
   try {
-    const resp = await fetch(config.scriptUrl + '?type=history&t=' + Date.now());
-    const json = await resp.json();
+    const json = await fetchJsonSafe(config.scriptUrl + '?type=history&t=' + Date.now());
     const r = (json.checkRows && json.checkRows[0]) || null;
     latestCheck = r;
     latestLoaded = true;
@@ -4129,7 +4151,11 @@ async function renderHistory() {
       const killer = ctrl ? setTimeout(() => ctrl.abort(), 25000) : null;
       const resp = await fetch(config.scriptUrl + '?type=latest&t=' + Date.now(), ctrl ? {signal: ctrl.signal} : undefined);
       if(killer) clearTimeout(killer);
-      const json = await resp.json();
+      const raw = await resp.text();
+      if (raw.trim().startsWith('<')) {
+        throw new Error('เซิร์ฟเวอร์ตอบกลับเป็นหน้าเว็บ ไม่ใช่ข้อมูล — มักเกิดจาก Deploy → Who has access ไม่ได้ตั้งเป็น "Anyone"');
+      }
+      const json = JSON.parse(raw);
       if(json.latestEquipRows) {
         // ── backend v8: ได้เฉพาะชุดล่าสุด (เร็ว) ──
         equipHistory = json.latestEquipRows;
@@ -4185,8 +4211,7 @@ async function loadFullHistory() {
   if(list) list.innerHTML = '<div class="empty-state"><div class="es-icon">🔄</div><p>กำลังโหลดประวัติทั้งหมด...</p></div>';
   if(config.scriptUrl) {
     try {
-      const resp = await fetch(config.scriptUrl + '?type=history&t=' + Date.now());
-      const json = await resp.json();
+      const json = await fetchJsonSafe(config.scriptUrl + '?type=history&t=' + Date.now());
       if(json.checkRows) {
         const normalized = json.checkRows.map(normalizeCheckRow);
         const fetchedKeys = new Set(normalized.map(r =>
@@ -5063,7 +5088,7 @@ function showToast(msg, color='#202124') {
 }
 
 // ─── BOOT ──────────────────────────────────────────────────
-console.log('EmergencyCheck build v2026-08-19.14');
+console.log('EmergencyCheck build v2026-08-19.16');
 init();
 </script>
 </body>
