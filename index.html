@@ -767,6 +767,22 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
     ✅ ผลการตรวจสอบอุปกรณ์
   </div>
 
+  <div class="card" style="position:relative" id="check-form-card">
+    <div class="card-header"><span class="ch-icon">🏥</span><h3>ผลการตรวจอุปกรณ์</h3></div>
+    <div class="card-body">
+      <div class="check-grid" id="check-grid"></div>
+    </div>
+    <div class="card-body" style="padding-top:0">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span style="font-size:12px;font-weight:600;color:var(--gray-800)">ความคืบหน้าการตรวจสอบ</span>
+        <span style="font-size:12px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:var(--blue-md)" id="prog-pct">0%</span>
+      </div>
+      <div style="height:8px;background:var(--gray-200);border-radius:4px;overflow:hidden">
+        <div id="prog-fill" style="height:100%;background:linear-gradient(90deg,var(--blue-md),#27AE60);border-radius:4px;transition:width .4s cubic-bezier(.4,0,.2,1);width:0%"></div>
+      </div>
+    </div>
+  </div>
+
   <div class="card">
     <div class="card-header"><span class="ch-icon">📅</span><h3>ข้อมูลทั่วไป</h3></div>
     <div class="card-body">
@@ -787,40 +803,6 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
       </div>
     </div>
   </div>
-
-  <div class="card" style="position:relative" id="check-form-card">
-    <div class="card-header"><span class="ch-icon">🏥</span><h3>ผลการตรวจอุปกรณ์</h3></div>
-    <div class="card-body">
-      <div class="check-grid" id="check-grid"></div>
-    </div>
-    <div class="card-body" style="padding-top:0">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-        <span style="font-size:12px;font-weight:600;color:var(--gray-800)">ความคืบหน้าการตรวจสอบ</span>
-        <span style="font-size:12px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:var(--blue-md)" id="prog-pct">0%</span>
-      </div>
-      <div style="height:8px;background:var(--gray-200);border-radius:4px;overflow:hidden">
-        <div id="prog-fill" style="height:100%;background:linear-gradient(90deg,var(--blue-md),#27AE60);border-radius:4px;transition:width .4s cubic-bezier(.4,0,.2,1);width:0%"></div>
-      </div>
-    </div>
-  </div>
-
-
-  <hr style="border:none;border-top:2px dashed var(--gray-200);margin:20px 0 16px">
-
-  <div class="search-bar">
-    <input type="text" id="eq-search" placeholder="ค้นหาอุปกรณ์..." oninput="renderEquip()">
-  </div>
-  <div class="filter-row">
-    <div class="filter-pill active" onclick="setFilter(this,'all')">ทั้งหมด</div>
-    <div class="filter-pill" onclick="setFilter(this,'ชั้นที่ 1')">ชั้นที่ 1</div>
-    <div class="filter-pill" onclick="setFilter(this,'ชั้นที่ 2')">ชั้นที่ 2</div>
-    <div class="filter-pill" onclick="setFilter(this,'ชั้นที่ 3')">ชั้นที่ 3</div>
-    <div class="filter-pill" onclick="setFilter(this,'ด้านบน')">ด้านบน</div>
-    <div class="filter-pill" onclick="setFilter(this,'ด้านนอก')">ด้านนอก</div>
-    <div class="filter-pill" onclick="setFilter(this,'__fifo')">⚠ ใช้ก่อน</div>
-    <div class="filter-pill" onclick="setFilter(this,'__checked')" id="pill-checked">✅ ตรวจแล้ว</div>
-  </div>
-  <div id="eq-container"></div>
 
   <div class="card">
     <div class="card-header"><span class="ch-icon">👩‍⚕️</span><h3>หัวหน้าหอ / หัวหน้าเวร</h3></div>
@@ -850,6 +832,25 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0
       </div>
     </div>
   </div>
+
+
+  <hr style="border:none;border-top:2px dashed var(--gray-200);margin:20px 0 16px">
+
+  <div class="search-bar">
+    <input type="text" id="eq-search" placeholder="ค้นหาอุปกรณ์..." oninput="renderEquip()">
+  </div>
+  <div class="filter-row">
+    <div class="filter-pill active" onclick="setFilter(this,'all')">ทั้งหมด</div>
+    <div class="filter-pill" onclick="setFilter(this,'ชั้นที่ 1')">ชั้นที่ 1</div>
+    <div class="filter-pill" onclick="setFilter(this,'ชั้นที่ 2')">ชั้นที่ 2</div>
+    <div class="filter-pill" onclick="setFilter(this,'ชั้นที่ 3')">ชั้นที่ 3</div>
+    <div class="filter-pill" onclick="setFilter(this,'ด้านบน')">ด้านบน</div>
+    <div class="filter-pill" onclick="setFilter(this,'ด้านนอก')">ด้านนอก</div>
+    <div class="filter-pill" onclick="setFilter(this,'__fifo')">⚠ ใช้ก่อน</div>
+    <div class="filter-pill" onclick="setFilter(this,'__checked')" id="pill-checked">✅ ตรวจแล้ว</div>
+  </div>
+  <div id="eq-container"></div>
+
 
   <!-- Progress + Save button at bottom -->
   <div style="background:var(--white);border-radius:var(--r);padding:12px 14px;margin-top:14px;box-shadow:var(--shadow-sm);border:1px solid var(--gray-200)">
@@ -4082,7 +4083,11 @@ async function submitCheck() {
   if(!d.nurse || d.nurse==='—') { showToast('⚠️ กรุณาเลือกชื่อหัวหน้าเวรและผู้ตรวจสอบ', '#C4708A'); return; }
   records.unshift(d);
   localStorage.setItem('records', JSON.stringify(records));
-  showToast('✅ บันทึกการตรวจสอบเรียบร้อย');
+  // ★ v9.6: เดิมขึ้น "✅ บันทึกเรียบร้อย" ตรงนี้ทันที ทั้งที่ยังไม่ได้ส่งข้อมูลขึ้น Sheets เลย
+  //   ทำให้ผู้ใช้เข้าใจผิดว่าเสร็จแล้ว แล้วปิดหน้า/สลับแอปก่อน ตัดการเชื่อมต่อขณะกำลังส่งจริง
+  //   (ข้อมูลอาจไปถึง Sheets ในภายหลังได้ แต่การแจ้งเตือน Telegram ที่รันต่อจากนั้นจะไม่ทำงาน)
+  //   เปลี่ยนเป็นข้อความ "กำลังบันทึก..." แล้วรอผลจริงจาก pushToSheets() ก่อนถึงจะถือว่าเสร็จ
+  showToast('📤 กำลังบันทึกขึ้น Google Sheets... กรุณาอย่าเพิ่งปิดหน้านี้');
   // ต้องรอให้บันทึกขึ้น Sheets เสร็จก่อน ไม่เช่นนั้น renderHistory() ที่ตามมาจะ GET
   // ข้อมูลเก่ากลับมาทับ records ในเครื่อง (ทำให้ดูเหมือนข้อมูลหาย ต้องรีเฟรสหลายรอบ)
   if(config.connected) await pushToSheets(d);
@@ -4764,9 +4769,12 @@ function closeEditHistModal(e) {
 async function pushToSheets(data) {
   if(!config.scriptUrl) return;
   try {
+    // ★ v9.6: keepalive:true — ถ้าผู้ใช้ปิดหน้า/สลับแอประหว่างกำลังส่งพอดี เบราว์เซอร์จะยังส่ง
+    //   คำขอนี้ต่อในพื้นหลังจนจบแทนที่จะตัดทิ้งกลางคัน (เหมือนกลไกเดียวกับ navigator.sendBeacon)
     await fetch(config.scriptUrl, {
       method: 'POST',
       mode: 'no-cors',
+      keepalive: true,
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify(data)
     });
